@@ -48,3 +48,4 @@ def seed_demo(db_path: Path | str | None = None) -> int:
 
 if __name__ == "__main__":
     seed_demo()
+

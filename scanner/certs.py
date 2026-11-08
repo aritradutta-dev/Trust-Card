@@ -351,3 +351,4 @@ def analyze_certificate_der(der_bytes: bytes, target_host: str) -> tuple[dict, l
     }
 
     return details, findings
+

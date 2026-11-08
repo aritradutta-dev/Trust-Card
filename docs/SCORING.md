@@ -101,3 +101,4 @@ where $X = |\mathcal{C}|$.
 
 1. **No Safe Guarantees**: A score of $0/100$ means "no risk indicators found across checked pillars", never "verified safe".
 2. **Deterministic Precedence**: Verdict assignment in `decide_verdict()` does not depend on the score. Technical findings (e.g. missing HSTS or self-signed cert) will never trigger `known_threat`.
+

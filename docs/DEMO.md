@@ -137,3 +137,4 @@ This document provides a click-by-click guide for demonstrating Trust Card to ha
      7. **Message Context** (Urgency, credential, payment cues)
 2. **Explain the Scoring Philosophy**:
    > *"Notice the metric 'Risk indicators: N/100 across 7 of 7 checks'. This provides users and analysts with transparent, explainable ranking. However, our architecture ensures that deterministic safety rules always govern the verdict: a website missing modern HTTP headers might score 15/100 on risk indicators, but it will never be falsely branded a Known Threat."*
+

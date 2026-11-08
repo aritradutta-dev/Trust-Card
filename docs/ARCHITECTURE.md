@@ -152,3 +152,4 @@ flowchart TD
 - Full headless browser / JavaScript dynamic execution (avoids remote code execution sandbox escapes).
 - Real-time OCSP / CRL live revocation checking (unreliable due to soft-fail design; addressed via Certificate Transparency monitoring).
 - Automated website takedowns (reports are local to instance or shared peer-to-peer).
+

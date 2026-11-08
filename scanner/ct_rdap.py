@@ -180,3 +180,4 @@ def lookup_domain_age_rdap(hostname: str, timeout: float = 6.0) -> list[dict]:
             })
 
     return findings
+

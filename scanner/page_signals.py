@@ -498,3 +498,4 @@ def audit_page_html(html: str, page_url: str) -> list[dict]:
             break
 
     return findings
+

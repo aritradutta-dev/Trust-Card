@@ -341,3 +341,4 @@ def analyze_url(canonical_url: str) -> list[dict]:
         })
 
     return findings
+
