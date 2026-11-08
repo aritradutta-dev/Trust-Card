@@ -1782,7 +1782,7 @@ function initInteractiveCursorSystem() {
   resizeCanvas();
   window.addEventListener('resize', resizeCanvas);
 
-  // Holst Palette Color Tokens
+  // Holst & Thematic Color Palettes
   const HOLST_COLORS = [
     { r: 27, g: 38, b: 59 },    // #1B263B Oxford Blue
     { r: 13, g: 27, b: 42 },    // #0D1B2A Midnight Dark
@@ -1791,17 +1791,68 @@ function initInteractiveCursorSystem() {
     { r: 212, g: 196, b: 168 }  // #D4C4A8 Warm Sand
   ];
 
+  const NEBULA_COLORS = [
+    { r: 121, g: 40, b: 202 },  // Astral Violet #7928CA
+    { r: 255, g: 0, b: 127 },   // Cyber Magenta #FF007F
+    { r: 251, g: 191, b: 36 },  // Radiant Gold #FBBF24
+    { r: 56, g: 189, b: 248 },  // Electric Cyan #38BDF8
+    { r: 245, g: 158, b: 11 }   // Stardust Amber #F59E0B
+  ];
+
+  const MAGMA_COLORS = [
+    { r: 220, g: 38, b: 38 },   // Inferno Red #DC2626
+    { r: 234, g: 88, b: 12 },   // Lava Orange #EA580C
+    { r: 250, g: 204, b: 21 },  // Molten Gold #FACC15
+    { r: 254, g: 240, b: 138 }, // Thermal Yellow #FEF08A
+    { r: 185, g: 28, b: 28 }    // Deep Magma #B91C1C
+  ];
+
+  const NEON_COLORS = [
+    { r: 0, g: 240, b: 255 },   // Electric Neon Cyan #00F0FF
+    { r: 255, g: 0, b: 127 },   // Hot Neon Pink #FF007F
+    { r: 139, g: 92, b: 246 },  // Deep Neon Violet #8B5CF6
+    { r: 255, g: 255, b: 255 }  // Laser Core White
+  ];
+
+  const MATRIX_COLORS = [
+    { r: 34, g: 197, b: 94 },   // Phosphor Green #22C55E
+    { r: 132, g: 204, b: 22 },  // Cyber Lime #84CC16
+    { r: 16, g: 185, b: 129 },  // Terminal Emerald #10B981
+    { r: 167, g: 243, b: 208 }  // Phosphor Mint #A7F3D0
+  ];
+
+  const PRISM_COLORS = [
+    { r: 6, g: 182, b: 212 },   // Spectral Cyan #06B6D4
+    { r: 236, g: 72, b: 153 },  // Spectral Magenta #EC4899
+    { r: 132, g: 204, b: 22 },  // Spectral Lime #84CC16
+    { r: 168, g: 85, b: 247 },  // Spectral Violet #A855F7
+    { r: 245, g: 158, b: 11 }   // Spectral Amber #F59E0B
+  ];
+
   const PRESET_LABELS = {
     fluid: 'Fluid Splash',
+    nebula: 'Cosmic Nebula',
+    magma: 'Volcanic Magma',
+    neon: 'Neon Synthwave',
+    matrix: 'Matrix Terminal',
+    prism: 'Prism Rainbow',
     radar: 'Cyber Radar',
     mesh: 'Threat Network Mesh',
     mercury: 'Liquid Mercury',
-    arc: 'Electric Plasma Arc',
     classic: 'Minimal Pointer'
   };
 
   let currentMode = localStorage.getItem('trustcard_cursor_effect') || 'fluid';
   if (!PRESET_LABELS[currentMode]) currentMode = 'fluid';
+
+  function applyModeBlend(mode) {
+    if (mode === 'fluid' || mode === 'mercury') {
+      canvas.style.mixBlendMode = 'multiply';
+    } else {
+      canvas.style.mixBlendMode = 'normal';
+    }
+  }
+  applyModeBlend(currentMode);
 
   // UI Switcher Elements
   const switcherToggle = document.querySelector('#cursor-switcher-toggle');
@@ -1814,6 +1865,7 @@ function initInteractiveCursorSystem() {
     optBtns.forEach((btn) => {
       btn.classList.toggle('active', btn.dataset.cursorMode === mode);
     });
+    applyModeBlend(mode);
   }
   updateSwitcherUI(currentMode);
 
@@ -1995,16 +2047,59 @@ function initInteractiveCursorSystem() {
         const pvy = dy * 0.15 + (Math.random() - 0.5) * 1.8;
         spawnParticle(px, py, pvx, pvy, Math.max(3, baseRadius), col, 0.026 + Math.random() * 0.018, false, (Math.random() - 0.5) * 0.08);
       }
+    } else if (currentMode === 'nebula') {
+      // Cosmic Nebula: Stardust & astral galaxy particles
+      const count = Math.min(Math.floor(dist / 6) + 1, 4);
+      for (let i = 0; i < count; i++) {
+        const t = i / count;
+        const px = prevMouseX + dx * t + (Math.random() - 0.5) * 10;
+        const py = prevMouseY + dy * t + (Math.random() - 0.5) * 10;
+        const col = NEBULA_COLORS[Math.floor(Math.random() * NEBULA_COLORS.length)];
+        const pvx = (Math.random() - 0.5) * 1.4;
+        const pvy = (Math.random() - 0.5) * 1.4;
+        spawnParticle(px, py, pvx, pvy, 2.5 + Math.random() * 4.5, col, 0.022 + Math.random() * 0.015, false, (Math.random() - 0.5) * 0.06, 1);
+      }
+    } else if (currentMode === 'magma') {
+      // Volcanic Magma: Rising heat embers with upward thermal buoyancy
+      const count = Math.min(Math.floor(dist / 8) + 1, 3);
+      for (let i = 0; i < count; i++) {
+        const px = mouseX + (Math.random() - 0.5) * 12;
+        const py = mouseY + (Math.random() - 0.5) * 12;
+        const col = MAGMA_COLORS[Math.floor(Math.random() * MAGMA_COLORS.length)];
+        const pvx = (Math.random() - 0.5) * 1.6;
+        const pvy = -0.8 - Math.random() * 1.5; // Upward thermal drift
+        spawnParticle(px, py, pvx, pvy, 3 + Math.random() * 4, col, 0.025 + Math.random() * 0.02, false, 0, 2);
+      }
+    } else if (currentMode === 'neon') {
+      // Neon Synthwave: Braided cyan and pink laser trails
+      const perpX = dist > 0 ? -dy / dist : 0;
+      const perpY = dist > 0 ? dx / dist : 0;
+      const wave = Math.sin(performance.now() * 0.015) * 8;
+
+      spawnParticle(mouseX + perpX * wave, mouseY + perpY * wave, dx * 0.08, dy * 0.08, 4.5, NEON_COLORS[0], 0.035, false, 0, 3);
+      spawnParticle(mouseX - perpX * wave, mouseY - perpY * wave, dx * 0.08, dy * 0.08, 4.5, NEON_COLORS[1], 0.035, false, 0, 3);
+    } else if (currentMode === 'matrix') {
+      // Matrix Terminal: Phosphor green falling code rain
+      if (Math.random() < 0.65) {
+        const px = mouseX + (Math.random() - 0.5) * 16;
+        const py = mouseY + (Math.random() - 0.5) * 8;
+        const col = MATRIX_COLORS[Math.floor(Math.random() * MATRIX_COLORS.length)];
+        spawnParticle(px, py, (Math.random() - 0.5) * 0.6, 1.2 + Math.random() * 1.8, 4, col, 0.028, false, 0, 4);
+      }
+    } else if (currentMode === 'prism') {
+      // Prism Rainbow: Chromatic aberration spectral dispersion
+      const perpX = dist > 0 ? -dy / dist : 0;
+      const perpY = dist > 0 ? dx / dist : 0;
+      const offset = 7;
+      spawnParticle(mouseX + perpX * offset, mouseY + perpY * offset, dx * 0.1, dy * 0.1, 4, PRISM_COLORS[0], 0.035, false, 0, 5); // Cyan
+      spawnParticle(mouseX, mouseY, dx * 0.1, dy * 0.1, 4, PRISM_COLORS[2], 0.035, false, 0, 5); // Lime
+      spawnParticle(mouseX - perpX * offset, mouseY - perpY * offset, dx * 0.1, dy * 0.1, 4, PRISM_COLORS[1], 0.035, false, 0, 5); // Magenta
     } else if (currentMode === 'mesh') {
       if (dist > 8 || Math.random() < 0.35) {
-        const col = HOLST_COLORS[Math.random() < 0.6 ? 2 : 3]; // Slate or Sage
+        const col = HOLST_COLORS[Math.random() < 0.6 ? 2 : 3];
         const angle = Math.random() * Math.PI * 2;
         const spd = 0.4 + Math.random() * 1.2;
         spawnParticle(mouseX + (Math.random() - 0.5) * 14, mouseY + (Math.random() - 0.5) * 14, Math.cos(angle) * spd, Math.sin(angle) * spd, 3 + Math.random() * 2, col, 0.016 + Math.random() * 0.012);
-      }
-    } else if (currentMode === 'arc') {
-      if (Math.random() < 0.45) {
-        spawnParticle(mouseX + (Math.random() - 0.5) * 8, mouseY + (Math.random() - 0.5) * 8, (Math.random() - 0.5) * 2, (Math.random() - 0.5) * 2, 2.5, HOLST_COLORS[3], 0.05);
       }
     }
 
@@ -2036,6 +2131,56 @@ function initInteractiveCursorSystem() {
         spawnParticle(cx, cy, Math.cos(angle) * vel, Math.sin(angle) * vel, 3 + Math.random() * 8.5, col, 0.02 + Math.random() * 0.022, true, (Math.random() - 0.5) * 0.05);
       }
       spawnParticle(cx, cy, 0, 0, 16, HOLST_COLORS[0], 0.035, false, 0);
+    } else if (currentMode === 'nebula') {
+      // Cosmic Supernova: Starburst in Astral Violet & Gold
+      spawnRipple(cx, cy, 65, NEBULA_COLORS[1]); // Magenta ripple
+      spawnRipple(cx, cy, 95, NEBULA_COLORS[2]); // Gold ripple
+      for (let i = 0; i < 36; i++) {
+        const angle = (i / 36) * Math.PI * 2 + (Math.random() - 0.5) * 0.3;
+        const vel = 2.5 + Math.random() * 9.5;
+        const col = NEBULA_COLORS[Math.floor(Math.random() * NEBULA_COLORS.length)];
+        spawnParticle(cx, cy, Math.cos(angle) * vel, Math.sin(angle) * vel, 3 + Math.random() * 7, col, 0.018 + Math.random() * 0.018, true, 0, 1);
+      }
+    } else if (currentMode === 'magma') {
+      // Volcanic Magma Eruption: Molten lava droplets & thermal blast
+      spawnRipple(cx, cy, 55, MAGMA_COLORS[0]);
+      spawnRipple(cx, cy, 85, MAGMA_COLORS[2], 'dashed');
+      for (let i = 0; i < 36; i++) {
+        const angle = (i / 36) * Math.PI * 2 + (Math.random() - 0.5) * 0.4;
+        const vel = 3 + Math.random() * 9;
+        const col = MAGMA_COLORS[Math.floor(Math.random() * MAGMA_COLORS.length)];
+        spawnParticle(cx, cy, Math.cos(angle) * vel, Math.sin(angle) * vel, 4 + Math.random() * 7, col, 0.022 + Math.random() * 0.02, true, 0, 2);
+      }
+    } else if (currentMode === 'neon') {
+      // Neon Synthwave Nova: Dual cyan & hot pink laser burst
+      spawnRipple(cx, cy, 60, NEON_COLORS[0]);
+      spawnRipple(cx, cy, 90, NEON_COLORS[1]);
+      for (let i = 0; i < 32; i++) {
+        const angle = (i / 32) * Math.PI * 2;
+        const vel = 3.5 + Math.random() * 8.5;
+        const col = NEON_COLORS[i % 2 === 0 ? 0 : 1];
+        spawnParticle(cx, cy, Math.cos(angle) * vel, Math.sin(angle) * vel, 3 + Math.random() * 5, col, 0.03, false, 0, 3);
+      }
+    } else if (currentMode === 'matrix') {
+      // Matrix Terminal Glitch EMP: Square grid shockwave & bit sparks
+      spawnRipple(cx, cy, 75, MATRIX_COLORS[0], 'dashed');
+      for (let i = 0; i < 28; i++) {
+        const angle = (i / 28) * Math.PI * 2;
+        const vel = 3 + Math.random() * 7.5;
+        const col = MATRIX_COLORS[Math.floor(Math.random() * MATRIX_COLORS.length)];
+        spawnParticle(cx, cy, Math.cos(angle) * vel, Math.sin(angle) * vel, 3.5, col, 0.026, false, 0, 4);
+      }
+    } else if (currentMode === 'prism') {
+      // Prism Rainbow Shatter: Chromatic spectral dispersion
+      spawnRipple(cx, cy, 50, PRISM_COLORS[0]);
+      spawnRipple(cx, cy, 80, PRISM_COLORS[1]);
+      spawnRipple(cx, cy, 110, PRISM_COLORS[2], 'dashed');
+      for (let i = 0; i < 36; i++) {
+        const angle = (i / 36) * Math.PI * 2;
+        const vel = 3 + Math.random() * 9;
+        const col = PRISM_COLORS[i % PRISM_COLORS.length];
+        spawnParticle(cx, cy, Math.cos(angle) * vel, Math.sin(angle) * vel, 3 + Math.random() * 5, col, 0.024, true, 0, 5);
+      }
     } else if (currentMode === 'radar') {
       // Cyber Radar EMP Burst: Expanding tactical dashed sonar waves + 8 directional ticks
       spawnRipple(cx, cy, 70, HOLST_COLORS[0], 'sonar');
@@ -2059,14 +2204,6 @@ function initInteractiveCursorSystem() {
         const angle = Math.random() * Math.PI * 2;
         const vel = 3 + Math.random() * 8;
         spawnParticle(cx, cy, Math.cos(angle) * vel, Math.sin(angle) * vel, 4 + Math.random() * 5, HOLST_COLORS[0], 0.032, true);
-      }
-    } else if (currentMode === 'arc') {
-      // Static Plasma Arc Discharge
-      spawnRipple(cx, cy, 60, HOLST_COLORS[3], 'dashed');
-      for (let i = 0; i < 16; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        const vel = 4 + Math.random() * 9;
-        spawnParticle(cx, cy, Math.cos(angle) * vel, Math.sin(angle) * vel, 2.5, HOLST_COLORS[Math.random() < 0.5 ? 2 : 3], 0.045);
       }
     }
 
@@ -2292,7 +2429,12 @@ function initInteractiveCursorSystem() {
         p.x += -p.vy * p.swirl;
         p.y += p.vx * p.swirl;
       }
-      if (p.isSplash) p.vy += 0.08;
+      if (p.isSplash) {
+        p.vy += 0.08;
+      } else if (p.extra === 2) {
+        // Magma upward thermal draft
+        p.vy -= 0.06;
+      }
 
       p.alpha -= p.decay;
       p.radius = p.maxRadius * (p.alpha > 0 ? Math.pow(p.alpha, 0.65) : 0);
@@ -2302,29 +2444,72 @@ function initInteractiveCursorSystem() {
         continue;
       }
 
-      const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, Math.max(1, p.radius));
-      grad.addColorStop(0, `rgba(${p.color.r}, ${p.color.g}, ${p.color.b}, ${p.alpha * 0.85})`);
-      grad.addColorStop(0.65, `rgba(${p.color.r}, ${p.color.g}, ${p.color.b}, ${p.alpha * 0.45})`);
-      grad.addColorStop(1, `rgba(${p.color.r}, ${p.color.g}, ${p.color.b}, 0)`);
+      // Mode-specific rendering enhancements
+      if (p.extra === 4 && p.alpha > 0.3) {
+        // Matrix: render digital code glyphs
+        ctx.font = '10px ui-monospace, Menlo, monospace';
+        ctx.fillStyle = `rgba(${p.color.r}, ${p.color.g}, ${p.color.b}, ${p.alpha * 0.9})`;
+        const glyph = (i % 5 === 0) ? '1' : (i % 5 === 1) ? '0' : (i % 5 === 2) ? 'A' : (i % 5 === 3) ? 'F' : '#';
+        ctx.fillText(glyph, p.x - 3, p.y + 3);
+      } else {
+        const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, Math.max(1, p.radius));
+        grad.addColorStop(0, `rgba(${p.color.r}, ${p.color.g}, ${p.color.b}, ${p.alpha * 0.9})`);
+        grad.addColorStop(0.65, `rgba(${p.color.r}, ${p.color.g}, ${p.color.b}, ${p.alpha * 0.5})`);
+        grad.addColorStop(1, `rgba(${p.color.r}, ${p.color.g}, ${p.color.b}, 0)`);
 
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, Math.max(0.5, p.radius), 0, Math.PI * 2);
-      ctx.fillStyle = grad;
-      ctx.fill();
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, Math.max(0.5, p.radius), 0, Math.PI * 2);
+        ctx.fillStyle = grad;
+        ctx.fill();
+
+        // Nebula 4-point twinkle flare
+        if (p.extra === 1 && p.alpha > 0.45 && i % 3 === 0) {
+          const flare = p.radius * 1.6;
+          ctx.beginPath();
+          ctx.moveTo(p.x - flare, p.y);
+          ctx.lineTo(p.x + flare, p.y);
+          ctx.moveTo(p.x, p.y - flare);
+          ctx.lineTo(p.x, p.y + flare);
+          ctx.strokeStyle = `rgba(251, 191, 36, ${p.alpha * 0.8})`;
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        }
+      }
     }
 
-    // 4. Always-on Central Precision Tip Dot
+    // 4. Central Precision Tip Pointer
     if (mouseX > 0 && mouseY > 0 && currentMode !== 'mercury') {
-      const pointerRadius = isHoveringInteractive ? 5 : 3.5;
+      const pointerRadius = isHoveringInteractive ? 5.5 : 3.5;
+
+      let coreColor = 'rgba(27, 38, 59, 0.9)';
+      let auraColor = 'rgba(65, 90, 119, 0.4)';
+
+      if (currentMode === 'nebula') {
+        coreColor = 'rgba(121, 40, 202, 0.95)';
+        auraColor = 'rgba(251, 191, 36, 0.55)';
+      } else if (currentMode === 'magma') {
+        coreColor = 'rgba(220, 38, 38, 0.95)';
+        auraColor = 'rgba(250, 204, 21, 0.6)';
+      } else if (currentMode === 'neon') {
+        coreColor = 'rgba(0, 240, 255, 0.95)';
+        auraColor = 'rgba(255, 0, 127, 0.6)';
+      } else if (currentMode === 'matrix') {
+        coreColor = 'rgba(34, 197, 94, 0.95)';
+        auraColor = 'rgba(132, 204, 22, 0.6)';
+      } else if (currentMode === 'prism') {
+        coreColor = 'rgba(6, 182, 212, 0.95)';
+        auraColor = 'rgba(236, 72, 153, 0.6)';
+      }
+
       ctx.beginPath();
       ctx.arc(mouseX, mouseY, pointerRadius, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(27, 38, 59, 0.88)';
+      ctx.fillStyle = coreColor;
       ctx.fill();
 
       ctx.beginPath();
       ctx.arc(mouseX, mouseY, pointerRadius + 3, 0, Math.PI * 2);
-      ctx.strokeStyle = 'rgba(65, 90, 119, 0.35)';
-      ctx.lineWidth = 1.2;
+      ctx.strokeStyle = auraColor;
+      ctx.lineWidth = 1.4;
       ctx.stroke();
     }
 

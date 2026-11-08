@@ -1707,7 +1707,11 @@ textarea:focus { border-color: rgba(65, 90, 119, 0.5); box-shadow: var(--nm-inse
   position: absolute;
   bottom: 48px;
   right: 0;
-  width: 270px;
+  width: 290px;
+  max-height: 480px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
   padding: 8px;
   border-radius: 16px;
   background: var(--paper);
