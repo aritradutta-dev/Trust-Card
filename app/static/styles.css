@@ -2648,468 +2648,128 @@ textarea:focus { border-color: rgba(65, 90, 119, 0.5); box-shadow: var(--nm-inse
 }
 
 /* =====================================================================
-   TRUST CARD CYBERNETIC OS BOOT SEQUENCE
+   MINIMAL TRUST CARD BOOT / LOADING ANIMATION
    ===================================================================== */
-.boot-overlay {
+.minimal-boot-overlay {
   position: fixed;
   inset: 0;
   z-index: 100000;
-  background-color: #070e17;
+  background-color: var(--bg, #F4F1DE);
   display: flex;
-  flex-direction: column;
-  justify-content: space-between;
   align-items: center;
-  padding: 24px 32px;
-  overflow: hidden;
+  justify-content: center;
   user-select: none;
   opacity: 1;
   visibility: visible;
-  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.6s;
+  transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.45s ease;
 }
 
-.boot-overlay.boot-completed {
+.minimal-boot-overlay.boot-completed {
   opacity: 0;
-  transform: scale(1.05);
   visibility: hidden;
   pointer-events: none;
 }
 
-/* CRT Ambient Grid Background */
-.boot-grid-bg {
-  position: absolute;
-  inset: 0;
-  background-image: 
-    linear-gradient(rgba(65, 90, 119, 0.12) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(65, 90, 119, 0.12) 1px, transparent 1px);
-  background-size: 36px 36px;
-  pointer-events: none;
-  z-index: 1;
-}
-
-/* CRT Scanline Shader Sweep */
-.boot-scanlines {
-  position: absolute;
-  inset: 0;
-  background: repeating-linear-gradient(
-    to bottom,
-    transparent 0px,
-    transparent 2px,
-    rgba(0, 0, 0, 0.35) 2px,
-    rgba(0, 0, 0, 0.35) 4px
-  );
-  pointer-events: none;
-  z-index: 2;
-  opacity: 0.65;
-}
-
-.boot-radial-vignette {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at 50% 50%, rgba(13, 27, 42, 0.2) 20%, rgba(5, 10, 17, 0.95) 90%);
-  pointer-events: none;
-  z-index: 3;
-}
-
-/* Top HUD Header */
-.boot-hud-top {
-  position: relative;
-  z-index: 10;
-  width: 100%;
-  max-width: 900px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.boot-hud-badge {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  color: #778D7A;
-  background: rgba(13, 27, 42, 0.85);
-  border: 1px solid rgba(119, 141, 122, 0.3);
-  padding: 6px 14px;
-  border-radius: 99px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
-}
-
-.boot-pulse-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #52B788;
-  box-shadow: 0 0 8px #52B788;
-  animation: bootDotPulse 1.2s infinite ease-in-out;
-}
-
-@keyframes bootDotPulse {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.4); opacity: 0.4; }
-}
-
-.boot-hud-controls {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.boot-ctrl-btn, .boot-skip-btn {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 11px;
-  color: #D4C4A8;
-  background: rgba(27, 38, 59, 0.7);
-  border: 1px solid rgba(212, 196, 168, 0.3);
-  padding: 6px 12px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.boot-ctrl-btn:hover, .boot-skip-btn:hover {
-  background: rgba(65, 90, 119, 0.5);
-  border-color: #D4C4A8;
-  color: #F4F1DE;
-  transform: translateY(-1px);
-}
-
-.boot-skip-btn kbd {
-  background: rgba(13, 27, 42, 0.9);
-  border: 1px solid rgba(212, 196, 168, 0.4);
-  border-radius: 4px;
-  padding: 1px 5px;
-  font-size: 10px;
-  color: #F4F1DE;
-}
-
-/* Center Visual Stage */
-.boot-center-stage {
-  position: relative;
-  z-index: 10;
-  width: 100%;
-  max-width: 680px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin: auto 0;
-}
-
-/* Shield Frame with HUD Brackets */
-.boot-shield-frame {
-  position: relative;
-  width: 320px;
-  max-width: 90vw;
-  padding: 20px;
+.minimal-boot-content {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  margin-bottom: 22px;
+  gap: 16px;
+  animation: minimalBootEntrance 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* Radar Sweep behind shield */
-.boot-radar-sweep {
-  position: absolute;
-  width: 340px;
-  height: 340px;
-  border-radius: 50%;
-  background: conic-gradient(from 0deg, transparent 0deg, transparent 270deg, rgba(82, 183, 136, 0.15) 360deg);
-  animation: radarSpin 3s linear infinite;
-  pointer-events: none;
-  z-index: 1;
+@keyframes minimalBootEntrance {
+  0% {
+    opacity: 0;
+    transform: scale(0.96) translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
-@keyframes radarSpin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-.boot-halo-glow {
-  position: absolute;
-  width: 220px;
-  height: 220px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(119, 141, 122, 0.3) 0%, rgba(65, 90, 119, 0.1) 60%, transparent 80%);
-  filter: blur(20px);
-  pointer-events: none;
-  animation: haloBreathe 2.4s ease-in-out infinite alternate;
-  z-index: 1;
-}
-
-@keyframes haloBreathe {
-  0% { transform: scale(0.9); opacity: 0.5; }
-  100% { transform: scale(1.15); opacity: 0.9; }
-}
-
-/* HUD Tech Brackets */
-.hud-corner {
-  position: absolute;
-  width: 16px;
-  height: 16px;
-  border-color: #778D7A;
-  pointer-events: none;
-  z-index: 5;
-  transition: border-color 0.3s;
-}
-.hud-tl { top: 0; left: 0; border-top: 2px solid; border-left: 2px solid; }
-.hud-tr { top: 0; right: 0; border-top: 2px solid; border-right: 2px solid; }
-.hud-bl { bottom: 0; left: 0; border-bottom: 2px solid; border-left: 2px solid; }
-.hud-br { bottom: 0; right: 0; border-bottom: 2px solid; border-right: 2px solid; }
-
-/* The Central Graphic Container */
-.boot-image-container {
+.minimal-boot-graphic-wrap {
   position: relative;
-  z-index: 2;
-  width: 280px;
-  max-width: 80vw;
-  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   overflow: hidden;
-  box-shadow: 
-    0 12px 36px rgba(0, 0, 0, 0.6),
-    0 0 0 1px rgba(212, 196, 168, 0.25),
-    inset 0 0 20px rgba(13, 27, 42, 0.4);
-  background: #FAF8ED;
-  transform: translateY(0);
-  transition: transform 0.4s ease, box-shadow 0.4s ease;
+  border-radius: 20px;
 }
 
-.boot-graphic {
-  width: 100%;
+/* Subtle, organic animated shimmer sweep across graphic like a live GIF */
+.minimal-boot-graphic-wrap::after {
+  content: '';
+  position: absolute;
+  top: -20%;
+  left: -120%;
+  width: 70%;
+  height: 140%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.45) 50%,
+    transparent 100%
+  );
+  transform: rotate(25deg);
+  animation: minimalShimmerSweep 1.8s infinite cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+@keyframes minimalShimmerSweep {
+  0% { left: -120%; }
+  55%, 100% { left: 160%; }
+}
+
+.minimal-boot-img {
+  width: 320px;
+  max-width: 82vw;
   height: auto;
   display: block;
   object-fit: contain;
+  /* Gentle breathing scale animation */
+  animation: minimalEmblemBreathe 2.4s ease-in-out infinite alternate;
 }
 
-/* Glowing Neon Laser Scanning Sweep */
-.boot-laser-scanner {
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, transparent 0%, rgba(82, 183, 136, 0.8) 25%, #52B788 50%, rgba(82, 183, 136, 0.8) 75%, transparent 100%);
-  box-shadow: 
-    0 0 12px #52B788,
-    0 0 24px rgba(82, 183, 136, 0.6);
-  pointer-events: none;
-  animation: laserScan 2s ease-in-out infinite alternate;
-  z-index: 4;
+@keyframes minimalEmblemBreathe {
+  0% { transform: scale(0.99); }
+  100% { transform: scale(1.015); }
 }
 
-@keyframes laserScan {
-  0% { top: 4%; opacity: 0.3; }
-  20% { opacity: 1; }
-  80% { opacity: 1; }
-  100% { top: 94%; opacity: 0.3; }
-}
-
-/* 7 Security Pillars Status LEDs */
-.boot-pillars-indicator {
-  display: flex;
-  gap: 8px;
-  margin-top: 14px;
-  position: relative;
-  z-index: 5;
-}
-
-.pillar-led {
-  width: 12px;
-  height: 5px;
-  border-radius: 2px;
-  background: rgba(65, 90, 119, 0.3);
-  border: 1px solid rgba(212, 196, 168, 0.2);
-  transition: all 0.25s ease;
-}
-
-.pillar-led.active {
-  background: #52B788;
-  border-color: #52B788;
-  box-shadow: 0 0 8px #52B788;
-  transform: scaleY(1.3);
-}
-
-/* Terminal Log Diagnostics Card */
-.boot-terminal-card {
-  width: 100%;
-  background: rgba(8, 16, 26, 0.88);
-  border: 1px solid rgba(65, 90, 119, 0.4);
-  border-radius: 12px;
-  padding: 12px 16px;
-  box-shadow: 
-    inset 0 2px 6px rgba(0, 0, 0, 0.7),
-    0 8px 24px rgba(0, 0, 0, 0.4);
-  margin-bottom: 18px;
-  backdrop-filter: blur(8px);
-}
-
-.boot-terminal-header {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid rgba(65, 90, 119, 0.3);
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 11px;
-  color: #778D7A;
-}
-
-.terminal-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-}
-.terminal-dot.red { background: #E63946; }
-.terminal-dot.yellow { background: #FFB703; }
-.terminal-dot.green { background: #52B788; }
-
-.terminal-title {
-  margin-left: 4px;
-  font-weight: 600;
-  color: #D4C4A8;
-}
-
-.terminal-mem {
-  margin-left: auto;
-  color: #415A77;
-  font-size: 10px;
-}
-
-.boot-log-stream {
-  min-height: 96px;
-  max-height: 96px;
-  overflow-y: hidden;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 11.5px;
-  line-height: 1.5;
-  color: #F4F1DE;
+/* Minimal hairline loading bar */
+.minimal-boot-loader {
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
-  padding-top: 6px;
-}
-
-.log-entry {
-  display: flex;
-  gap: 8px;
-  opacity: 0;
-  transform: translateY(4px);
-  animation: logSlide 0.15s forwards ease-out;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-@keyframes logSlide {
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.log-entry .log-tag {
-  color: #778D7A;
-  font-weight: 700;
-  flex-shrink: 0;
-}
-
-.log-entry .log-msg {
-  color: #D4C4A8;
-}
-
-.log-entry.success .log-msg {
-  color: #F4F1DE;
-}
-
-.log-entry.ready-line {
-  color: #52B788;
-  font-weight: 700;
-}
-
-/* Precision Progress Bar */
-.boot-progress-wrap {
-  width: 100%;
-}
-
-.boot-progress-meta {
-  display: flex;
-  justify-content: space-between;
   align-items: center;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 11px;
-  margin-bottom: 6px;
-  color: #D4C4A8;
+  gap: 8px;
+  margin-top: 4px;
 }
 
-.boot-status-label {
-  letter-spacing: 0.05em;
-  color: #778D7A;
-}
-
-.boot-percent-label {
-  font-weight: 700;
-  color: #F4F1DE;
-}
-
-.boot-progress-track {
-  width: 100%;
-  height: 8px;
-  background: rgba(13, 27, 42, 0.95);
-  border: 1px solid rgba(65, 90, 119, 0.4);
+.minimal-boot-bar {
+  width: 140px;
+  height: 3px;
+  background: rgba(65, 90, 119, 0.16);
   border-radius: 99px;
   overflow: hidden;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.8);
   position: relative;
+  box-shadow: inset 0 1px 2px rgba(13, 27, 42, 0.08);
 }
 
-.boot-progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #415A77 0%, #778D7A 60%, #52B788 100%);
-  border-radius: 99px;
-  transition: width 0.18s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 0 10px rgba(82, 183, 136, 0.5);
-  position: relative;
-}
-
-.boot-progress-glint {
+.minimal-boot-progress {
   position: absolute;
-  right: 0;
   top: 0;
   bottom: 0;
-  width: 20px;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.7));
+  left: 0;
+  width: 0%;
+  background: linear-gradient(90deg, #415A77 0%, #778D7A 60%, #52B788 100%);
   border-radius: 99px;
-  animation: glintPulse 1s infinite alternate;
+  box-shadow: 0 0 6px rgba(82, 183, 136, 0.4);
+  transition: width 0.15s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@keyframes glintPulse {
-  0% { opacity: 0.3; }
-  100% { opacity: 1; }
-}
-
-/* Bottom HUD Footer */
-.boot-hud-bottom {
-  position: relative;
-  z-index: 10;
-  width: 100%;
-  max-width: 900px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 10.5px;
-  color: #415A77;
-  letter-spacing: 0.05em;
-  padding-top: 12px;
-  border-top: 1px solid rgba(65, 90, 119, 0.2);
-}
-
-.boot-version-hash {
-  color: #778D7A;
-}
-
-/* Interactive Topbar Reboot Button */
+/* Topbar system status / replay button */
 .system-reboot-btn {
   display: inline-flex;
   align-items: center;
@@ -3118,7 +2778,7 @@ textarea:focus { border-color: rgba(65, 90, 119, 0.5); box-shadow: var(--nm-inse
   border-radius: 99px;
   font-size: 11px;
   font-weight: 700;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   background: #EDF2EE;
   color: #2B4530;
   border: 1px solid #778D7A;
@@ -3135,14 +2795,6 @@ textarea:focus { border-color: rgba(65, 90, 119, 0.5); box-shadow: var(--nm-inse
 .system-reboot-btn:active {
   transform: translateY(1px);
   box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.15);
-}
-
-@media (max-width: 600px) {
-  .boot-overlay { padding: 16px 18px; }
-  .boot-hud-bottom { font-size: 9px; flex-direction: column; gap: 4px; text-align: center; }
-  .boot-shield-frame { width: 240px; }
-  .boot-terminal-card { padding: 10px 12px; }
-  .boot-log-stream { min-height: 80px; font-size: 10.5px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

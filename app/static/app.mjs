@@ -2245,121 +2245,25 @@ function initThreatMeshCursor() {
 initThreatMeshCursor();
 
 /* =====================================================================
-   TRUST CARD CYBERNETIC OS BOOT SEQUENCE
+   MINIMAL TRUST CARD BOOT / LOADING ANIMATION
    ===================================================================== */
 function initBootSequence() {
   const overlay = document.querySelector('#system-boot-overlay');
   if (!overlay) return;
 
-  const logStream = document.querySelector('#boot-log-stream');
   const progressBar = document.querySelector('#boot-progress-bar');
-  const percentLabel = document.querySelector('#boot-percent-label');
-  const statusLabel = document.querySelector('#boot-status-label');
-  const memCounter = document.querySelector('#boot-mem-counter');
-  const skipBtn = document.querySelector('#boot-skip-btn');
-  const soundToggle = document.querySelector('#boot-sound-toggle');
-  const soundLabel = document.querySelector('#boot-sound-label');
   const rebootBtn = document.querySelector('#reboot-system-btn');
   const brandEmblem = document.querySelector('.brand-mark');
-  const pillarLeds = document.querySelectorAll('.pillar-led');
 
-  // Web Audio Synthesizer for authentic cyber telemetry audio
-  class CyberAudio {
-    constructor() {
-      this.ctx = null;
-      this.enabled = false;
-    }
-    init() {
-      if (!this.ctx && typeof window !== 'undefined') {
-        const AudioCtx = window.AudioContext || window.webkitAudioContext;
-        if (AudioCtx) this.ctx = new AudioCtx();
-      }
-      if (this.ctx && this.ctx.state === 'suspended') {
-        this.ctx.resume();
-      }
-    }
-    chirp(freq = 920, dur = 0.035, type = 'sine') {
-      if (!this.enabled || !this.ctx) return;
-      try {
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = type;
-        osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(Math.max(200, freq * 0.5), this.ctx.currentTime + dur);
-        gain.gain.setValueAtTime(0.04, this.ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + dur);
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-        osc.start();
-        osc.stop(this.ctx.currentTime + dur);
-      } catch {
-        /* audio failure graceful no-op */
-      }
-    }
-    successChord() {
-      if (!this.enabled || !this.ctx) return;
-      const notes = [523.25, 659.25, 783.99, 1046.50];
-      notes.forEach((freq, idx) => {
-        setTimeout(() => this.chirp(freq, 0.28, 'triangle'), idx * 55);
-      });
-    }
-  }
-
-  const cyberAudio = new CyberAudio();
-
-  const BOOT_STEPS = [
-    { tag: '[SYS_INIT]', msg: 'Initializing hardware enclave & PRNG entropy...', pct: 15, pillar: 1, mem: '2.1 MB' },
-    { tag: '[PRIVACY]', msg: 'Zero-knowledge browser isolation sandbox armed.', pct: 32, pillar: 2, mem: '4.8 MB' },
-    { tag: '[CRYPTO]', msg: 'Verification engines online (P-384, Ed25519, RSA).', pct: 48, pillar: 3, mem: '7.3 MB' },
-    { tag: '[INTEL_FEEDS]', msg: 'Loaded feeds: PhishTank · URLhaus · OpenPhish.', pct: 66, pillar: 4, mem: '9.9 MB' },
-    { tag: '[HEURISTICS]', msg: 'Neural brand lookalike & IDN homoglyph filter.', pct: 82, pillar: 5, mem: '11.4 MB' },
-    { tag: '[CT_MONITOR]', msg: 'Certificate Transparency log surveillance active.', pct: 94, pillar: 6, mem: '12.8 MB' },
-    { tag: '[READY]', msg: '>>> ALL 7 DEFENSE PILLARS ARMED · SYSTEM SECURE <<<', pct: 100, pillar: 7, mem: '12.8 MB', ready: true },
-  ];
-
-  let currentStepIdx = 0;
-  let timerId = null;
   let isBooting = false;
+  let timerId = null;
 
-  function setPillarCount(count) {
-    pillarLeds.forEach((led, idx) => {
-      if (idx < count) led.classList.add('active');
-      else led.classList.remove('active');
-    });
-  }
-
-  function appendLogEntry(tag, msg, isReady = false) {
-    if (!logStream) return;
-    const row = document.createElement('div');
-    row.className = `log-entry ${isReady ? 'ready-line' : 'success'}`;
-
-    const tagSpan = document.createElement('span');
-    tagSpan.className = 'log-tag';
-    tagSpan.textContent = tag;
-
-    const msgSpan = document.createElement('span');
-    msgSpan.className = 'log-msg';
-    msgSpan.textContent = msg;
-
-    row.append(tagSpan, msgSpan);
-    logStream.append(row);
-
-    // Keep scrolled to bottom
-    logStream.scrollTop = logStream.scrollHeight;
-  }
-
-  function completeBootImmediately() {
+  function dismissBoot() {
     if (!isBooting) return;
     isBooting = false;
     clearTimeout(timerId);
 
-    // Ensure 100% state
     if (progressBar) progressBar.style.width = '100%';
-    if (percentLabel) percentLabel.textContent = '100%';
-    if (statusLabel) statusLabel.textContent = 'SYSTEM ARMED · ACCESS GRANTED';
-    setPillarCount(7);
-    cyberAudio.successChord();
-
     overlay.classList.add('boot-completed');
     sessionStorage.setItem('tc_boot_completed', 'true');
     document.body.style.overflow = '';
@@ -2367,30 +2271,7 @@ function initBootSequence() {
     setTimeout(() => {
       overlay.hidden = true;
       input?.focus();
-    }, 600);
-  }
-
-  function advanceStep() {
-    if (!isBooting) return;
-    if (currentStepIdx >= BOOT_STEPS.length) {
-      completeBootImmediately();
-      return;
-    }
-
-    const step = BOOT_STEPS[currentStepIdx];
-    currentStepIdx++;
-
-    if (progressBar) progressBar.style.width = `${step.pct}%`;
-    if (percentLabel) percentLabel.textContent = `${step.pct}%`;
-    if (memCounter) memCounter.textContent = `ALLOC: ${step.mem}`;
-    if (statusLabel) statusLabel.textContent = step.ready ? 'SYSTEM ARMED · ACCESS GRANTED' : step.msg.toUpperCase();
-
-    setPillarCount(step.pillar);
-    appendLogEntry(step.tag, step.msg, Boolean(step.ready));
-    cyberAudio.chirp(700 + currentStepIdx * 70, 0.04);
-
-    const stepDelay = step.ready ? 450 : 260;
-    timerId = setTimeout(advanceStep, stepDelay);
+    }, 450);
   }
 
   function startBoot(force = false) {
@@ -2405,76 +2286,48 @@ function initBootSequence() {
     }
 
     isBooting = true;
-    currentStepIdx = 0;
     clearTimeout(timerId);
 
     overlay.hidden = false;
     overlay.classList.remove('boot-completed');
     document.body.style.overflow = 'hidden';
 
-    if (logStream) logStream.replaceChildren();
-    if (progressBar) progressBar.style.width = '0%';
-    if (percentLabel) percentLabel.textContent = '0%';
-    if (statusLabel) statusLabel.textContent = 'INITIALIZING HARDWARE ENCLAVE...';
-    if (memCounter) memCounter.textContent = 'ALLOC: 0.0 MB';
-    setPillarCount(0);
+    if (progressBar) {
+      progressBar.style.width = '0%';
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          if (progressBar && isBooting) progressBar.style.width = '55%';
+        }, 140);
+        setTimeout(() => {
+          if (progressBar && isBooting) progressBar.style.width = '88%';
+        }, 600);
+        setTimeout(() => {
+          if (progressBar && isBooting) progressBar.style.width = '100%';
+        }, 950);
+      });
+    }
 
-    // Initial greeting
-    appendLogEntry('[SYS_BOOT]', 'Trust Card Secure Cybernetic OS v2.4 Kernel Loaded.');
-
-    // Kickoff steps
-    timerId = setTimeout(advanceStep, 320);
+    // Dismiss seamlessly at 1.25s
+    timerId = setTimeout(dismissBoot, 1250);
   }
 
-  // Audio toggle
-  soundToggle?.addEventListener('click', (e) => {
-    e.stopPropagation();
-    cyberAudio.init();
-    cyberAudio.enabled = !cyberAudio.enabled;
-    if (soundLabel) {
-      soundLabel.textContent = cyberAudio.enabled ? '🔊 Audio: On' : '🔈 Audio: Off';
-    }
-    if (cyberAudio.enabled) {
-      cyberAudio.chirp(880, 0.08, 'triangle');
-    }
-  });
-
-  // Skip button & overlay dismiss
-  skipBtn?.addEventListener('click', (e) => {
-    e.stopPropagation();
-    completeBootImmediately();
-  });
-
-  overlay.addEventListener('click', (e) => {
-    // If clicking outside controls, skip immediately
-    if (e.target.closest('#boot-hud-controls') || e.target.closest('button')) return;
-    completeBootImmediately();
-  });
-
-  // Keybindings for instant skip (Escape, Space, Enter)
+  // Any click or keypress dismisses immediately
+  overlay.addEventListener('click', dismissBoot);
   window.addEventListener('keydown', (e) => {
-    if (!isBooting) return;
-    if (e.key === 'Escape' || e.key === ' ' || e.key === 'Enter') {
+    if (isBooting && (e.key === 'Escape' || e.key === ' ' || e.key === 'Enter')) {
       e.preventDefault();
-      completeBootImmediately();
+      dismissBoot();
     }
   });
 
-  // Replay Boot button in header
-  rebootBtn?.addEventListener('click', () => {
-    startBoot(true);
-  });
-
-  // Also allow clicking brand emblem to replay
+  rebootBtn?.addEventListener('click', () => startBoot(true));
   brandEmblem?.addEventListener('click', (e) => {
-    // If holding Alt/Option or click directly on logo image, replay boot
     if (e.altKey) {
       e.preventDefault();
       startBoot(true);
     }
   });
 
-  // Run on page launch
   startBoot(false);
 }
 

@@ -17,83 +17,17 @@
   <script type="module" src="/static/app.mjs"></script>
 </head>
 <body>
-  <!-- Trust Card Cybernetic OS Boot Sequence Overlay -->
-  <div id="system-boot-overlay" class="boot-overlay" role="dialog" aria-modal="true" aria-label="Trust Card OS Boot Initialization">
-    <div class="boot-grid-bg" aria-hidden="true"></div>
-    <div class="boot-scanlines" aria-hidden="true"></div>
-    <div class="boot-radial-vignette" aria-hidden="true"></div>
-
-    <div class="boot-hud-top">
-      <div class="boot-hud-badge">
-        <span class="boot-pulse-dot" aria-hidden="true"></span>
-        <span class="boot-hud-title">TRUST CARD SECURE OS // KERNEL v2.4</span>
+  <!-- Minimal Trust Card Boot / Loading Screen -->
+  <div id="system-boot-overlay" class="minimal-boot-overlay" role="status" aria-label="Loading Trust Card">
+    <div class="minimal-boot-content">
+      <div class="minimal-boot-graphic-wrap">
+        <img src="/static/boot-animation.png" alt="Trust Card" class="minimal-boot-img" width="320" height="auto">
       </div>
-      <div class="boot-hud-controls">
-        <button id="boot-sound-toggle" class="boot-ctrl-btn" type="button" aria-label="Toggle Boot Telemetry Audio">
-          <span id="boot-sound-label">🔈 Audio: Off</span>
-        </button>
-        <button id="boot-skip-btn" class="boot-skip-btn" type="button" aria-label="Skip Boot Animation">
-          <span>Skip Boot</span> <kbd>ESC</kbd>
-        </button>
-      </div>
-    </div>
-
-    <div class="boot-center-stage">
-      <div class="boot-shield-frame">
-        <div class="hud-corner hud-tl" aria-hidden="true"></div>
-        <div class="hud-corner hud-tr" aria-hidden="true"></div>
-        <div class="hud-corner hud-bl" aria-hidden="true"></div>
-        <div class="hud-corner hud-br" aria-hidden="true"></div>
-
-        <div class="boot-radar-sweep" aria-hidden="true"></div>
-        <div class="boot-halo-glow" aria-hidden="true"></div>
-
-        <div class="boot-image-container">
-          <img src="/static/boot-animation.png" alt="Trust Card Boot Sequence" class="boot-graphic" id="boot-graphic">
-          <div class="boot-laser-scanner" aria-hidden="true"></div>
-        </div>
-
-        <div class="boot-pillars-indicator" aria-hidden="true" title="7 Security Pillars">
-          <span class="pillar-led" data-pillar="1" title="Threat Intelligence"></span>
-          <span class="pillar-led" data-pillar="2" title="URL & Impersonation"></span>
-          <span class="pillar-led" data-pillar="3" title="Page Content"></span>
-          <span class="pillar-led" data-pillar="4" title="Certificate & Trust"></span>
-          <span class="pillar-led" data-pillar="5" title="Web Security"></span>
-          <span class="pillar-led" data-pillar="6" title="Community Intel"></span>
-          <span class="pillar-led" data-pillar="7" title="Message Context"></span>
+      <div class="minimal-boot-loader">
+        <div class="minimal-boot-bar">
+          <div id="boot-progress-bar" class="minimal-boot-progress"></div>
         </div>
       </div>
-
-      <div class="boot-terminal-card">
-        <div class="boot-terminal-header">
-          <span class="terminal-dot red" aria-hidden="true"></span>
-          <span class="terminal-dot yellow" aria-hidden="true"></span>
-          <span class="terminal-dot green" aria-hidden="true"></span>
-          <span class="terminal-title">tty0/boot-diagnostics</span>
-          <span class="terminal-mem" id="boot-mem-counter">ALLOC: 0.0 MB</span>
-        </div>
-        <div class="boot-log-stream" id="boot-log-stream" aria-live="polite">
-          <!-- Populated dynamically by boot loader -->
-        </div>
-      </div>
-
-      <div class="boot-progress-wrap">
-        <div class="boot-progress-meta">
-          <span id="boot-status-label" class="boot-status-label">INITIALIZING HARDWARE ENCLAVE...</span>
-          <span id="boot-percent-label" class="boot-percent-label">0%</span>
-        </div>
-        <div class="boot-progress-track" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
-          <div id="boot-progress-bar" class="boot-progress-fill" style="width: 0%;">
-            <span class="boot-progress-glint" aria-hidden="true"></span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="boot-hud-bottom">
-      <span>PRIVACY: LOCAL-FIRST · ZERO DATA EGRESS</span>
-      <span class="boot-version-hash">BUILD SHA-256: 7772DF1865E2</span>
-      <span>STANDALONE CYBERSECURITY ENGINE</span>
     </div>
   </div>
 
