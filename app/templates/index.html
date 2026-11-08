@@ -649,6 +649,60 @@
     </div>
   </dialog>
 
+  <!-- INTERACTIVE CURSOR EFFECT CONTROLLER -->
+  <aside class="cursor-switcher-widget" aria-label="Interactive Cursor Mode Switcher">
+    <button id="cursor-switcher-toggle" class="cursor-switcher-btn" type="button" aria-expanded="false" title="Switch Dynamic Cursor Effect">
+      <span class="cursor-switcher-icon" aria-hidden="true">✨</span>
+      <span class="cursor-switcher-label">Cursor: <strong id="cursor-active-label">Fluid Splash</strong></span>
+      <span class="cursor-switcher-chevron" aria-hidden="true">▾</span>
+    </button>
+    <div id="cursor-switcher-menu" class="cursor-switcher-menu" hidden>
+      <div class="cursor-menu-title">Dynamic Cursor Presets</div>
+      <button class="cursor-opt-btn active" data-cursor-mode="fluid" type="button">
+        <span class="cursor-opt-emoji">🌊</span>
+        <span class="cursor-opt-info">
+          <strong>Fluid Splash</strong>
+          <small>Viscous ribbons & 32-droplet splash bursts</small>
+        </span>
+      </button>
+      <button class="cursor-opt-btn" data-cursor-mode="radar" type="button">
+        <span class="cursor-opt-emoji">🎯</span>
+        <span class="cursor-opt-info">
+          <strong>Cyber Radar</strong>
+          <small>Sonar sweep, target reticle & EMP burst</small>
+        </span>
+      </button>
+      <button class="cursor-opt-btn" data-cursor-mode="mesh" type="button">
+        <span class="cursor-opt-emoji">🌐</span>
+        <span class="cursor-opt-info">
+          <strong>Threat Network Mesh</strong>
+          <small>Neural nodes & dynamic data connections</small>
+        </span>
+      </button>
+      <button class="cursor-opt-btn" data-cursor-mode="mercury" type="button">
+        <span class="cursor-opt-emoji">💧</span>
+        <span class="cursor-opt-info">
+          <strong>Liquid Mercury</strong>
+          <small>Viscous ferrofluid with magnetic snap</small>
+        </span>
+      </button>
+      <button class="cursor-opt-btn" data-cursor-mode="arc" type="button">
+        <span class="cursor-opt-emoji">⚡</span>
+        <span class="cursor-opt-info">
+          <strong>Electric Plasma Arc</strong>
+          <small>Branching ionic sparks & lightning discharge</small>
+        </span>
+      </button>
+      <button class="cursor-opt-btn" data-cursor-mode="classic" type="button">
+        <span class="cursor-opt-emoji">🔘</span>
+        <span class="cursor-opt-info">
+          <strong>Minimal Pointer</strong>
+          <small>Clean, non-distracting precision dot</small>
+        </span>
+      </button>
+    </div>
+  </aside>
+
   <!-- MOUSE SPLASH / FLUID SIMULATION CURSOR CANVAS -->
   <canvas id="fluid-cursor-canvas" class="fluid-cursor-canvas" aria-hidden="true"></canvas>
 </body>
