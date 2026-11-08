@@ -22,6 +22,7 @@ from app.feeds import refresh_feed
 from app.scanner_client import configured_feed_fetcher, configured_scanner
 from app.storage import create_report, find_reports, get_feed_status, init_db, list_reports, lookup_feed_matches, review_report
 from app.urls import canonicalize_url, host_from_url, indicator_fingerprint, url_hash
+from app.url_analysis import analyze_url
 from app.verdict import decide_verdict
 
 BASE_DIR = Path(__file__).parent
@@ -139,6 +140,7 @@ def _local_result(db_path: Path, request: AnalyzeRequest) -> dict:
     matches = lookup_feed_matches(db_path, url_hash(request.url))
     reports = find_reports(db_path, indicator_fingerprint(request.url), host)
     findings = _context_findings(request.context_flags)
+    findings.extend(analyze_url(request.url))
 
     for match in matches:
         source_display = (
