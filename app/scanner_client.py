@@ -11,8 +11,8 @@ import urllib.request
 def make_scanner_client(base_url: str, token: str):
     endpoint = base_url.rstrip("/") + "/scan"
 
-    def scan(url: str) -> dict:
-        body = json.dumps({"url": url}).encode()
+    def scan(url: str, ct_rdap_consent: bool = False) -> dict:
+        body = json.dumps({"url": url, "ct_rdap_consent": ct_rdap_consent}).encode()
         request = urllib.request.Request(
             endpoint,
             data=body,

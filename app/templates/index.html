@@ -132,6 +132,15 @@
       <section class="consent-list will-list"><h3>What the scanner will do</h3><ul><li>Make one read-only GET request to the URL above using its HTTP or HTTPS scheme on port 80 or 443.</li><li>If it redirects, make up to five more GET requests to public destinations — six GET requests total.</li><li>Finish within 20 seconds. Read response headers and up to 2 MiB of HTML for static password-form checks.</li></ul></section>
       <section class="consent-list wont-list"><h3>What it will not do</h3><ul><li>Try alternate schemes, <code>www</code>, or guessed URL variants.</li><li>Run page scripts, submit forms, or send the URL to reputation providers.</li></ul></section>
     </div>
+    <div class="consent-optional-section">
+      <label class="consent-checkbox-label">
+        <input type="checkbox" id="consent-ct-rdap" name="consent-ct-rdap">
+        <span>
+          <strong>Include third-party Certificate Transparency and domain age lookups</strong>
+          <small>Optional: Queries <code>crt.sh</code> for certificate log history and <code>rdap.org</code> for domain registration age. Sends the <em>hostname only</em> (never the path or query parameters). Unchecked by default.</small>
+        </span>
+      </label>
+    </div>
     <div class="consent-actions">
       <button id="decline-scan" class="button button-secondary" type="button">Not now</button>
       <button id="approve-scan" class="button button-primary" type="button">Allow this check</button>

@@ -41,6 +41,7 @@ class AnalyzeRequest(BaseModel):
     url: str = Field(min_length=8, max_length=2048)
     mode: Literal["local", "full_scan"]
     consent: bool = False
+    ct_rdap_consent: bool = False
     context_flags: list[ContextFlag] = Field(default_factory=list, max_length=4)
 
     @field_validator("url")
@@ -283,7 +284,16 @@ def create_app(
             scan = {"complete": False, "findings": [], "redirect_hosts": [], "error": "scanner_unavailable"}
         else:
             try:
-                scan = await run_in_threadpool(app.state.scanner_call, payload.url)
+                import inspect
+                scanner_fn = app.state.scanner_call
+                try:
+                    sig = inspect.signature(scanner_fn)
+                    if "ct_rdap_consent" in sig.parameters:
+                        scan = await run_in_threadpool(scanner_fn, payload.url, ct_rdap_consent=payload.ct_rdap_consent)
+                    else:
+                        scan = await run_in_threadpool(scanner_fn, payload.url)
+                except Exception:
+                    scan = await run_in_threadpool(scanner_fn, payload.url)
             except Exception:
                 scan = {"complete": False, "findings": [], "redirect_hosts": [], "error": "scan_failed"}
 

@@ -89,6 +89,7 @@ class Handler(BaseHTTPRequestHandler):
                 raise ValueError
             payload = json.loads(self.rfile.read(size))
             url = payload.get("url") if isinstance(payload, dict) else None
+            ct_rdap_consent = bool(payload.get("ct_rdap_consent", False)) if isinstance(payload, dict) else False
             if not isinstance(url, str) or len(url) > 2048:
                 raise ValueError
         except (ValueError, json.JSONDecodeError):
@@ -98,7 +99,7 @@ class Handler(BaseHTTPRequestHandler):
             self._respond(429, {"error": "scanner_busy"})
             return
         try:
-            self._respond(200, scan_url(url))
+            self._respond(200, scan_url(url, ct_rdap_consent=ct_rdap_consent))
         except Exception:
             self._respond(500, {"complete": False, "findings": [], "redirect_hosts": [], "error": "scan_failed"})
         finally:

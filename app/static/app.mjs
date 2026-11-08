@@ -74,8 +74,9 @@ for (const chip of document.querySelectorAll('.example-chip')) {
 }
 
 document.querySelector('#approve-scan').addEventListener('click', async () => {
+  const ctRdapConsent = Boolean(document.querySelector('#consent-ct-rdap')?.checked);
   scanDialog.close();
-  await analyze('full_scan', true);
+  await analyze('full_scan', true, ctRdapConsent);
 });
 document.querySelector('#decline-scan').addEventListener('click', declineLiveScan);
 document.querySelector('[data-close-dialog="scan-consent"]').addEventListener('click', declineLiveScan);
@@ -167,7 +168,7 @@ function declineLiveScan() {
   if (currentResult) renderResult(currentResult);
 }
 
-async function analyze(mode, consent) {
+async function analyze(mode, consent, ctRdapConsent = false) {
   input.disabled = true;
   findButton.disabled = true;
   clearButton.disabled = true;
@@ -180,7 +181,7 @@ async function analyze(mode, consent) {
     const response = await fetch('/api/v1/analyze', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(buildAnalyzeRequest(selectedUrl, mode, consent, selectedFlags)),
+      body: JSON.stringify(buildAnalyzeRequest(selectedUrl, mode, consent, selectedFlags, ctRdapConsent)),
     });
     const data = await response.json();
     if (!response.ok) throw new Error(apiError(data, 'The link could not be checked.'));
@@ -350,6 +351,41 @@ function renderResult(data) {
   details.append(evidence, next);
   card.append(details);
 
+  if (data.certificate) {
+    const certBlock = document.createElement('details');
+    certBlock.className = 'cert-details-block';
+    const certSummary = document.createElement('summary');
+    certSummary.className = 'cert-details-summary';
+    certSummary.textContent = 'Certificate details';
+    const certGrid = document.createElement('div');
+    certGrid.className = 'cert-grid';
+
+    const fields = [
+      ['Subject', data.certificate.subject],
+      ['Issuer', data.certificate.issuer],
+      ['SANs', Array.isArray(data.certificate.sans) && data.certificate.sans.length ? data.certificate.sans.join(', ') : 'None'],
+      ['Valid from', formatDate(data.certificate.valid_from)],
+      ['Valid to', formatDate(data.certificate.valid_to)],
+      ['Key', `${data.certificate.key_type || 'Unknown'} (${data.certificate.key_size || 0} bits)`],
+      ['Signature algorithm', data.certificate.signature_algorithm || 'Unknown'],
+      ['SCT count', `${data.certificate.sct_count || 0} embedded timestamp(s)`],
+    ];
+    for (const [label, val] of fields) {
+      const row = document.createElement('div');
+      row.className = 'cert-field';
+      const k = document.createElement('span');
+      k.className = 'cert-field-name';
+      k.textContent = label;
+      const v = document.createElement('span');
+      v.className = 'cert-field-val';
+      v.textContent = val || 'None';
+      row.append(k, v);
+      certGrid.append(row);
+    }
+    certBlock.append(certSummary, certGrid);
+    card.append(certBlock);
+  }
+
   if (resultNotice) {
     const notice = document.createElement('p');
     notice.className = 'notice';
@@ -363,6 +399,8 @@ function renderResult(data) {
   if (data.coverage === 'local_only' || (data.scan_error && data.scan_error !== 'scanner_unavailable')) {
     actions.append(makeButton('Run optional live check', 'button button-primary', () => {
       document.querySelector('#consent-host').textContent = selectedUrl;
+      const cb = document.querySelector('#consent-ct-rdap');
+      if (cb) cb.checked = false;
       scanDialog.showModal();
     }));
   }

@@ -15,6 +15,8 @@ from html.parser import HTMLParser
 from urllib.parse import urljoin, urlsplit
 
 from app.urls import canonicalize_url
+from scanner.certs import analyze_certificate_der
+from scanner.ct_rdap import lookup_ct_logs, lookup_domain_age_rdap
 
 MAX_REDIRECTS = 5
 MAX_HTML_BYTES = 2 * 1024 * 1024
@@ -318,18 +320,28 @@ def _connect_pinned(url: str, addresses: list[str], timeout: float, deadline: fl
                     sock = _wrap_tls_with_deadline(sock, parts.hostname or "", deadline)
                     certificate = sock.getpeercert()
                     findings = []
-                    expires = certificate.get("notAfter")
-                    if expires:
-                        expires_at = datetime.fromtimestamp(ssl.cert_time_to_seconds(expires), timezone.utc)
-                        if (expires_at - datetime.now(timezone.utc)).total_seconds() < 14 * 86400:
-                            findings.append({
-                                "category": "certificate",
-                                "severity": "low",
-                                "summary": "The TLS certificate expires within 14 days.",
-                                "source": "Live TLS validation",
-                                "observed_at": datetime.now(timezone.utc).isoformat(),
-                                "group": "tls",
-                            })
+                    cert_der = None
+                    try:
+                        cert_der = sock.getpeercert(binary_form=True)
+                    except Exception:
+                        pass
+                    if cert_der:
+                        cert_details, cert_findings = analyze_certificate_der(cert_der, parts.hostname or "")
+                        findings.extend(cert_findings)
+                        findings.append({"_cert_details": cert_details})
+                    else:
+                        expires = certificate.get("notAfter")
+                        if expires:
+                            expires_at = datetime.fromtimestamp(ssl.cert_time_to_seconds(expires), timezone.utc)
+                            if (expires_at - datetime.now(timezone.utc)).total_seconds() < 14 * 86400:
+                                findings.append({
+                                    "category": "certificate",
+                                    "severity": "low",
+                                    "summary": "The TLS certificate expires within 14 days.",
+                                    "source": "Live TLS validation",
+                                    "observed_at": datetime.now(timezone.utc).isoformat(),
+                                    "group": "tls",
+                                })
                     return sock, findings
                 except ssl.SSLCertVerificationError as exc:
                     sock.close()
@@ -353,6 +365,8 @@ def _connect_pinned(url: str, addresses: list[str], timeout: float, deadline: fl
                     # Non-verifying inspection handshake: read the certificate
                     # without trusting it, for deeper analysis. No HTTP request
                     # is sent over this connection.
+                    cert_findings_extra = []
+                    cert_details = None
                     try:
                         remaining = deadline - time.monotonic()
                         if remaining > 0.5:
@@ -367,14 +381,17 @@ def _connect_pinned(url: str, addresses: list[str], timeout: float, deadline: fl
                                     inspect_sock, server_hostname=parts.hostname or ""
                                 )
                                 cert_der = inspect_ssl.getpeercert(binary_form=True)
-                                if cert_der:
-                                    finding["_cert_der"] = cert_der
                                 inspect_ssl.close()
+                                if cert_der:
+                                    cert_details, cert_findings_extra = analyze_certificate_der(cert_der, parts.hostname or "")
                             except Exception:
                                 inspect_sock.close()
                     except Exception:
                         pass
-                    return None, [finding]
+                    res_findings = [finding] + [f for f in cert_findings_extra if f.get("id") != "cert-hostname-mismatch"]
+                    if cert_details:
+                        res_findings.append({"_cert_details": cert_details})
+                    return None, res_findings
             return sock, []
         except OSError as exc:
             last_error = exc
@@ -435,7 +452,7 @@ def _request_pinned(url: str, addresses: list[str], timeout: float, deadline: fl
         connection.close()
 
 
-def scan_url(value: str) -> dict:
+def scan_url(value: str, ct_rdap_consent: bool = False) -> dict:
     """Perform at most six read-only GETs; never execute page code or submit forms."""
     started = time.monotonic()
     try:
@@ -448,6 +465,7 @@ def scan_url(value: str) -> dict:
     redirect_count = 0
     page_body = b""
     content_type = ""
+    cert_details = None
     while True:
         remaining = MAX_SCAN_SECONDS - (time.monotonic() - started)
         if remaining <= 0:
@@ -478,7 +496,17 @@ def scan_url(value: str) -> dict:
             return {"complete": False, "findings": findings, "redirect_hosts": redirect_hosts, "error": "site_unreachable"}
 
         if response is None:
-            return {"complete": True, "findings": findings, "redirect_hosts": redirect_hosts, "coverage": "partial"}
+            clean_findings = [f for f in findings if "_cert_details" not in f]
+            for f in findings:
+                if "_cert_details" in f:
+                    cert_details = f["_cert_details"]
+            return {
+                "complete": True,
+                "findings": clean_findings,
+                "redirect_hosts": redirect_hosts,
+                "coverage": "partial",
+                "certificate": cert_details,
+            }
         status, headers = response
         location = headers.get("location")
         if status in {301, 302, 303, 307, 308} and location:
@@ -573,9 +601,29 @@ def scan_url(value: str) -> dict:
             "observed_at": datetime.now(timezone.utc).isoformat(),
             "group": "technical",
         })
+    clean_findings = []
+    for item in findings:
+        if "_cert_details" in item:
+            cert_details = item["_cert_details"]
+        else:
+            clean_findings.append(item)
+    findings = clean_findings
+
+    target_hostname = urlsplit(current).hostname or ""
+    skipped_lookups = []
+    if ct_rdap_consent and target_hostname:
+        ct_findings = lookup_ct_logs(target_hostname)
+        rdap_findings = lookup_domain_age_rdap(target_hostname)
+        findings.extend(ct_findings)
+        findings.extend(rdap_findings)
+    else:
+        skipped_lookups.append("Third-party CT log and RDAP lookups were skipped (requires optional consent).")
+
     return {
         "complete": True,
         "findings": findings,
         "redirect_hosts": redirect_hosts,
         "coverage": page_coverage,
+        "certificate": cert_details,
+        "skipped_lookups": skipped_lookups,
     }

@@ -44,8 +44,12 @@ export function chooseLink(links, selectedUrl) {
   return Array.isArray(links) && links.includes(selectedUrl) ? selectedUrl : null;
 }
 
-export function buildAnalyzeRequest(url, mode, consent, contextFlags) {
-  return { url, mode, consent, context_flags: contextFlags };
+export function buildAnalyzeRequest(url, mode, consent, contextFlags, ctRdapConsent = false) {
+  const req = { url, mode, consent, context_flags: contextFlags };
+  if (ctRdapConsent) {
+    req.ct_rdap_consent = true;
+  }
+  return req;
 }
 
 export function detectContextFlags(text) {
