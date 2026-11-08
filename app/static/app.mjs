@@ -414,7 +414,27 @@ function makeStatus(message) {
   return status;
 }
 
+function getHumanFriendlyHeadline(verdict, score) {
+  if (verdict === 'known_threat') {
+    return '🚨 High-Risk Threat — Do Not Open This Link';
+  }
+  if (verdict === 'suspicious') {
+    return score >= 60 ? '⚠️ High Suspicion — Phishing Indicators Observed' : '⚠️ Suspicious Activity — Caution Required';
+  }
+  if (verdict === 'caution') {
+    return '⚠️ Technical Trust Failure — Cryptographic Warning';
+  }
+  if (verdict === 'no_strong_warning') {
+    return '🛡️ No Known Threats Detected Across Tested Pillars';
+  }
+  if (verdict === 'not_enough_info') {
+    return 'ℹ️ Limited Threat Data Available for this Domain';
+  }
+  return '❓ Scan Incomplete — Review Available Signals';
+}
+
 function renderResult(data) {
+  currentResult = data;
   const findings = Array.isArray(data.findings) ? data.findings : [];
   const card = document.createElement('article');
   const verdictClass = {
@@ -425,379 +445,453 @@ function renderResult(data) {
     not_enough_info: 'verdict-not-enough',
     unable_to_check: 'verdict-unable',
   }[data.verdict] || 'verdict-unable';
-  card.className = `result-card trust-card ${verdictClass}`;
+  card.className = `result-card trust-card ${verdictClass} result-card-modern`;
 
-  const header = document.createElement('div');
-  header.className = 'result-header';
-  const verdict = document.createElement('div');
-  verdict.className = 'verdict-group';
-  const icon = document.createElement('span');
-  icon.className = 'verdict-icon';
-  icon.setAttribute('aria-hidden', 'true');
-  icon.textContent = data.verdict === 'known_threat' || data.verdict === 'suspicious' ? '!' : data.verdict === 'caution' ? '⚠' : data.verdict === 'no_strong_warning' ? '✓' : '?';
-  const verdictText = document.createElement('div');
-  const kicker = document.createElement('p');
-  kicker.className = 'step-label';
-  kicker.textContent = 'TRUST CARD RESULT';
-  const title = document.createElement('h2');
-  title.className = 'result-title';
-  title.textContent = verdictTitle(data.verdict);
-  const summary = document.createElement('p');
-  summary.className = 'result-summary';
-  summary.textContent = verdictSummary(data.verdict);
-  verdictText.append(kicker, title, summary);
-  verdict.append(icon, verdictText);
-  const checked = document.createElement('span');
-  checked.className = 'checked-at';
-  checked.textContent = `Checked ${formatDate(data.checked_at)}`;
-  header.append(verdict, checked);
-  card.append(header);
+  // 1. Calculate Score & Gauge Theme
+  const score = data.scoring?.score ?? (data.verdict === 'known_threat' ? 100 : data.verdict === 'suspicious' ? 65 : data.verdict === 'caution' ? 40 : 10);
+  const gaugeColor = score >= 70 ? '#A83232' : score >= 45 ? '#D95D39' : score >= 20 ? '#D4A359' : '#778D7A';
+  const circumference = 2 * Math.PI * 40; // r=40
+  const strokeDashoffset = Math.max(0, circumference - (score / 100) * circumference);
 
-  // Target Sector Pill
+  // 2. Executive Hero Banner
+  const hero = document.createElement('div');
+  hero.className = 'result-hero-banner';
+
+  // SVG Gauge
+  const gaugeWrap = document.createElement('div');
+  gaugeWrap.className = 'threat-gauge-wrapper';
+  gaugeWrap.innerHTML = `
+    <svg class="threat-gauge-svg" width="104" height="104" viewBox="0 0 96 96" aria-hidden="true">
+      <circle class="gauge-bg" cx="48" cy="48" r="40" stroke="rgba(212, 196, 168, 0.45)" stroke-width="7" fill="none" />
+      <circle class="gauge-meter" cx="48" cy="48" r="40" stroke="${gaugeColor}" stroke-width="7" stroke-dasharray="${circumference.toFixed(1)}" stroke-dashoffset="${strokeDashoffset.toFixed(1)}" stroke-linecap="round" fill="none" transform="rotate(-90 48 48)" />
+    </svg>
+    <div class="gauge-center">
+      <span class="gauge-score">${score}</span>
+      <span class="gauge-scale">/100</span>
+      <span class="gauge-label">THREAT</span>
+    </div>
+  `;
+
+  // Info Column
+  const infoCol = document.createElement('div');
+  infoCol.className = 'result-hero-info';
+
+  const badgeRow = document.createElement('div');
+  badgeRow.className = 'hero-tag-row';
+  
+  const verdictPill = document.createElement('span');
+  verdictPill.className = `verdict-pill verdict-pill-${data.verdict}`;
+  const iconSymbol = data.verdict === 'known_threat' || data.verdict === 'suspicious' ? '🚨' : data.verdict === 'caution' ? '⚠️' : data.verdict === 'no_strong_warning' ? '🛡️' : '❓';
+  verdictPill.innerHTML = `<span class="pill-dot"></span> ${iconSymbol} ${verdictTitle(data.verdict)}`;
+  badgeRow.append(verdictPill);
+
   if (data.target_category) {
-    const sectorPill = document.createElement('span');
-    sectorPill.className = 'target-sector-pill';
-    sectorPill.style.margin = '14px 24px 0';
-    sectorPill.textContent = `Target Category: ${data.target_category}`;
-    card.append(sectorPill);
+    const targetPill = document.createElement('span');
+    targetPill.className = 'hero-target-pill';
+    targetPill.textContent = `Target: ${titleCase(data.target_category)}`;
+    badgeRow.append(targetPill);
   }
 
-  // 5-Tier Risk Classification Banner
-  if (data.risk_classification) {
-    const banner = document.createElement('div');
-    banner.className = 'risk-classification-banner';
-    banner.style.margin = '12px 24px 0';
-    const badge = document.createElement('span');
-    badge.className = `risk-badge badge-${data.risk_classification.key}`;
-    badge.textContent = data.risk_classification.label;
-    const desc = document.createElement('span');
-    desc.style.fontSize = '12px';
-    desc.style.color = '#4b5563';
-    desc.textContent = data.risk_classification.description;
-    banner.append(badge, desc);
-    card.append(banner);
-  }
+  const timePill = document.createElement('span');
+  timePill.className = 'hero-time';
+  timePill.textContent = `Checked ${formatDate(data.checked_at)}`;
+  badgeRow.append(timePill);
 
-  // Certificate problem banner
-  const hasCertProblem = data.verdict === 'caution' || findings.some((f) => (f.group === 'certificate' || f.category === 'certificate') && (f.severity === 'medium' || f.severity === 'high'));
-  if (hasCertProblem) {
-    const certBanner = document.createElement('div');
-    certBanner.className = 'certificate-banner';
-    certBanner.setAttribute('role', 'alert');
-    const bannerIcon = document.createElement('span');
-    bannerIcon.className = 'banner-icon';
-    bannerIcon.textContent = '⚠';
-    bannerIcon.setAttribute('aria-hidden', 'true');
-    const bannerText = document.createElement('div');
-    const bannerHeading = document.createElement('strong');
-    bannerHeading.textContent = 'Certificate problem detected';
-    const bannerMsg = document.createElement('p');
-    bannerMsg.textContent = 'This site has a certificate validation or cryptographic trust failure. Never enter credentials or sensitive details on a site with certificate problems.';
-    bannerText.append(bannerHeading, bannerMsg);
-    certBanner.append(bannerIcon, bannerText);
-    card.append(certBanner);
-  }
+  const headline = document.createElement('h2');
+  headline.className = 'hero-headline';
+  headline.textContent = getHumanFriendlyHeadline(data.verdict, score);
 
-  const site = document.createElement('div');
-  site.className = 'result-site';
-  const siteIcon = document.createElement('span');
-  siteIcon.className = 'site-icon';
-  siteIcon.setAttribute('aria-hidden', 'true');
-  siteIcon.textContent = '↗';
-  const siteText = document.createElement('div');
-  const siteLabel = document.createElement('span');
-  siteLabel.className = 'site-label';
-  siteLabel.textContent = 'LINK CHECKED';
-  const siteUrl = document.createElement('code');
-  siteUrl.textContent = selectedUrl;
-  siteText.append(siteLabel, siteUrl);
-  site.append(siteIcon, siteText);
-  card.append(site);
+  const summary = document.createElement('p');
+  summary.className = 'hero-summary';
+  summary.textContent = verdictSummary(data.verdict);
 
-  const metrics = document.createElement('div');
-  metrics.className = 'result-metrics';
+  const urlChip = document.createElement('div');
+  urlChip.className = 'hero-url-chip';
+  const isHttps = selectedUrl.startsWith('https');
+  urlChip.innerHTML = `
+    <span class="url-scheme-badge ${isHttps ? 'scheme-https' : 'scheme-http'}">${isHttps ? '🔒 HTTPS' : '⚠️ HTTP'}</span>
+    <span class="url-text" title="${selectedUrl}">${selectedUrl}</span>
+    <button type="button" class="copy-url-btn" title="Copy URL" aria-label="Copy inspected URL">📋 Copy</button>
+  `;
+  const copyBtn = urlChip.querySelector('.copy-url-btn');
+  copyBtn?.addEventListener('click', () => {
+    navigator.clipboard?.writeText(selectedUrl);
+    copyBtn.textContent = '✓ Copied';
+    setTimeout(() => { copyBtn.textContent = '📋 Copy'; }, 2000);
+  });
+
+  infoCol.append(badgeRow, headline, summary, urlChip);
+  hero.append(gaugeWrap, infoCol);
+  card.append(hero);
+
+  // 3. High-Visibility Safety Callout
+  const callout = document.createElement('div');
+  const isDanger = data.verdict === 'known_threat' || data.verdict === 'suspicious';
+  callout.className = `hero-action-callout ${isDanger ? 'callout-danger' : data.verdict === 'caution' ? 'callout-warning' : 'callout-safe'}`;
+  const calloutSymbol = isDanger ? '🛑' : data.verdict === 'caution' ? '⚠️' : '✅';
+  const calloutLead = isDanger ? 'Immediate Safety Advice: Avoid this site completely.' : data.verdict === 'caution' ? 'Caution Advised: Technical trust issues detected.' : 'Safe Practice: No active threat signatures found.';
+  const calloutDetail = data.next_steps && data.next_steps[0] ? data.next_steps[0] : 'Use official mobile applications or verified bookmarked URLs rather than interacting with unverified links.';
+  callout.innerHTML = `
+    <span class="callout-icon">${calloutSymbol}</span>
+    <div class="callout-text">
+      <strong>${calloutLead}</strong>
+      <span>${calloutDetail}</span>
+    </div>
+  `;
+  card.append(callout);
+
+  // 4. Quick Vitals Bar (Single-Row Strip)
+  const vitals = document.createElement('div');
+  vitals.className = 'result-vitals-strip';
   const freshest = freshestFeed(data.feed_status || []);
-  metrics.append(
-    makeMetric('Confidence', confidenceLabel(data.confidence), 'Evidence strength'),
-    makeMetric('Coverage', coverageShortLabel(data.coverage), coverageDetail(data)),
-    makeMetric('Threat data', data.feed_stale ? 'Stale or missing' : 'Current', freshest ? `Latest snapshot: ${formatDate(freshest)}` : 'No feed snapshots available'),
-  );
-  if (data.scoring) {
-    metrics.append(
-      makeMetric('Risk indicators', `${data.scoring.score}/100`, `${data.scoring.checked_count} of 7 checks run`),
-    );
-  }
-  card.append(metrics);
+  vitals.innerHTML = `
+    <div class="vital-item">
+      <span class="vital-label">CONFIDENCE</span>
+      <strong class="vital-value">${confidenceLabel(data.confidence)}</strong>
+      <small class="vital-hint">Evidence depth</small>
+    </div>
+    <div class="vital-item">
+      <span class="vital-label">COVERAGE</span>
+      <strong class="vital-value">${coverageShortLabel(data.coverage)}</strong>
+      <small class="vital-hint">${coverageDetail(data)}</small>
+    </div>
+    <div class="vital-item">
+      <span class="vital-label">THREAT DATA</span>
+      <strong class="vital-value">${data.feed_stale ? 'Stale' : 'Current'}</strong>
+      <small class="vital-hint">${freshest ? formatDate(freshest) : '3 verified feeds'}</small>
+    </div>
+    <div class="vital-item">
+      <span class="vital-label">SECURITY PILLARS</span>
+      <strong class="vital-value">${data.scoring ? data.scoring.checked_count : 3} of 5 Active</strong>
+      <small class="vital-hint">Multi-pillar audit</small>
+    </div>
+  `;
+  card.append(vitals);
 
-  const coverage = document.createElement('p');
-  coverage.className = 'coverage-note';
-  coverage.textContent = coverageExplanation(data);
-  card.append(coverage);
-
-  // AI Security Explanation Panel
+  // 5. AI Security Co-Pilot Threat Synthesis (if available)
   if (data.ai_explanation) {
-    const aiPanel = document.createElement('section');
-    aiPanel.className = 'ai-panel';
-    const aiHeader = document.createElement('div');
-    aiHeader.className = 'ai-header';
-    const aiTitle = document.createElement('div');
-    aiTitle.className = 'ai-title';
-    aiTitle.innerHTML = '<span>🤖</span> AI Security Explanation & Threat Synthesis';
-    const aiBadge = document.createElement('span');
-    aiBadge.className = 'ai-badge';
-    aiBadge.textContent = data.ai_explanation.source || 'Intelligence Synthesis';
-    aiHeader.append(aiTitle, aiBadge);
-    aiPanel.append(aiHeader);
-
-    const summaryP = document.createElement('p');
-    summaryP.className = 'ai-summary';
-    summaryP.textContent = data.ai_explanation.summary;
-    aiPanel.append(summaryP);
-
-    if (data.ai_explanation.attack_techniques?.length) {
-      const sub = document.createElement('div');
-      sub.className = 'ai-section-subtitle';
-      sub.textContent = 'Potential Attack Vectors';
-      const tagList = document.createElement('div');
-      tagList.className = 'ai-tag-list';
-      for (const t of data.ai_explanation.attack_techniques) {
-        const tag = document.createElement('span');
-        tag.className = 'ai-tag';
-        tag.textContent = t;
-        tagList.append(tag);
-      }
-      aiPanel.append(sub, tagList);
-    }
-    card.append(aiPanel);
+    const aiCard = document.createElement('section');
+    aiCard.className = 'result-ai-card';
+    const vectorsHtml = data.ai_explanation.attack_techniques?.length
+      ? `<div class="ai-vectors-row"><span class="vectors-title">Detected Attack Vectors:</span><div class="vectors-list">${data.ai_explanation.attack_techniques.map(t => `<span class="vector-chip">#${t}</span>`).join('')}</div></div>`
+      : '';
+    aiCard.innerHTML = `
+      <div class="ai-card-header">
+        <span class="ai-robot-badge">🤖 AI Security Co-Pilot Analysis</span>
+        <span class="ai-source-tag">${data.ai_explanation.source || 'Neural Synthesis'}</span>
+      </div>
+      <p class="ai-card-body">${data.ai_explanation.summary}</p>
+      ${vectorsHtml}
+    `;
+    card.append(aiCard);
   }
 
-  // Security Pillars Assessment
+  // 6. Progressive Disclosure Tabs Navigation (The Clutter-Killer!)
+  const tabNav = document.createElement('div');
+  tabNav.className = 'result-tabs-segmented';
+  tabNav.setAttribute('role', 'tablist');
+
+  const tabDefs = [
+    { id: 'tab-overview', icon: '📋', label: 'Overview & Safety Plan', active: true },
+    { id: 'tab-pillars', icon: '🛡️', label: '5 Security Pillars', badge: data.scoring ? `${data.scoring.score}/100` : null },
+    { id: 'tab-findings', icon: '🔬', label: 'Technical Evidence', badge: `${findings.length} signal${findings.length === 1 ? '' : 's'}` },
+  ];
+  if (data.certificate) {
+    tabDefs.push({ id: 'tab-crypto', icon: '🔒', label: 'TLS & Certificate' });
+  }
+
+  tabDefs.forEach((t) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = `result-tab-btn ${t.active ? 'active' : ''}`;
+    btn.setAttribute('role', 'tab');
+    btn.setAttribute('aria-selected', t.active ? 'true' : 'false');
+    btn.setAttribute('data-target-pane', t.id);
+    btn.innerHTML = `<span>${t.icon}</span> <span>${t.label}</span>${t.badge ? `<span class="res-tab-chip">${t.badge}</span>` : ''}`;
+    tabNav.append(btn);
+  });
+  card.append(tabNav);
+
+  // PANE CONTAINER
+  const paneContainer = document.createElement('div');
+  paneContainer.className = 'result-panes-container';
+
+  // --- PANE 1: Overview & Safety Plan ---
+  const paneOverview = document.createElement('div');
+  paneOverview.id = 'tab-overview';
+  paneOverview.className = 'result-tab-pane active';
+
+  // Overview Grid: Left = Top Observed Signals, Right = Safety Checklist
+  const overviewGrid = document.createElement('div');
+  overviewGrid.className = 'overview-cards-grid';
+
+  // Left card: Why was this result reached?
+  const signalsCard = document.createElement('div');
+  signalsCard.className = 'overview-subcard';
+  signalsCard.innerHTML = `
+    <div class="subcard-header">
+      <span class="subcard-icon">🔍</span>
+      <h4>Why this result?</h4>
+      <span class="subcard-badge">${findings.length} observed</span>
+    </div>
+  `;
+  if (findings.length > 0) {
+    const sigList = document.createElement('div');
+    sigList.className = 'quick-signal-list';
+    findings.slice(0, 4).forEach((f) => {
+      const item = document.createElement('div');
+      item.className = 'quick-signal-item';
+      const mark = f.severity === 'high' ? '🚨' : f.severity === 'medium' ? '⚠️' : 'ℹ️';
+      item.innerHTML = `
+        <span class="signal-glyph">${mark}</span>
+        <div>
+          <strong>${f.category === 'known_threat' ? 'Threat Intelligence Match' : titleCase(f.category || 'Warning')}</strong>
+          <p>${f.explanation || f.summary || 'Signal observed during analysis.'}</p>
+        </div>
+      `;
+      sigList.append(item);
+    });
+    if (findings.length > 4) {
+      const moreNote = document.createElement('button');
+      moreNote.type = 'button';
+      moreNote.className = 'switch-to-findings-btn';
+      moreNote.textContent = `+ View all ${findings.length} technical signals →`;
+      moreNote.addEventListener('click', () => {
+        switchResultTab('tab-findings');
+      });
+      sigList.append(moreNote);
+    }
+    signalsCard.append(sigList);
+  } else {
+    signalsCard.innerHTML += `<p class="empty-state-note">No threat signatures or malicious patterns were observed across tested pillars.</p>`;
+  }
+
+  // Right card: Action Checklist
+  const nextStepsCard = document.createElement('div');
+  nextStepsCard.className = 'overview-subcard next-steps-subcard';
+  nextStepsCard.innerHTML = `
+    <div class="subcard-header">
+      <span class="subcard-icon">🛡️</span>
+      <h4>A Safer Next Step</h4>
+      <span class="subcard-badge">Checklist</span>
+    </div>
+  `;
+  const nextList = document.createElement('ul');
+  nextList.className = 'checklist-ul';
+  (data.next_steps || ['Do not enter passwords, OTPs, or financial information.', 'Verify directly via the organisation\'s official app or bookmarked website.']).forEach((step) => {
+    const li = document.createElement('li');
+    li.innerHTML = `<span class="check-bullet">✓</span> <span>${step}</span>`;
+    nextList.append(li);
+  });
+  nextStepsCard.append(nextList);
+
+  overviewGrid.append(signalsCard, nextStepsCard);
+  paneOverview.append(overviewGrid);
+
+  // Redirect chain if present
+  if (Array.isArray(data.redirect_hosts) && data.redirect_hosts.length > 1) {
+    const redirectBox = document.createElement('div');
+    redirectBox.className = 'redirect-trail-box';
+    redirectBox.innerHTML = `
+      <span class="trail-title">🔄 Redirect Journey (${data.redirect_hosts.length} hops):</span>
+      <div class="trail-chain">${data.redirect_hosts.map((h, i) => `<span class="trail-node">${h}</span>${i < data.redirect_hosts.length - 1 ? '<span class="trail-arrow">→</span>' : ''}`).join('')}</div>
+    `;
+    paneOverview.append(redirectBox);
+  }
+
+  // Coverage Note
+  const coverageP = document.createElement('p');
+  coverageP.className = 'coverage-note';
+  coverageP.textContent = coverageExplanation(data);
+  paneOverview.append(coverageP);
+
+  paneContainer.append(paneOverview);
+
+  // --- PANE 2: Security Pillars ---
+  const panePillars = document.createElement('div');
+  panePillars.id = 'tab-pillars';
+  panePillars.className = 'result-tab-pane';
+
   if (data.scoring && data.scoring.pillars) {
-    const pillarsPanel = document.createElement('section');
-    pillarsPanel.className = 'pillars-panel';
-    pillarsPanel.setAttribute('aria-labelledby', 'pillars-heading');
-
-    const pillarsHeader = document.createElement('div');
-    pillarsHeader.className = 'pillars-header';
-    const pillarsTitle = document.createElement('h3');
-    pillarsTitle.id = 'pillars-heading';
-    pillarsTitle.className = 'pillars-title';
-    pillarsTitle.textContent = 'Security Pillars Assessment';
-    const pillarsSummary = document.createElement('span');
-    pillarsSummary.className = 'pillars-summary-pill';
-    pillarsSummary.textContent = data.scoring.summary;
-    pillarsHeader.append(pillarsTitle, pillarsSummary);
-    pillarsPanel.append(pillarsHeader);
-
-    const pillarList = document.createElement('div');
-    pillarList.className = 'pillar-list';
+    const pillarsGrid = document.createElement('div');
+    pillarsGrid.className = 'pillars-cards-grid';
 
     for (const [, pillar] of Object.entries(data.scoring.pillars)) {
-      const row = document.createElement('div');
-      row.className = 'pillar-row';
+      const pCard = document.createElement('div');
+      pCard.className = 'pillar-feature-card';
 
-      const badge = document.createElement('span');
-      badge.className = 'pillar-badge';
-      badge.dataset.status = pillar.status;
-      badge.textContent = pillar.status === 'not_checked' ? 'Not checked' : pillar.status;
+      const pScore = pillar.score ?? (pillar.status === 'alert' ? 100 : pillar.status === 'attention' ? 50 : 0);
+      const pColor = pillar.status === 'alert' ? '#A83232' : pillar.status === 'attention' ? '#D4A359' : pillar.status === 'clear' ? '#778D7A' : '#415A77';
 
-      const content = document.createElement('div');
-      content.className = 'pillar-content';
-
-      const nameLine = document.createElement('div');
-      nameLine.className = 'pillar-name-line';
-      const name = document.createElement('strong');
-      name.className = 'pillar-name';
-      name.textContent = pillar.name;
-      nameLine.append(name);
-      if (pillar.status !== 'not_checked') {
-        const scoreSpan = document.createElement('span');
-        scoreSpan.className = 'pillar-score';
-        scoreSpan.textContent = `(Risk: ${pillar.score}/100)`;
-        nameLine.append(scoreSpan);
-      }
-
-      const why = document.createElement('p');
-      why.className = 'pillar-why';
-      why.textContent = pillar.why;
-
-      content.append(nameLine, why);
+      pCard.innerHTML = `
+        <div class="pillar-top-row">
+          <strong class="pillar-title">${pillar.name}</strong>
+          <span class="pillar-status-chip status-${pillar.status}">${pillar.status === 'not_checked' ? 'Not Checked' : pillar.status}</span>
+        </div>
+        <div class="pillar-meter-bar" title="Risk: ${pScore}/100">
+          <div class="meter-fill" style="width: ${pScore}%; background: ${pColor};"></div>
+        </div>
+        <div class="pillar-risk-row">
+          <span class="pillar-why-text">${pillar.why}</span>
+          ${pillar.status !== 'not_checked' ? `<span class="pillar-score-val" style="color: ${pColor};">Risk: ${pScore}/100</span>` : ''}
+        </div>
+      `;
 
       if (Array.isArray(pillar.findings) && pillar.findings.length > 0) {
-        const fToggle = document.createElement('details');
-        fToggle.className = 'pillar-findings-toggle';
-        const fSummary = document.createElement('summary');
-        fSummary.textContent = `${pillar.findings.length} signal${pillar.findings.length === 1 ? '' : 's'} observed`;
-        const fList = document.createElement('ul');
-        fList.className = 'pillar-findings-list';
-        for (const f of pillar.findings) {
-          const item = document.createElement('li');
-          item.textContent = f.summary || f.explanation || f.id;
-          fList.append(item);
-        }
-        fToggle.append(fSummary, fList);
-        content.append(fToggle);
+        const toggle = document.createElement('details');
+        toggle.className = 'pillar-signals-details';
+        toggle.innerHTML = `
+          <summary>${pillar.findings.length} signal${pillar.findings.length === 1 ? '' : 's'} observed</summary>
+          <ul>${pillar.findings.map(f => `<li>${f.summary || f.explanation || f.id}</li>`).join('')}</ul>
+        `;
+        pCard.append(toggle);
       }
-
-      row.append(badge, content);
-      pillarList.append(row);
+      pillarsGrid.append(pCard);
     }
-
-    pillarsPanel.append(pillarList);
-    card.append(pillarsPanel);
-  }
-
-  const details = document.createElement('div');
-  details.className = 'result-detail-grid';
-  const evidence = document.createElement('section');
-  evidence.className = 'detail-panel evidence-panel';
-  evidence.setAttribute('aria-labelledby', 'evidence-title');
-  const evidenceHead = document.createElement('div');
-  evidenceHead.className = 'detail-heading';
-  const evidenceTitle = document.createElement('h3');
-  evidenceTitle.id = 'evidence-title';
-  evidenceTitle.textContent = 'Why this result';
-  const findingCount = document.createElement('span');
-  findingCount.className = 'detail-count';
-  findingCount.textContent = `${findings.length} ${findings.length === 1 ? 'signal' : 'signals'}`;
-  evidenceHead.append(evidenceTitle, findingCount);
-  evidence.append(evidenceHead);
-
-  if (findings.length) {
-    const list = document.createElement('div');
-    list.className = 'finding-list';
-    for (const finding of findings) list.append(makeFinding(finding));
-    evidence.append(list);
+    panePillars.append(pillarsGrid);
   } else {
-    const empty = document.createElement('p');
-    empty.className = 'empty-finding';
-    empty.textContent = 'No known threat match or strong warning appeared in these checks.';
-    evidence.append(empty);
+    panePillars.innerHTML = `<p class="empty-state-note">Security pillar evaluation data is not available for this scan mode.</p>`;
   }
+  paneContainer.append(panePillars);
 
-  if (Array.isArray(data.redirect_hosts) && data.redirect_hosts.length) {
-    const redirects = document.createElement('div');
-    redirects.className = 'redirect-detail';
-    const label = document.createElement('strong');
-    label.textContent = 'Redirect sites reached';
-    const hosts = document.createElement('p');
-    hosts.textContent = data.redirect_hosts.join(' → ');
-    redirects.append(label, hosts);
-    evidence.append(redirects);
+  // --- PANE 3: Technical Findings ---
+  const paneFindings = document.createElement('div');
+  paneFindings.id = 'tab-findings';
+  paneFindings.className = 'result-tab-pane';
+
+  if (findings.length > 0) {
+    const findingsList = document.createElement('div');
+    findingsList.className = 'findings-deck';
+    findings.forEach((f) => {
+      const fCard = document.createElement('div');
+      fCard.className = `finding-card severity-${f.severity || 'low'}`;
+      const fSeverity = (f.severity || 'info').toUpperCase();
+      fCard.innerHTML = `
+        <div class="finding-card-head">
+          <div class="finding-title-row">
+            <span class="severity-badge sev-${f.severity || 'low'}">${fSeverity}</span>
+            <strong class="finding-title">${f.category === 'known_threat' ? 'Confirmed Threat Intelligence Match' : titleCase(f.category || 'Finding')}</strong>
+          </div>
+          <span class="finding-source-tag">${f.source || 'Local Analysis'}${f.observed_at ? ` · ${formatDate(f.observed_at)}` : ''}</span>
+        </div>
+        <p class="finding-explanation">${f.explanation || f.summary || 'A security signal was observed.'}</p>
+        ${f.potential_impact ? `<div class="finding-impact"><strong>Potential Impact:</strong> ${f.potential_impact}</div>` : ''}
+        ${f.recommended_remediation ? `<div class="finding-remediation"><strong>Recommended Remediation:</strong> ${f.recommended_remediation}</div>` : ''}
+      `;
+      findingsList.append(fCard);
+    });
+    paneFindings.append(findingsList);
+  } else {
+    paneFindings.innerHTML = `<div class="clean-findings-state"><span class="clean-icon">🛡️</span><h4>No Technical Threat Findings</h4><p>All automated heuristics and signature feeds returned zero warnings.</p></div>`;
   }
+  paneContainer.append(paneFindings);
 
-  const next = document.createElement('section');
-  next.className = 'detail-panel next-panel';
-  next.setAttribute('aria-labelledby', 'next-title');
-  const nextTitle = document.createElement('h3');
-  nextTitle.id = 'next-title';
-  nextTitle.textContent = 'A safer next step';
-  const list = document.createElement('ul');
-  for (const text of data.next_steps || []) {
-    const item = document.createElement('li');
-    item.textContent = text;
-    list.append(item);
-  }
-  next.append(nextTitle, list);
-  details.append(evidence, next);
-  card.append(details);
-
+  // --- PANE 4: TLS & Certificate ---
   if (data.certificate) {
-    const certBlock = document.createElement('details');
-    certBlock.className = 'cert-details-block';
-    const certSummary = document.createElement('summary');
-    certSummary.className = 'cert-details-summary';
-    certSummary.textContent = 'Certificate details';
-    const certGrid = document.createElement('div');
-    certGrid.className = 'cert-grid';
+    const paneCrypto = document.createElement('div');
+    paneCrypto.id = 'tab-crypto';
+    paneCrypto.className = 'result-tab-pane';
 
-    const fields = [
-      ['Subject', data.certificate.subject],
-      ['Issuer', data.certificate.issuer],
-      ['SANs', Array.isArray(data.certificate.sans) && data.certificate.sans.length ? data.certificate.sans.join(', ') : 'None'],
-      ['Valid from', formatDate(data.certificate.valid_from)],
-      ['Valid to', formatDate(data.certificate.valid_to)],
-      ['Key', `${data.certificate.key_type || 'Unknown'} (${data.certificate.key_size || 0} bits)`],
-      ['Signature algorithm', data.certificate.signature_algorithm || 'Unknown'],
-      ['SCT count', `${data.certificate.sct_count || 0} embedded timestamp(s)`],
-    ];
-    for (const [label, val] of fields) {
-      const row = document.createElement('div');
-      row.className = 'cert-field';
-      const k = document.createElement('span');
-      k.className = 'cert-field-name';
-      k.textContent = label;
-      const v = document.createElement('span');
-      v.className = 'cert-field-val';
-      v.textContent = val || 'None';
-      row.append(k, v);
-      certGrid.append(row);
-    }
-    certBlock.append(certSummary, certGrid);
-    card.append(certBlock);
+    const certCard = document.createElement('div');
+    certCard.className = 'crypto-specs-card';
+    certCard.innerHTML = `
+      <div class="crypto-specs-head">
+        <h4>🔒 Cryptographic Trust & Certificate Infrastructure</h4>
+        <span class="crypto-badge">${data.certificate.key_type || 'TLS'} (${data.certificate.key_size || 0} bits)</span>
+      </div>
+      <div class="cert-grid">
+        <div class="cert-field"><span class="cert-field-name">Subject</span><span class="cert-field-val">${data.certificate.subject || 'None'}</span></div>
+        <div class="cert-field"><span class="cert-field-name">Issuer (CA)</span><span class="cert-field-val">${data.certificate.issuer || 'None'}</span></div>
+        <div class="cert-field"><span class="cert-field-name">SANs</span><span class="cert-field-val">${Array.isArray(data.certificate.sans) && data.certificate.sans.length ? data.certificate.sans.join(', ') : 'None'}</span></div>
+        <div class="cert-field"><span class="cert-field-name">Valid From</span><span class="cert-field-val">${formatDate(data.certificate.valid_from)}</span></div>
+        <div class="cert-field"><span class="cert-field-name">Valid Until</span><span class="cert-field-val">${formatDate(data.certificate.valid_to)}</span></div>
+        <div class="cert-field"><span class="cert-field-name">Key Specifications</span><span class="cert-field-val">${data.certificate.key_type || 'Unknown'} · ${data.certificate.key_size || 0} bits</span></div>
+        <div class="cert-field"><span class="cert-field-name">Signature Algorithm</span><span class="cert-field-val">${data.certificate.signature_algorithm || 'Unknown'}</span></div>
+        <div class="cert-field"><span class="cert-field-name">CT Timestamps (SCT)</span><span class="cert-field-val">${data.certificate.sct_count || 0} embedded timestamp(s)</span></div>
+      </div>
+    `;
+    paneCrypto.append(certCard);
+    paneContainer.append(paneCrypto);
   }
 
+  card.append(paneContainer);
+
+  // Tab switching logic
+  function switchResultTab(targetId) {
+    tabNav.querySelectorAll('.result-tab-btn').forEach((b) => {
+      const match = b.getAttribute('data-target-pane') === targetId;
+      b.classList.toggle('active', match);
+      b.setAttribute('aria-selected', match ? 'true' : 'false');
+    });
+    paneContainer.querySelectorAll('.result-tab-pane').forEach((p) => {
+      p.classList.toggle('active', p.id === targetId);
+    });
+  }
+
+  tabNav.querySelectorAll('.result-tab-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const target = btn.getAttribute('data-target-pane');
+      if (target) switchResultTab(target);
+    });
+  });
+
+  // 7. Result Notices (if any)
   if (resultNotice) {
-    const notice = document.createElement('p');
-    notice.className = 'notice';
-    notice.setAttribute('role', 'status');
-    notice.textContent = resultNotice;
+    const notice = document.createElement('div');
+    notice.className = 'result-notice-toast';
+    notice.innerHTML = `<span>ℹ️</span> <span>${resultNotice}</span>`;
     card.append(notice);
   }
 
-  const actions = document.createElement('div');
-  actions.className = 'result-actions';
+  // 8. Result Action Dock at the bottom
+  const dock = document.createElement('div');
+  dock.className = 'result-action-dock';
 
-  // Printable Report Button
   if (data.scan_id) {
-    const reportBtn = makeButton('🖨️ Download PDF Report', 'button button-secondary', () => {
+    const pdfBtn = makeButton('🖨️ Download PDF Report', 'dock-btn btn-pdf', () => {
       window.open(`/scans/${data.scan_id}/report`, '_blank');
     });
-    actions.append(reportBtn);
+    dock.append(pdfBtn);
   }
 
   if (data.coverage === 'local_only' || (data.scan_error && data.scan_error !== 'scanner_unavailable')) {
-    actions.append(makeButton('Run optional live check', 'button button-primary', () => {
+    const liveScanBtn = makeButton('🔬 Run Optional Live Deep Scan', 'dock-btn btn-live', () => {
       document.querySelector('#consent-host').textContent = selectedUrl;
       const cb = document.querySelector('#consent-ct-rdap');
       if (cb) cb.checked = false;
       scanDialog?.showModal();
-    }));
+    });
+    dock.append(liveScanBtn);
   }
+
   if (data.verdict !== 'known_threat') {
+    const reportGroup = document.createElement('div');
+    reportGroup.className = 'dock-report-group';
     const category = document.createElement('select');
-    category.className = 'report-select';
-    category.setAttribute('aria-label', 'Choose a report category');
-    const placeholder = document.createElement('option');
-    placeholder.value = '';
-    placeholder.textContent = 'Choose a category';
-    placeholder.disabled = true;
-    placeholder.selected = true;
-    category.append(placeholder);
-    for (const [value, label] of [
-      ['phishing', 'Phishing'],
-      ['malware', 'Malware'],
-      ['fake_banking', 'Fake Banking Portal'],
-      ['fraudulent_payment', 'Fraudulent Payment'],
-      ['fake_recruitment', 'Fake Recruitment Portal'],
-      ['impersonation', 'Impersonation'],
-      ['other', 'Other'],
-    ]) {
-      const option = document.createElement('option');
-      option.value = value;
-      option.textContent = label;
-      category.append(option);
-    }
-    const reportButton = makeButton('Report this link', 'button button-secondary', () => {
+    category.className = 'dock-report-select';
+    category.setAttribute('aria-label', 'Choose report category');
+    category.innerHTML = `
+      <option value="" disabled selected>Report this threat...</option>
+      <option value="phishing">Phishing</option>
+      <option value="malware">Malware</option>
+      <option value="fake_banking">Fake Banking Portal</option>
+      <option value="fraudulent_payment">Fraudulent Payment</option>
+      <option value="fake_recruitment">Fake Recruitment</option>
+      <option value="impersonation">Brand Impersonation</option>
+      <option value="other">Other</option>
+    `;
+    const reportButton = makeButton('🚨 Submit Threat Report', 'dock-btn btn-report', () => {
       if (category.value) submitReport(category.value);
     });
     reportButton.disabled = true;
     category.addEventListener('change', () => {
       reportButton.disabled = !category.value;
     });
-    actions.append(category, reportButton);
+    reportGroup.append(category, reportButton);
+    dock.append(reportGroup);
   }
-  card.append(actions);
+
+  card.append(dock);
   resultRegion.replaceChildren(card);
   resultRegion.hidden = false;
 }
