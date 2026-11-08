@@ -17,11 +17,23 @@
   <script type="module" src="/static/app.mjs"></script>
 </head>
 <body>
-  <!-- Minimal Trust Card Boot / Loading Screen -->
-  <div id="system-boot-overlay" class="minimal-boot-overlay" role="status" aria-label="Loading Trust Card">
-    <div class="minimal-boot-content">
-      <div class="minimal-boot-graphic-wrap">
-        <img src="/static/boot-animation.gif" alt="Trust Card Loading" class="minimal-boot-img" width="340" height="auto">
+  <!-- Trust Card Minimal Luxury Boot Screen -->
+  <div id="system-boot-overlay" class="luxury-boot-overlay" role="status" aria-label="Trust Card Security Enclave">
+    <div class="boot-ambient-glow" aria-hidden="true"></div>
+    <div class="boot-ripple-ring r1" aria-hidden="true"></div>
+    <div class="boot-ripple-ring r2" aria-hidden="true"></div>
+
+    <div class="boot-stage-content">
+      <div class="boot-emblem-wrapper">
+        <img src="/static/boot-animation.gif" alt="Trust Card" class="boot-emblem-image" width="340" height="auto">
+        <div class="boot-light-sheen" aria-hidden="true"></div>
+      </div>
+
+      <div class="boot-status-whisper">
+        <div class="boot-whisper-track">
+          <div id="boot-whisper-bar" class="boot-whisper-pulse"></div>
+        </div>
+        <span id="boot-whisper-text" class="boot-whisper-text">ENCLAVE SECURE · INITIALIZING</span>
       </div>
     </div>
   </div>

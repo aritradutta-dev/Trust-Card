@@ -2251,6 +2251,8 @@ function initBootSequence() {
   const overlay = document.querySelector('#system-boot-overlay');
   if (!overlay) return;
 
+  const whisperBar = document.querySelector('#boot-whisper-bar');
+  const whisperText = document.querySelector('#boot-whisper-text');
   const rebootBtn = document.querySelector('#reboot-system-btn');
   const brandEmblem = document.querySelector('.brand-mark');
 
@@ -2262,7 +2264,7 @@ function initBootSequence() {
     isBooting = false;
     clearTimeout(timerId);
 
-    // Zoom out with fade out
+    if (whisperBar) whisperBar.style.width = '100%';
     overlay.classList.add('boot-completed');
     sessionStorage.setItem('tc_boot_completed', 'true');
     document.body.style.overflow = '';
@@ -2270,7 +2272,7 @@ function initBootSequence() {
     setTimeout(() => {
       overlay.hidden = true;
       input?.focus();
-    }, 600);
+    }, 650);
   }
 
   function startBoot(force = false) {
@@ -2281,6 +2283,7 @@ function initBootSequence() {
     if (!force && hasSeenBoot && !forceParam) {
       overlay.hidden = true;
       overlay.classList.add('boot-completed');
+      document.body.style.overflow = '';
       return;
     }
 
@@ -2291,8 +2294,26 @@ function initBootSequence() {
     overlay.classList.remove('boot-completed');
     document.body.style.overflow = 'hidden';
 
-    // Cinematic hold while transparent GIF plays, then zooms out and disappears
-    timerId = setTimeout(dismissBoot, 2400);
+    if (whisperBar) whisperBar.style.width = '0%';
+    if (whisperText) whisperText.textContent = 'ENCLAVE PRIVACY · INITIALIZING';
+
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        if (whisperBar && isBooting) whisperBar.style.width = '45%';
+        if (whisperText && isBooting) whisperText.textContent = 'MOUNTING CLIENT ENCLAVE';
+      }, 350);
+      setTimeout(() => {
+        if (whisperBar && isBooting) whisperBar.style.width = '82%';
+        if (whisperText && isBooting) whisperText.textContent = 'CALIBRATING 7 DEFENSE PILLARS';
+      }, 1100);
+      setTimeout(() => {
+        if (whisperBar && isBooting) whisperBar.style.width = '100%';
+        if (whisperText && isBooting) whisperText.textContent = 'SYSTEM ARMED · WELCOME';
+      }, 1900);
+    });
+
+    // Holds centered and plays the transparent animated GIF, then smoothly zooms out and disappears
+    timerId = setTimeout(dismissBoot, 2450);
   }
 
   // Any click or keypress dismisses immediately
