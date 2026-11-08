@@ -237,11 +237,26 @@ def calculate_risk_scoring(
     checked_pillars = [k for k, p in pillars.items() if p["status"] != "not_checked"]
     summary_text = f"Risk indicators: {overall_score}/100 across {len(checked_pillars)} of 7 checks"
 
+    if overall_score >= 80:
+        risk_class = "malicious"
+        risk_label = "Malicious / Critical Risk"
+    elif overall_score >= 50:
+        risk_class = "high"
+        risk_label = "High Risk"
+    elif overall_score >= 20:
+        risk_class = "suspicious"
+        risk_label = "Suspicious / Medium Risk"
+    else:
+        risk_class = "safe"
+        risk_label = "Safe / Low Risk"
+
     return {
         "score": overall_score,
         "summary": summary_text,
         "checked_count": len(checked_pillars),
         "total_pillars": 7,
+        "risk_class": risk_class,
+        "risk_label": risk_label,
         "pillars": pillars,
         "unchecked_pillars": [k for k, p in pillars.items() if p["status"] == "not_checked"],
     }

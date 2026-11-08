@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Security Assessment Report · {{ scan.url }} · Trust Card</title>
+  <style>
+    :root {
+      --melon-red: #ff385c;
+      --melon-dark: #e0284b;
+      --rind-green: #059669;
+      --seed-dark: #111827;
+      --muted: #4b5563;
+      --border: #ffd0d8;
+      --card-bg: #ffffff;
+      --page-bg: #fff9fa;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      margin: 0;
+      padding: 32px 16px;
+      background: var(--page-bg);
+      color: var(--seed-dark);
+      line-height: 1.5;
+    }
+    .report-container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 40px;
+      box-shadow: 0 10px 30px rgba(255, 56, 92, 0.08);
+    }
+    .report-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 2px solid #ffe4e9;
+      padding-bottom: 24px;
+      margin-bottom: 32px;
+    }
+    .brand-title {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--melon-red);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .report-id {
+      font-family: ui-monospace, monospace;
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+    .action-buttons {
+      display: flex;
+      gap: 12px;
+    }
+    .btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-primary {
+      background: var(--melon-red);
+      color: #fff;
+      border: 1px solid var(--melon-dark);
+    }
+    .btn-secondary {
+      background: #fff;
+      color: var(--seed-dark);
+      border: 1px solid #d1d5db;
+    }
+    .section-title {
+      font-size: 16px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      color: var(--melon-dark);
+      border-bottom: 1px solid #fee2e2;
+      padding-bottom: 6px;
+      margin-top: 32px;
+      margin-bottom: 16px;
+    }
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      background: #fff9fa;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+    .meta-item { display: flex; flex-direction: column; }
+    .meta-label { font-size: 11px; text-transform: uppercase; font-weight: 700; color: var(--muted); }
+    .meta-val { font-size: 15px; font-weight: 700; margin-top: 4px; word-break: break-all; }
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 99px;
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+    .badge-malicious { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+    .badge-high { background: #fff1f2; color: #e11d48; border: 1px solid #fda4af; }
+    .badge-suspicious { background: #fffbeb; color: #d97706; border: 1px solid #fde68a; }
+    .badge-safe { background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
+    .badge-unknown { background: #f3f4f6; color: #4b5563; border: 1px solid #e5e7eb; }
+    
+    .callout-box {
+      background: #fff0f3;
+      border-left: 4px solid var(--melon-red);
+      padding: 16px 20px;
+      border-radius: 0 8px 8px 0;
+      margin-bottom: 24px;
+    }
+    .callout-title { font-weight: 800; font-size: 14px; margin-bottom: 4px; }
+    .callout-body { font-size: 13px; color: #374151; margin: 0; }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 13px; }
+    th { background: #fef2f2; text-align: left; padding: 10px 12px; border-bottom: 2px solid #fecaca; font-weight: 700; }
+    td { padding: 10px 12px; border-bottom: 1px solid #f3f4f6; vertical-align: top; }
+    .code-text { font-family: ui-monospace, monospace; font-size: 12px; background: #f9fafb; padding: 2px 6px; border-radius: 4px; }
+
+    ul.remediation-list { padding-left: 20px; margin: 8px 0; }
+    ul.remediation-list li { margin-bottom: 6px; font-size: 13px; }
+
+    .footer {
+      margin-top: 48px;
+      text-align: center;
+      font-size: 11px;
+      color: var(--muted);
+      border-top: 1px solid #f3f4f6;
+      padding-top: 24px;
+    }
+
+    @media print {
+      body { background: #fff; padding: 0; }
+      .report-container { border: none; box-shadow: none; padding: 0; max-width: 100%; }
+      .action-buttons { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="report-container">
+    <header class="report-header">
+      <div>
+        <div class="brand-title">🍉 Trust Card · Security Assessment Report</div>
+        <div class="report-id">Scan Reference ID: {{ scan.id }} · Verified Independent Inspection</div>
+      </div>
+      <div class="action-buttons">
+        <a href="/" class="btn btn-secondary">← Back to Platform</a>
+        <button onclick="window.print()" class="btn btn-primary">🖨️ Print / Save as PDF</button>
+      </div>
+    </header>
+
+    <!-- 1 & 2. Target URL & Timestamp -->
+    <div class="meta-grid">
+      <div class="meta-item">
+        <span class="meta-label">1. Target URL</span>
+        <span class="meta-val"><code class="code-text">{{ scan.url }}</code></span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">2. Scan Date & Time</span>
+        <span class="meta-val">{{ scan.checked_at }}</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">3. Overall Threat Score</span>
+        <span class="meta-val" style="font-size: 20px; color: var(--melon-red);">{{ scan.score }} / 100</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">4. Risk Classification</span>
+        <span class="meta-val">
+          <span class="badge badge-{{ scan.risk_class }}">{{ scan.risk_class | upper }} RISK</span>
+        </span>
+      </div>
+    </div>
+
+    <!-- AI & Deterministic Summary -->
+    {% if scan.ai_explanation %}
+    <div class="callout-box">
+      <div class="callout-title">Executive Summary & Threat Verdict ({{ scan.verdict | upper }})</div>
+      <p class="callout-body">{{ scan.ai_explanation.summary }}</p>
+    </div>
+    {% endif %}
+
+    <!-- 5. URL Analysis -->
+    <h3 class="section-title">5. URL & Structural Analysis</h3>
+    <table>
+      <thead>
+        <tr><th>Signal / Anomaly</th><th>Severity</th><th>Technical Finding Details</th></tr>
+      </thead>
+      <tbody>
+        {% set url_findings = scan.findings | selectattr("group", "in", ["url_lookalike", "url_structure"]) | list %}
+        {% if url_findings %}
+          {% for f in url_findings %}
+          <tr>
+            <td><strong>{{ f.id }}</strong></td>
+            <td><span class="badge badge-{{ 'malicious' if f.severity == 'high' else 'suspicious' if f.severity == 'medium' else 'safe' }}">{{ f.severity }}</span></td>
+            <td>{{ f.summary or f.explanation }}</td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr><td colspan="3" style="color: #059669;">✓ No brand lookalikes, homoglyphs, or deceptive URL patterns identified.</td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+
+    <!-- 6. Domain Intelligence -->
+    <h3 class="section-title">6. Domain Intelligence & Resolution</h3>
+    <div class="meta-grid">
+      <div class="meta-item">
+        <span class="meta-label">Host Destination</span>
+        <span class="meta-val"><code>{{ scan.host }}</code></span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">Inspection Mode</span>
+        <span class="meta-val">{{ scan.mode }}</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">Confidence Level</span>
+        <span class="meta-val">{{ scan.confidence | upper }}</span>
+      </div>
+    </div>
+
+    <!-- 7. TLS Certificate Analysis -->
+    <h3 class="section-title">7. TLS Certificate & Cryptographic Trust Analysis</h3>
+    {% if scan.certificate %}
+    <table>
+      <tbody>
+        <tr><td><strong>Subject & Issuer</strong></td><td>Subject: <code>{{ scan.certificate.subject }}</code><br>Issuer: <code>{{ scan.certificate.issuer }}</code></td></tr>
+        <tr><td><strong>Subject Alternative Names (SANs)</strong></td><td><code>{{ scan.certificate.sans | join(', ') if scan.certificate.sans else 'None' }}</code></td></tr>
+        <tr><td><strong>Validity Period</strong></td><td>Valid from {{ scan.certificate.valid_from }} to {{ scan.certificate.valid_to }}</td></tr>
+        <tr><td><strong>Key Strength & Algorithm</strong></td><td>{{ scan.certificate.key_type }} ({{ scan.certificate.key_size }} bits) · Sig: {{ scan.certificate.signature_algorithm }}</td></tr>
+        <tr><td><strong>Certificate Transparency</strong></td><td>{{ scan.certificate.sct_count }} embedded Signed Certificate Timestamp(s)</td></tr>
+      </tbody>
+    </table>
+    {% else %}
+    <p style="font-size: 13px; color: var(--muted);">TLS Certificate was not inspected in this local check mode. Run a consented live scan for cryptographic validation.</p>
+    {% endif %}
+
+    <!-- 8. Web Security Assessment -->
+    <h3 class="section-title">8. Web Security Assessment (Headers & Content)</h3>
+    <table>
+      <thead>
+        <tr><th>Security Dimension</th><th>Severity</th><th>Observation</th></tr>
+      </thead>
+      <tbody>
+        {% set web_findings = scan.findings | selectattr("group", "in", ["security_headers", "credential_form", "page_content", "redirect"]) | list %}
+        {% if web_findings %}
+          {% for f in web_findings %}
+          <tr>
+            <td><strong>{{ f.id }}</strong></td>
+            <td><span class="badge badge-{{ 'malicious' if f.severity == 'high' else 'suspicious' if f.severity == 'medium' else 'safe' }}">{{ f.severity }}</span></td>
+            <td>{{ f.summary or f.explanation }}</td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr><td colspan="3" style="color: #059669;">✓ Checked HTTP headers and forms comply with baseline security practices.</td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+
+    <!-- 9. Threat Intelligence Findings -->
+    <h3 class="section-title">9. Threat Intelligence & Community Records</h3>
+    <table>
+      <thead>
+        <tr><th>Source / Feed</th><th>Status</th><th>Evidence Details</th></tr>
+      </thead>
+      <tbody>
+        {% set ti_findings = scan.findings | selectattr("group", "in", ["threat_intelligence", "community_report"]) | list %}
+        {% if ti_findings %}
+          {% for f in ti_findings %}
+          <tr>
+            <td><strong>{{ f.source or 'Threat Feed' }}</strong></td>
+            <td><span class="badge badge-malicious">MATCH</span></td>
+            <td>{{ f.summary or f.explanation }}</td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr><td colspan="3" style="color: #059669;">✓ No entries found in local PhishTank, URLhaus, OpenPhish, or community report databases.</td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+
+    <!-- 10. Identified Vulnerabilities or Weaknesses -->
+    <h3 class="section-title">10. Identified Vulnerabilities & Weaknesses</h3>
+    <ul class="remediation-list">
+      {% for f in scan.findings %}
+      <li><strong>[{{ f.severity | upper }}] {{ f.id }}:</strong> {{ f.summary or f.explanation }}</li>
+      {% else %}
+      <li>No specific technical vulnerabilities were flagged during this scan.</li>
+      {% endfor %}
+    </ul>
+
+    <!-- 11. Evidence -->
+    <h3 class="section-title">11. Corroborating Evidence</h3>
+    {% if scan.ai_explanation and scan.ai_explanation.attack_techniques %}
+    <p style="font-size: 13px; font-weight: 700; margin-bottom: 4px;">Potential Attack Techniques & Mechanisms:</p>
+    <ul class="remediation-list">
+      {% for tech in scan.ai_explanation.attack_techniques %}
+      <li>{{ tech }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+
+    <!-- 12. Recommended Mitigation Steps -->
+    <h3 class="section-title">12. Recommended Mitigation Steps</h3>
+    <ul class="remediation-list">
+      {% if scan.ai_explanation and scan.ai_explanation.recommended_remediation %}
+        {% for step in scan.ai_explanation.recommended_remediation %}
+        <li>{{ step }}</li>
+        {% endfor %}
+      {% else %}
+        <li>Do not submit passwords or payment information on unverified sites.</li>
+        <li>Access official domains directly via your browser bookmarks or mobile apps.</li>
+      {% endif %}
+    </ul>
+
+    <footer class="footer">
+      <div>Generated by <strong>Trust Card Platform</strong> · Privacy-First Intelligent Security Architecture</div>
+      <div>© 2026 Trust Card Platform. All rights reserved. Evaluation is based on available evidence; not a guarantee of absolute safety.</div>
+    </footer>
+  </div>
+</body>
+</html>

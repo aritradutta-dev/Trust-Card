@@ -340,5 +340,75 @@ def analyze_url(canonical_url: str) -> list[dict]:
             "group": "url_structure",
         })
 
+    # 5. Plain HTTP scheme
+    if parts.scheme == "http":
+        findings.append({
+            "id": "url-structure-plain-http",
+            "category": "url_structure",
+            "severity": "low",
+            "summary": "The link uses unencrypted plain HTTP instead of HTTPS, exposing traffic to interception.",
+            "source": "URL structure and brand analysis",
+            "observed_at": now,
+            "group": "url_structure",
+        })
+
+    # 6. Dangerous / Executable file extensions
+    dangerous_exts = {".exe", ".scr", ".bat", ".apk", ".vbs", ".iso", ".cmd", ".msi", ".ps1"}
+    path_lower = parts.path.lower()
+    for dext in dangerous_exts:
+        if path_lower.endswith(dext):
+            findings.append({
+                "id": f"url-structure-dangerous-ext-{dext.lstrip('.')}",
+                "category": "url_structure",
+                "severity": "medium",
+                "summary": f"The link targets an executable or installer payload ({dext}), a common indicator of drive-by malware.",
+                "source": "URL structure and brand analysis",
+                "observed_at": now,
+                "group": "url_structure",
+            })
+            break
+
+    # 7. Open redirect / credential relay query parameters
+    query_lower = parts.query.lower()
+    suspicious_params = ["redirect_url=", "redirect_uri=", "return_url=", "next=", "dest=", "url=http", "target=http"]
+    if any(param in query_lower for param in suspicious_params):
+        findings.append({
+            "id": "url-structure-open-redirect-param",
+            "category": "url_structure",
+            "severity": "low",
+            "summary": "The link query contains parameters commonly abused in open-redirect attacks to disguise destinations.",
+            "source": "URL structure and brand analysis",
+            "observed_at": now,
+            "group": "url_structure",
+        })
+
     return findings
+
+
+def detect_target_category(url: str, findings: list[dict]) -> str:
+    """Classify the target sector (banking, payment, recruitment, government, big_tech, general)."""
+    text = url.lower()
+    for f in findings:
+        summary = f.get("summary", "").lower()
+        if any(w in summary for w in ["bank", "sbi", "hdfc", "icici", "axis"]):
+            return "Fake Banking Portal"
+        if any(w in summary for w in ["paypal", "upi", "paytm", "phonepe", "payment"]):
+            return "Fraudulent Payment Portal"
+        if any(w in summary for w in ["irctc", "passport", "aadhaar", "uidai", "tax", "epfo", "gov"]):
+            return "Fake Government Portal"
+        if any(w in summary for w in ["interview", "offer letter", "recruitment", "job", "career"]):
+            return "Fake Recruitment / Job Portal"
+
+    if any(w in text for w in ["bank", "sbi", "hdfc", "icici", "axis", "citi", "chase"]):
+        return "Fake Banking Portal"
+    if any(w in text for w in ["pay", "upi", "wallet", "checkout", "refund", "invoice"]):
+        return "Fraudulent Payment Portal"
+    if any(w in text for w in ["gov", "portal", "tax", "passport", "visa", "kyc"]):
+        return "Fake Government Portal"
+    if any(w in text for w in ["career", "job", "interview", "recruitment", "hiring", "offer"]):
+        return "Fake Recruitment / Job Portal"
+    if any(w in text for w in ["google", "microsoft", "apple", "netflix", "amazon"]):
+        return "Brand Impersonation"
+    return "Phishing / Malicious Site"
+
 

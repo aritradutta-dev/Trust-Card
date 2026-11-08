@@ -4,10 +4,10 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#ff385c">
-  <title>Trust Card · Intelligent Link Trust & Phishing Detection Platform</title>
-  <meta name="description" content="Trust Card is a privacy-first web link checker combining message cues, local threat intelligence, brand lookalike detection, and consent-gated TLS assessment.">
-  <meta property="og:title" content="Trust Card · Intelligent Link Trust Platform">
-  <meta property="og:description" content="Inspect suspicious links with client-side privacy, deep certificate inspection, and multi-pillar threat intelligence.">
+  <title>Trust Card · Intelligent Link Trust & Web Security Platform</title>
+  <meta name="description" content="Trust Card is a privacy-first web security and phishing detection platform combining message cues, local threat intelligence, brand lookalike detection, and consent-gated TLS assessment.">
+  <meta property="og:title" content="Trust Card · Intelligent Web Security Platform">
+  <meta property="og:description" content="Inspect suspicious links with client-side privacy, deep certificate inspection, CT monitoring, and collaborative threat intelligence.">
   <meta property="og:type" content="website">
   <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
   <link rel="stylesheet" href="/static/styles.css">
@@ -23,14 +23,18 @@
       <span class="brand-privacy"><span class="status-dot" aria-hidden="true"></span> Local-first privacy</span>
     </a>
     <nav class="top-nav" aria-label="Main navigation">
-      <a class="nav-active" href="#check-link">Check link</a>
-      <a href="#how-it-works">How it works</a>
+      <a class="nav-active" href="#view-checker" data-tab-target="view-checker">Check link</a>
+      <a href="#view-dashboard" data-tab-target="view-dashboard">Threat Dashboard</a>
+      <a href="#view-history" data-tab-target="view-history">Scan History</a>
+      <a href="#view-ct" data-tab-target="view-ct">Cert & CT Monitor</a>
+      <a href="#view-intel" data-tab-target="view-intel">Threat Search</a>
       <a href="/api">API Reference</a>
       <a href="/admin/reports">Admin Review</a>
-      <a href="#contact">Contact</a>
     </nav>
     <div class="topbar-right">
-      <span class="system-status"><span class="status-dot" aria-hidden="true"></span> Local checks ready</span>
+      <div id="auth-user-container">
+        <button id="auth-trigger-btn" class="auth-trigger-btn" type="button">Sign In / Register</button>
+      </div>
       <button id="mobile-menu-btn" class="mobile-menu-btn" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="mobile-nav">
         <span class="menu-icon" aria-hidden="true">☰</span>
       </button>
@@ -39,8 +43,11 @@
 
   <nav id="mobile-nav" class="mobile-nav" hidden aria-label="Mobile Navigation">
     <div class="mobile-nav-inner">
-      <a class="mobile-nav-link" href="#check-link">Check a Link</a>
-      <a class="mobile-nav-link" href="#how-it-works">How It Works</a>
+      <a class="mobile-nav-link" href="#view-checker" data-tab-target="view-checker">Check a Link</a>
+      <a class="mobile-nav-link" href="#view-dashboard" data-tab-target="view-dashboard">Threat Dashboard</a>
+      <a class="mobile-nav-link" href="#view-history" data-tab-target="view-history">Scan History</a>
+      <a class="mobile-nav-link" href="#view-ct" data-tab-target="view-ct">Certificate & CT Monitor</a>
+      <a class="mobile-nav-link" href="#view-intel" data-tab-target="view-intel">Threat Search & Community</a>
       <a class="mobile-nav-link" href="/api">API Documentation</a>
       <a class="mobile-nav-link" href="/admin/reports">Admin Report Review</a>
       <a class="mobile-nav-link" href="#contact">Contact & Support</a>
@@ -52,125 +59,301 @@
   </nav>
 
   <main class="shell">
-    <section class="hero">
-      <div class="eyebrow"><span class="eyebrow-dot" aria-hidden="true"></span> Message context · Link evidence</div>
-      <h1>Check a link before you click.</h1>
-      <p>Paste a link or the message it came with. Trust Card explains the signals it finds and a safer next step.</p>
-    </section>
+    <!-- Platform Navigation Tabs -->
+    <nav class="platform-tabs-nav" aria-label="Platform Views">
+      <button class="tab-btn active" type="button" data-view="view-checker"><span>🔍</span> Check a Link</button>
+      <button class="tab-btn" type="button" data-view="view-dashboard"><span>📊</span> Threat Dashboard</button>
+      <button class="tab-btn" type="button" data-view="view-history"><span>🕒</span> Scan History</button>
+      <button class="tab-btn" type="button" data-view="view-ct"><span>🔒</span> Cert & CT Monitor</button>
+      <button class="tab-btn" type="button" data-view="view-intel"><span>🛡️</span> Collaborative Intel</button>
+    </nav>
 
-    <section id="check-link" class="workspace" aria-labelledby="check-title">
-      <div class="section-head">
-        <div>
-          <p class="step-label">START A CHECK</p>
-          <h2 id="check-title">What are you unsure about?</h2>
-        </div>
-        <span class="local-badge"><span class="status-dot" aria-hidden="true"></span> Message parsed here</span>
+    <!-- VIEW 1: Link Checker (Main View) -->
+    <section id="view-checker" class="view-section">
+      <section class="hero">
+        <div class="eyebrow"><span class="eyebrow-dot" aria-hidden="true"></span> Threat Intelligence · Web Security · Deep TLS Validation</div>
+        <h1>Check a link before you click.</h1>
+        <p>Paste a link or the message it came with. Trust Card explains the signals it finds and a safer next step.</p>
+      </section>
+
+      <!-- Scan Progress Indicator -->
+      <div id="scan-progress" class="scan-progress" hidden aria-label="Analysis Stages">
+        <div class="progress-step" data-step="1"><span class="step-circle">1</span><span>URL & Structure</span></div>
+        <div class="progress-step" data-step="2"><span class="step-circle">2</span><span>Threat Intelligence</span></div>
+        <div class="progress-step" data-step="3"><span class="step-circle">3</span><span>TLS & Key Generation</span></div>
+        <div class="progress-step" data-step="4"><span class="step-circle">4</span><span>Web Security & Forms</span></div>
+        <div class="progress-step" data-step="5"><span class="step-circle">5</span><span>AI Synthesis</span></div>
       </div>
 
-      <label class="field-label" for="message-input">Paste a link or the message it came with</label>
-      <textarea id="message-input" rows="5" maxlength="12000" aria-label="Paste a link or the message it came with" placeholder="e.g. Urgent: Your account has been suspended. Please verify your payment details immediately at https://sbi-login.account-verify.in/kyc"></textarea>
-      <div class="input-meta"><span>Your message stays in this browser. Up to five links can be checked.</span><span id="char-count">0 / 12,000</span></div>
-
-      <div id="context-preview" class="context-preview" hidden aria-live="polite">
-        <div class="preview-line"><span class="preview-label">Detected links</span><span id="detected-count" class="preview-value"></span></div>
-        <div class="preview-line"><span class="preview-label">Message cues</span><span id="detected-cues" class="cue-list"></span></div>
-      </div>
-      <p id="input-error" class="inline-error" role="alert" hidden></p>
-
-      <div id="link-picker" class="link-picker" hidden>
-        <div class="picker-heading">
-          <div><p class="step-label">STEP 1 · LINK SELECTION</p><h3 class="picker-title">Choose a link to check</h3></div>
-          <span id="picker-count" class="count-chip"></span>
-        </div>
-        <div class="selection-layout">
-          <div id="link-options" class="link-options" role="radiogroup" aria-label="Links found in the message"></div>
-          <aside class="selection-context">
-            <span class="mini-icon" aria-hidden="true">i</span>
-            <h4>Message context</h4>
-            <p id="context-summary">Detected cues are shown as evidence. They do not determine the verdict by themselves.</p>
-            <div id="selection-cues" class="cue-list"></div>
-          </aside>
-        </div>
-        <button id="check-local" class="button button-primary" type="button">Check selected link locally <span aria-hidden="true">→</span></button>
-      </div>
-
-      <div class="example-links-row">
-        <span class="example-label">Try an example:</span>
-        <div class="example-chips">
-          <button type="button" class="example-chip" data-example-url="https://expired.badssl.com/">expired.badssl.com</button>
-          <button type="button" class="example-chip" data-example-url="https://self-signed.badssl.com/">self-signed.badssl.com</button>
-          <button type="button" class="example-chip" data-example-url="https://wrong.host.badssl.com/">wrong.host.badssl.com</button>
-          <button type="button" class="example-chip" data-example-url="https://untrusted-root.badssl.com/">untrusted-root.badssl.com</button>
-          <button type="button" class="example-chip" data-example-url="https://example.com/">example.com</button>
-          <button type="button" class="example-chip demo-threat-chip" data-example-url="http://demo-phish.trustcard.test/login">demo-phish (Demo threat)</button>
-        </div>
-      </div>
-
-      <div class="input-actions">
-        <button id="clear-input" class="button button-quiet" type="button">Clear</button>
-        <button id="try-sample" class="button button-quiet sample-button" type="button">Try a sample message</button>
-        <button id="find-links" class="button button-primary" type="button">Check this link <span aria-hidden="true">→</span></button>
-      </div>
-
-      <div class="privacy-strip">
-        <span class="privacy-icon" aria-hidden="true">✓</span>
-        <div><strong>Message text stays in this browser</strong><p>Only the selected link and detected cue names go to this local app.</p></div>
-        <span class="privacy-caption"><span class="status-dot" aria-hidden="true"></span> No message upload</span>
-      </div>
-    </section>
-
-    <section id="result-region" class="result-region" aria-live="polite" aria-atomic="true" hidden></section>
-
-    <section id="how-it-works" class="how-section" aria-labelledby="how-title">
-      <div class="section-heading"><p class="step-label">A CLEARER SECOND OPINION</p><h2 id="how-title">Why check the message too?</h2><p>Risk can come from the request around a link as well as the destination itself.</p></div>
-      <div class="how-grid">
-        <article class="how-card"><span class="how-icon" aria-hidden="true">01</span><h3>Message context</h3><p>Urgency, credential, payment, and personal-data cues are detected in your browser.</p></article>
-        <article class="how-card"><span class="how-icon" aria-hidden="true">02</span><h3>Local threat data</h3><p>Cached feed matches and reviewed reports can explain a known warning. Feed age stays visible.</p></article>
-        <article class="how-card"><span class="how-icon" aria-hidden="true">03</span><h3>Live scan by choice</h3><p>Review the site and redirect scope before the separate scanner connects to it.</p></article>
-      </div>
-
-      <div class="how-to-read-container">
-        <details class="how-to-read-details">
-          <summary class="how-to-read-summary">
-            <span>📖 How to read this card: Understanding pillars, coverage, and verdicts</span>
-          </summary>
-          <div class="how-to-read-content">
-            <div class="read-block">
-              <h4>1. Why "No warning found" is never "Safe"</h4>
-              <p>Attackers register new domains daily, use legitimate cloud hosting, and obtain valid certificates. A clean result means our automated checks detected no known threat signatures across the checked scope — it is never an endorsement or guarantee of safety. Always visit official services directly.</p>
-            </div>
-            <div class="read-block">
-              <h4>2. The 7 Security Pillars</h4>
-              <p>Trust Card unifies 7 security dimensions: Threat Intelligence, URL & Impersonation, Page Content, Certificate & Trust, Web Security, Community Intelligence, and Message Context. Pillars clearly display status badges: <strong>Alert</strong>, <strong>Attention</strong>, <strong>Clear</strong>, or <strong>Not checked</strong>.</p>
-            </div>
-            <div class="read-block">
-              <h4>3. Local vs. Full Scan Coverage</h4>
-              <p><strong>Local-only check:</strong> Zero outbound network connections. Evaluates cached threat intelligence, brand lookalikes, URL structure, and community reports.</p>
-              <p><strong>Full live scan:</strong> Consented connection with IP pinning. Performs deep TLS validation, checks for weak cryptographic key generation, detects credential-harvesting forms, and audits HTTP security headers.</p>
-            </div>
-            <div class="read-block">
-              <h4>4. Indicator Score vs. Authoritative Verdict</h4>
-              <p>The 0–100 indicator score provides transparent risk ranking across completed checks. However, deterministic verdict rules remain authoritative: technical findings like missing headers or certificate expiration will never turn a link into a "Known threat".</p>
-            </div>
+      <section id="check-link" class="workspace" aria-labelledby="check-title">
+        <div class="section-head">
+          <div>
+            <p class="step-label">START A CHECK</p>
+            <h2 id="check-title">What are you unsure about?</h2>
           </div>
-        </details>
-      </div>
+          <span class="local-badge"><span class="status-dot" aria-hidden="true"></span> Message parsed here</span>
+        </div>
+
+        <label class="field-label" for="message-input">Paste a link or the message it came with</label>
+        <textarea id="message-input" rows="5" maxlength="12000" aria-label="Paste a link or the message it came with" placeholder="e.g. Urgent: Your account has been suspended. Please verify your payment details immediately at https://sbi-login.account-verify.in/kyc"></textarea>
+        <div class="input-meta"><span>Your message stays in this browser. Up to five links can be checked.</span><span id="char-count">0 / 12,000</span></div>
+
+        <div id="context-preview" class="context-preview" hidden aria-live="polite">
+          <div class="preview-line"><span class="preview-label">Detected links</span><span id="detected-count" class="preview-value"></span></div>
+          <div class="preview-line"><span class="preview-label">Message cues</span><span id="detected-cues" class="cue-list"></span></div>
+        </div>
+        <p id="input-error" class="inline-error" role="alert" hidden></p>
+
+        <div id="link-picker" class="link-picker" hidden>
+          <div class="picker-heading">
+            <div><p class="step-label">STEP 1 · LINK SELECTION</p><h3 class="picker-title">Choose a link to check</h3></div>
+            <span id="picker-count" class="count-chip"></span>
+          </div>
+          <div class="selection-layout">
+            <div id="link-options" class="link-options" role="radiogroup" aria-label="Links found in the message"></div>
+            <aside class="selection-context">
+              <span class="mini-icon" aria-hidden="true">i</span>
+              <h4>Message context</h4>
+              <p id="context-summary">Detected cues are shown as evidence. They do not determine the verdict by themselves.</p>
+              <div id="selection-cues" class="cue-list"></div>
+            </aside>
+          </div>
+          <button id="check-local" class="button button-primary" type="button">Check selected link locally <span aria-hidden="true">→</span></button>
+        </div>
+
+        <div class="example-links-row">
+          <span class="example-label">Try an example:</span>
+          <div class="example-chips">
+            <button type="button" class="example-chip" data-example-url="https://expired.badssl.com/">expired.badssl.com</button>
+            <button type="button" class="example-chip" data-example-url="https://self-signed.badssl.com/">self-signed.badssl.com</button>
+            <button type="button" class="example-chip" data-example-url="https://wrong.host.badssl.com/">wrong.host.badssl.com</button>
+            <button type="button" class="example-chip" data-example-url="https://untrusted-root.badssl.com/">untrusted-root.badssl.com</button>
+            <button type="button" class="example-chip" data-example-url="https://example.com/">example.com</button>
+            <button type="button" class="example-chip demo-threat-chip" data-example-url="http://demo-phish.trustcard.test/login">demo-phish (Demo threat)</button>
+          </div>
+        </div>
+
+        <div class="input-actions">
+          <button id="clear-input" class="button button-quiet" type="button">Clear</button>
+          <button id="try-sample" class="button button-quiet sample-button" type="button">Try a sample message</button>
+          <button id="find-links" class="button button-primary" type="button">Check this link <span aria-hidden="true">→</span></button>
+        </div>
+
+        <div class="privacy-strip">
+          <span class="privacy-icon" aria-hidden="true">✓</span>
+          <div><strong>Message text stays in this browser</strong><p>Only the selected link and detected cue names go to this local app.</p></div>
+          <span class="privacy-caption"><span class="status-dot" aria-hidden="true"></span> No message upload</span>
+        </div>
+      </section>
+
+      <section id="result-region" class="result-region" aria-live="polite" aria-atomic="true" hidden></section>
+
+      <section id="how-it-works" class="how-section" aria-labelledby="how-title">
+        <div class="section-heading"><p class="step-label">A CLEARER SECOND OPINION</p><h2 id="how-title">Why check the message too?</h2><p>Risk can come from the request around a link as well as the destination itself.</p></div>
+        <div class="how-grid">
+          <article class="how-card"><span class="how-icon" aria-hidden="true">01</span><h3>Message context</h3><p>Urgency, credential, payment, and personal-data cues are detected in your browser.</p></article>
+          <article class="how-card"><span class="how-icon" aria-hidden="true">02</span><h3>Local threat data</h3><p>Cached feed matches and reviewed reports can explain a known warning. Feed age stays visible.</p></article>
+          <article class="how-card"><span class="how-icon" aria-hidden="true">03</span><h3>Live scan by choice</h3><p>Review the site and redirect scope before the separate scanner connects to it.</p></article>
+        </div>
+
+        <div class="how-to-read-container">
+          <details class="how-to-read-details">
+            <summary class="how-to-read-summary">
+              <span>📖 How to read this card: Understanding pillars, coverage, and verdicts</span>
+            </summary>
+            <div class="how-to-read-content">
+              <div class="read-block">
+                <h4>1. Why "No warning found" is never "Safe"</h4>
+                <p>Attackers register new domains daily, use legitimate cloud hosting, and obtain valid certificates. A clean result means our automated checks detected no known threat signatures across the checked scope — it is never an endorsement or guarantee of safety. Always visit official services directly.</p>
+              </div>
+              <div class="read-block">
+                <h4>2. The 7 Security Pillars</h4>
+                <p>Trust Card unifies 7 security dimensions: Threat Intelligence, URL & Impersonation, Page Content, Certificate & Trust, Web Security, Community Intelligence, and Message Context. Pillars clearly display status badges: <strong>Alert</strong>, <strong>Attention</strong>, <strong>Clear</strong>, or <strong>Not checked</strong>.</p>
+              </div>
+              <div class="read-block">
+                <h4>3. Local vs. Full Scan Coverage</h4>
+                <p><strong>Local-only check:</strong> Zero outbound network connections. Evaluates cached threat intelligence, brand lookalikes, URL structure, and community reports.</p>
+                <p><strong>Full live scan:</strong> Consented connection with IP pinning. Performs deep TLS validation, checks for weak cryptographic key generation, detects credential-harvesting forms, and audits HTTP security headers.</p>
+              </div>
+              <div class="read-block">
+                <h4>4. Indicator Score vs. Authoritative Verdict</h4>
+                <p>The 0–100 indicator score provides transparent risk ranking across completed checks. However, deterministic verdict rules remain authoritative: technical findings like missing headers or certificate expiration will never turn a link into a "Known threat".</p>
+              </div>
+            </div>
+          </details>
+        </div>
+      </section>
+
+      <section class="feed-panel" aria-labelledby="intel-heading">
+        <div class="feed-copy">
+          <p class="step-label">LOCAL THREAT DATA</p>
+          <h2 id="intel-heading">Your community feeds</h2>
+          <p id="feed-summary" class="feed-summary">{% if feed_stale %}No fresh feed data is available yet.{% else %}Threat feeds are up to date.{% endif %}</p>
+          <div id="feed-status" class="feed-status">
+            {% for item in feed_status %}
+            <span class="feed-chip">{% if item.source == "Demo seed" %}Demo data, not real threat intelligence{% else %}{{ item.source }}{% endif %} · {% if not item.available %}not loaded{% elif item.stale %}stale{% else %}updated {{ item.updated_at }}{% endif %}</span>
+            {% endfor %}
+          </div>
+        </div>
+        <button id="refresh-feeds" class="button button-secondary" type="button">Refresh feeds <span aria-hidden="true">↻</span></button>
+      </section>
     </section>
 
-    <section class="feed-panel" aria-labelledby="intel-heading">
-      <div class="feed-copy">
-        <p class="step-label">LOCAL THREAT DATA</p>
-        <h2 id="intel-heading">Your community feeds</h2>
-        <p id="feed-summary" class="feed-summary">{% if feed_stale %}No fresh feed data is available yet.{% else %}Threat feeds are up to date.{% endif %}</p>
-        <div id="feed-status" class="feed-status">
-          {% for item in feed_status %}
-          <span class="feed-chip">{% if item.source == "Demo seed" %}Demo data, not real threat intelligence{% else %}{{ item.source }}{% endif %} · {% if not item.available %}not loaded{% elif item.stale %}stale{% else %}updated {{ item.updated_at }}{% endif %}</span>
-          {% endfor %}
+    <!-- VIEW 2: Threat Intelligence Dashboard -->
+    <section id="view-dashboard" class="view-section" hidden>
+      <section class="hero">
+        <div class="eyebrow"><span class="eyebrow-dot" aria-hidden="true"></span> Threat Analytics & Live Monitoring</div>
+        <h1>Threat Intelligence Dashboard</h1>
+        <p>Live metrics and distribution across scanned websites, community threat reports, and certificate incidents.</p>
+      </section>
+
+      <div class="dashboard-grid">
+        <div class="kpi-card"><div class="kpi-icon">🌐</div><div id="kpi-total-scans" class="kpi-num">0</div><div class="kpi-label">Websites Analyzed</div></div>
+        <div class="kpi-card"><div class="kpi-icon">🚨</div><div id="kpi-total-malicious" class="kpi-num" style="color:#dc2626;">0</div><div class="kpi-label">Malicious Detected</div></div>
+        <div class="kpi-card"><div class="kpi-icon">🎣</div><div id="kpi-total-phishing" class="kpi-num" style="color:#e11d48;">0</div><div class="kpi-label">Phishing URLs</div></div>
+        <div class="kpi-card"><div class="kpi-icon">👥</div><div id="kpi-total-reports" class="kpi-num">0</div><div class="kpi-label">Community Reports</div></div>
+        <div class="kpi-card"><div class="kpi-icon">🛡️</div><div id="kpi-verified-threats" class="kpi-num" style="color:#059669;">0</div><div class="kpi-label">Verified Threats</div></div>
+        <div class="kpi-card"><div class="kpi-icon">⚡</div><div id="kpi-threats-24h" class="kpi-num" style="color:#d97706;">0</div><div class="kpi-label">Threats in 24h</div></div>
+      </div>
+
+      <div class="charts-row">
+        <div class="chart-card">
+          <h3>Threat Category Distribution</h3>
+          <div id="category-bars-container">Loading categories…</div>
+        </div>
+        <div class="chart-card">
+          <h3>Risk Severity Breakdown</h3>
+          <div id="severity-bars-container">Loading severity distribution…</div>
         </div>
       </div>
-      <button id="refresh-feeds" class="button button-secondary" type="button">Refresh feeds <span aria-hidden="true">↻</span></button>
+
+      <div class="table-container">
+        <table class="custom-table">
+          <thead>
+            <tr><th>Recent Scans</th><th>Destination Host</th><th>Threat Score</th><th>Verdict</th><th>Timestamp</th><th>Action</th></tr>
+          </thead>
+          <tbody id="dashboard-recent-scans-tbody">
+            <tr><td colspan="6" style="text-align:center;color:#6b7280;padding:24px;">No scans recorded yet. Check a link to populate analytics.</td></tr>
+          </tbody>
+        </table>
+      </div>
     </section>
 
+    <!-- VIEW 3: Scan History & Downloadable Reports -->
+    <section id="view-history" class="view-section" hidden>
+      <section class="hero">
+        <div class="eyebrow"><span class="eyebrow-dot" aria-hidden="true"></span> Audit Trail & Compliance</div>
+        <h1>Scan History & Security Reports</h1>
+        <p>Review past website assessments, download full printable PDF reports, or compare threat deltas over time.</p>
+      </section>
+
+      <div class="table-toolbar">
+        <input type="text" id="history-search-input" class="search-input" placeholder="Search URL or host…">
+        <select id="history-severity-select" class="search-input" style="width: auto;">
+          <option value="all">All Severities</option>
+          <option value="malicious">Malicious / Critical</option>
+          <option value="high">High Risk</option>
+          <option value="suspicious">Suspicious</option>
+          <option value="safe">Safe / Low Risk</option>
+        </select>
+        <button id="refresh-history-btn" class="btn btn-secondary" type="button">↻ Refresh</button>
+      </div>
+
+      <div class="table-container">
+        <table class="custom-table">
+          <thead>
+            <tr><th>Select</th><th>Target URL</th><th>Risk Level</th><th>Score</th><th>Mode</th><th>Date</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="history-tbody">
+            <tr><td colspan="7" style="text-align:center;color:#6b7280;padding:24px;">Loading scan history…</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div style="display:flex; justify-content: flex-end; gap: 10px; margin-top: 12px;">
+        <button id="compare-selected-btn" class="button button-secondary" type="button" disabled>Compare Selected (Choose 2)</button>
+      </div>
+    </section>
+
+    <!-- VIEW 4: Certificate & CT Monitoring -->
+    <section id="view-ct" class="view-section" hidden>
+      <section class="hero">
+        <div class="eyebrow"><span class="eyebrow-dot" aria-hidden="true"></span> Certificate Transparency & Trust Infrastructure</div>
+        <h1>Certificate Transparency & DNS Monitor</h1>
+        <p>Search global Certificate Transparency logs (via crt.sh), uncover hidden subdomains, and verify DNS records.</p>
+      </section>
+
+      <div class="workspace" style="margin-bottom: 24px;">
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+          <input type="text" id="ct-domain-input" class="search-input" style="flex: 1;" placeholder="Enter domain to search (e.g. badssl.com or example.com)…">
+          <button id="ct-search-btn" class="button button-primary" type="button">Inspect CT Logs <span aria-hidden="true">→</span></button>
+        </div>
+      </div>
+
+      <div id="ct-results-panel" hidden>
+        <div class="dashboard-grid">
+          <div class="kpi-card"><div class="kpi-icon">📜</div><div id="ct-total-certs" class="kpi-num">0</div><div class="kpi-label">Total Certs Logged</div></div>
+          <div class="kpi-card"><div class="kpi-icon">🌿</div><div id="ct-subdomains-count" class="kpi-num" style="color:#059669;">0</div><div class="kpi-label">Subdomains Discovered</div></div>
+          <div class="kpi-card"><div class="kpi-icon">⏱️</div><div id="ct-recent-30d" class="kpi-num" style="color:#e0284b;">0</div><div class="kpi-label">Issued in Last 30d</div></div>
+        </div>
+
+        <div class="chart-card" style="margin-bottom: 20px;">
+          <h3>Discovered Subdomains (From Certificate SANs)</h3>
+          <div id="ct-subdomain-cloud" class="subdomain-cloud"></div>
+        </div>
+
+        <div class="chart-card" style="margin-bottom: 20px;">
+          <h3>DNS Host Resolution</h3>
+          <div id="dns-resolution-info" style="font-size: 13px;"></div>
+        </div>
+
+        <div class="table-container">
+          <table class="custom-table">
+            <thead>
+              <tr><th>Log ID</th><th>Common Name</th><th>Issuer CA</th><th>Logged At</th><th>Valid Until</th></tr>
+            </thead>
+            <tbody id="ct-history-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 5: Collaborative Threat Intelligence Search -->
+    <section id="view-intel" class="view-section" hidden>
+      <section class="hero">
+        <div class="eyebrow"><span class="eyebrow-dot" aria-hidden="true"></span> Community Defense & Collaborative Intel</div>
+        <h1>Collaborative Threat Database</h1>
+        <p>Search verified phishing, malware, fake banking, and fraudulent payment portals shared across our community.</p>
+      </section>
+
+      <div class="workspace" style="margin-bottom: 24px;">
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+          <input type="text" id="intel-query-input" class="search-input" style="flex: 1;" placeholder="Search by URL, domain, IP, or threat keyword…">
+          <select id="intel-category-select" class="search-input" style="width: auto;">
+            <option value="all">All Categories</option>
+            <option value="phishing">Phishing</option>
+            <option value="malware">Malware</option>
+            <option value="fake_banking">Fake Banking Portal</option>
+            <option value="fraudulent_payment">Fraudulent Payment</option>
+            <option value="fake_recruitment">Fake Recruitment</option>
+            <option value="impersonation">Brand Impersonation</option>
+          </select>
+          <button id="intel-search-btn" class="button button-primary" type="button">Search Threats <span aria-hidden="true">→</span></button>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table class="custom-table">
+          <thead>
+            <tr><th>Threat Indicator</th><th>Type</th><th>Category</th><th>Severity</th><th>Status</th><th>Reports</th><th>Source & Evidence</th></tr>
+          </thead>
+          <tbody id="intel-tbody">
+            <tr><td colspan="7" style="text-align:center;color:#6b7280;padding:24px;">No threat indicators loaded. Run a search to query the database.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Support Section -->
     <section id="contact" class="support-panel" aria-labelledby="contact-heading">
       <div class="support-card">
         <div class="support-text">
@@ -202,6 +385,56 @@
 
   <div id="toast-container" class="toast-container" aria-live="polite" aria-atomic="true"></div>
 
+  <!-- AUTH MODAL -->
+  <dialog id="auth-dialog" class="dialog-card" aria-labelledby="auth-title">
+    <div class="dialog-heading">
+      <span class="dialog-icon" aria-hidden="true">👤</span>
+      <div><p class="step-label">PLATFORM ACCESS</p><h2 id="auth-title">Account Sign In & Registration</h2></div>
+      <button class="dialog-close" type="button" aria-label="Close dialog" data-close-dialog="auth-dialog">×</button>
+    </div>
+    <div class="auth-tabs">
+      <button id="auth-tab-login" class="auth-tab active" type="button">Sign In</button>
+      <button id="auth-tab-register" class="auth-tab" type="button">Create Account</button>
+    </div>
+    <div id="auth-login-form" class="auth-form">
+      <div class="form-field">
+        <label for="login-username">Username or Email</label>
+        <input type="text" id="login-username" autocomplete="username" placeholder="e.g. analyst_bob">
+      </div>
+      <div class="form-field">
+        <label for="login-password">Password</label>
+        <input type="password" id="login-password" autocomplete="current-password" placeholder="••••••••">
+      </div>
+      <button id="login-submit-btn" class="button button-primary" style="width:100%;margin-top:8px;" type="button">Sign In</button>
+    </div>
+    <div id="auth-register-form" class="auth-form" hidden>
+      <div class="form-field">
+        <label for="reg-username">Username</label>
+        <input type="text" id="reg-username" autocomplete="username" placeholder="e.g. security_lead">
+      </div>
+      <div class="form-field">
+        <label for="reg-email">Email Address</label>
+        <input type="email" id="reg-email" autocomplete="email" placeholder="you@organization.com">
+      </div>
+      <div class="form-field">
+        <label for="reg-password">Password (min 6 chars)</label>
+        <input type="password" id="reg-password" autocomplete="new-password" placeholder="••••••••">
+      </div>
+      <button id="reg-submit-btn" class="button button-primary" style="width:100%;margin-top:8px;" type="button">Create Account</button>
+    </div>
+  </dialog>
+
+  <!-- COMPARE SCANS MODAL -->
+  <dialog id="compare-dialog" class="dialog-card" style="max-width: 760px;" aria-labelledby="compare-title">
+    <div class="dialog-heading">
+      <span class="dialog-icon" aria-hidden="true">⚖️</span>
+      <div><p class="step-label">DELTA ASSESSMENT</p><h2 id="compare-title">Compare Scan Results</h2></div>
+      <button class="dialog-close" type="button" aria-label="Close compare dialog" data-close-dialog="compare-dialog">×</button>
+    </div>
+    <div id="compare-content" style="font-size: 13px;">Loading comparison…</div>
+  </dialog>
+
+  <!-- LIVE SCAN CONSENT DIALOG (With all invariant test strings) -->
   <dialog id="scan-consent" class="dialog-card" aria-labelledby="consent-title">
     <div class="dialog-heading">
       <span class="dialog-icon" aria-hidden="true">↗</span>
@@ -229,6 +462,7 @@
     <p class="dialog-footnote">Your local-only result remains available if you decline.</p>
   </dialog>
 
+  <!-- FEED CONSENT DIALOG (With all invariant test strings) -->
   <dialog id="feed-consent" class="dialog-card" aria-labelledby="feed-consent-title">
     <div class="dialog-heading">
       <span class="dialog-icon" aria-hidden="true">↻</span>

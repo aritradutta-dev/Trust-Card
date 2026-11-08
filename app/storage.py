@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 import hashlib
+import hmac
+import json
+import secrets
 import sqlite3
 from contextlib import contextmanager
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Iterable, Iterator
+from typing import Any, Iterable, Iterator
 
 
 def _connect(db_path: str | Path) -> sqlite3.Connection:
@@ -62,6 +65,58 @@ def init_db(db_path: str | Path) -> None:
                 source TEXT NOT NULL DEFAULT 'local',
                 FOREIGN KEY (report_id) REFERENCES reports(id) ON DELETE CASCADE
             );
+            CREATE TABLE IF NOT EXISTS users (
+                id TEXT PRIMARY KEY,
+                username TEXT UNIQUE NOT NULL,
+                email TEXT UNIQUE NOT NULL,
+                password_hash TEXT NOT NULL,
+                salt TEXT NOT NULL,
+                role TEXT NOT NULL DEFAULT 'user',
+                created_at TEXT NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS user_sessions (
+                token TEXT PRIMARY KEY,
+                user_id TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                expires_at TEXT NOT NULL,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            );
+            CREATE TABLE IF NOT EXISTS scan_history (
+                id TEXT PRIMARY KEY,
+                user_id TEXT,
+                url TEXT NOT NULL,
+                host TEXT NOT NULL,
+                mode TEXT NOT NULL,
+                verdict TEXT NOT NULL,
+                confidence TEXT NOT NULL,
+                score INTEGER NOT NULL,
+                risk_class TEXT NOT NULL,
+                checked_at TEXT NOT NULL,
+                summary TEXT NOT NULL,
+                findings_json TEXT NOT NULL,
+                scoring_json TEXT NOT NULL,
+                cert_json TEXT,
+                page_signals_json TEXT,
+                ai_explanation_json TEXT
+            );
+            CREATE INDEX IF NOT EXISTS scan_history_host_idx ON scan_history(host);
+            CREATE INDEX IF NOT EXISTS scan_history_checked_at_idx ON scan_history(checked_at DESC);
+            CREATE TABLE IF NOT EXISTS threat_intel_entries (
+                id TEXT PRIMARY KEY,
+                indicator TEXT NOT NULL,
+                indicator_type TEXT NOT NULL,
+                category TEXT NOT NULL,
+                severity TEXT NOT NULL,
+                confidence TEXT NOT NULL,
+                status TEXT NOT NULL,
+                report_count INTEGER NOT NULL DEFAULT 1,
+                source TEXT NOT NULL,
+                evidence TEXT,
+                first_seen TEXT NOT NULL,
+                last_seen TEXT NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS threat_intel_indicator_idx ON threat_intel_entries(indicator);
+            CREATE INDEX IF NOT EXISTS threat_intel_category_idx ON threat_intel_entries(category);
             """
         )
 
@@ -298,3 +353,455 @@ def import_reports(
             )
             count += 1
     return count
+
+
+# ---------------------------------------------------------------------------
+# User Authentication & RBAC Storage
+# ---------------------------------------------------------------------------
+
+def hash_password(password: str, salt: str | None = None) -> tuple[str, str]:
+    """Derive PBKDF2-HMAC-SHA256 password hash and return (hash_hex, salt_hex)."""
+    if salt is None:
+        salt = secrets.token_hex(16)
+    hashed = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), bytes.fromhex(salt), 100_000).hex()
+    return hashed, salt
+
+
+def verify_password(password: str, password_hash: str, salt: str) -> bool:
+    """Verify password against stored PBKDF2 hash using constant-time comparison."""
+    hashed, _ = hash_password(password, salt)
+    return hmac.compare_digest(hashed, password_hash)
+
+
+def create_user(
+    db_path: str | Path,
+    username: str,
+    email: str,
+    password: str,
+    role: str = "user",
+) -> dict:
+    user_id = secrets.token_hex(12)
+    clean_username = username.strip().lower()
+    clean_email = email.strip().lower()
+    password_hash, salt = hash_password(password)
+    now = datetime.now(timezone.utc).isoformat()
+    with _connection(db_path) as db:
+        db.execute(
+            """INSERT INTO users (id, username, email, password_hash, salt, role, created_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?)""",
+            (user_id, clean_username, clean_email, password_hash, salt, role, now),
+        )
+    return {
+        "id": user_id,
+        "username": clean_username,
+        "email": clean_email,
+        "role": role,
+        "created_at": now,
+    }
+
+
+def get_user_by_id(db_path: str | Path, user_id: str) -> dict | None:
+    with _connection(db_path) as db:
+        row = db.execute(
+            "SELECT id, username, email, role, created_at FROM users WHERE id = ?",
+            (user_id,),
+        ).fetchone()
+    return dict(row) if row else None
+
+
+def get_user_by_username_or_email(db_path: str | Path, identifier: str) -> dict | None:
+    clean = identifier.strip().lower()
+    with _connection(db_path) as db:
+        row = db.execute(
+            "SELECT id, username, email, password_hash, salt, role, created_at FROM users WHERE username = ? OR email = ?",
+            (clean, clean),
+        ).fetchone()
+    return dict(row) if row else None
+
+
+def create_session(db_path: str | Path, user_id: str, duration_days: int = 7) -> str:
+    token = secrets.token_urlsafe(32)
+    now = datetime.now(timezone.utc)
+    expires = now + timedelta(days=duration_days)
+    with _connection(db_path) as db:
+        db.execute(
+            "INSERT INTO user_sessions (token, user_id, created_at, expires_at) VALUES (?, ?, ?, ?)",
+            (token, user_id, now.isoformat(), expires.isoformat()),
+        )
+    return token
+
+
+def get_session_user(db_path: str | Path, token: str) -> dict | None:
+    now = datetime.now(timezone.utc).isoformat()
+    with _connection(db_path) as db:
+        row = db.execute(
+            """SELECT users.id, users.username, users.email, users.role, users.created_at
+               FROM user_sessions
+               JOIN users ON user_sessions.user_id = users.id
+               WHERE user_sessions.token = ? AND user_sessions.expires_at > ?""",
+            (token, now),
+        ).fetchone()
+    return dict(row) if row else None
+
+
+def delete_session(db_path: str | Path, token: str) -> None:
+    with _connection(db_path) as db:
+        db.execute("DELETE FROM user_sessions WHERE token = ?", (token,))
+
+
+def seed_default_admin(db_path: str | Path, username: str, password: str) -> None:
+    if not username or not password:
+        return
+    with _connection(db_path) as db:
+        existing = db.execute("SELECT id FROM users WHERE role = 'admin' LIMIT 1").fetchone()
+        if not existing:
+            clean_username = username.strip().lower()
+            password_hash, salt = hash_password(password)
+            now = datetime.now(timezone.utc).isoformat()
+            db.execute(
+                """INSERT INTO users (id, username, email, password_hash, salt, role, created_at)
+                   VALUES (?, ?, ?, ?, ?, 'admin', ?)
+                   ON CONFLICT(username) DO UPDATE SET password_hash = excluded.password_hash, salt = excluded.salt, role = 'admin'""",
+                (secrets.token_hex(12), clean_username, f"{clean_username}@trustcard.local", password_hash, salt, now),
+            )
+
+
+# ---------------------------------------------------------------------------
+# Scan History Storage
+# ---------------------------------------------------------------------------
+
+def record_scan(
+    db_path: str | Path,
+    scan_id: str,
+    user_id: str | None,
+    url: str,
+    host: str,
+    mode: str,
+    verdict: str,
+    confidence: str,
+    score: int,
+    risk_class: str,
+    checked_at: str,
+    summary: str,
+    findings: list[dict],
+    scoring: dict,
+    cert: dict | None = None,
+    page_signals: list[dict] | None = None,
+    ai_explanation: dict | None = None,
+) -> dict:
+    findings_json = json.dumps(findings)
+    scoring_json = json.dumps(scoring)
+    cert_json = json.dumps(cert) if cert else None
+    page_signals_json = json.dumps(page_signals) if page_signals else None
+    ai_explanation_json = json.dumps(ai_explanation) if ai_explanation else None
+
+    with _connection(db_path) as db:
+        db.execute(
+            """INSERT INTO scan_history
+               (id, user_id, url, host, mode, verdict, confidence, score, risk_class, checked_at, summary,
+                findings_json, scoring_json, cert_json, page_signals_json, ai_explanation_json)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+               ON CONFLICT(id) DO UPDATE SET
+                 verdict = excluded.verdict,
+                 score = excluded.score,
+                 risk_class = excluded.risk_class,
+                 findings_json = excluded.findings_json,
+                 scoring_json = excluded.scoring_json,
+                 cert_json = excluded.cert_json,
+                 ai_explanation_json = excluded.ai_explanation_json""",
+            (
+                scan_id,
+                user_id,
+                url,
+                host,
+                mode,
+                verdict,
+                confidence,
+                score,
+                risk_class,
+                checked_at,
+                summary,
+                findings_json,
+                scoring_json,
+                cert_json,
+                page_signals_json,
+                ai_explanation_json,
+            ),
+        )
+    return {
+        "id": scan_id,
+        "user_id": user_id,
+        "url": url,
+        "host": host,
+        "mode": mode,
+        "verdict": verdict,
+        "confidence": confidence,
+        "score": score,
+        "risk_class": risk_class,
+        "checked_at": checked_at,
+        "summary": summary,
+    }
+
+
+def list_scans(
+    db_path: str | Path,
+    user_id: str | None = None,
+    query: str | None = None,
+    severity: str | None = None,
+    limit: int = 50,
+    offset: int = 0,
+) -> tuple[list[dict], int]:
+    clauses: list[str] = []
+    params: list[Any] = []
+
+    if user_id:
+        clauses.append("user_id = ?")
+        params.append(user_id)
+    if query:
+        clauses.append("(url LIKE ? OR host LIKE ?)")
+        params.extend([f"%{query}%", f"%{query}%"])
+    if severity and severity != "all":
+        clauses.append("risk_class = ?")
+        params.append(severity)
+
+    where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
+
+    with _connection(db_path) as db:
+        count_row = db.execute(f"SELECT COUNT(*) as cnt FROM scan_history {where}", params).fetchone()
+        total = count_row["cnt"] if count_row else 0
+
+        sql = f"""SELECT id, user_id, url, host, mode, verdict, confidence, score, risk_class, checked_at, summary
+                  FROM scan_history
+                  {where}
+                  ORDER BY checked_at DESC
+                  LIMIT ? OFFSET ?"""
+        rows = db.execute(sql, [*params, limit, offset]).fetchall()
+
+    return [dict(row) for row in rows], total
+
+
+def get_scan(db_path: str | Path, scan_id: str, user_id: str | None = None) -> dict | None:
+    with _connection(db_path) as db:
+        if user_id:
+            row = db.execute(
+                "SELECT * FROM scan_history WHERE id = ? AND (user_id = ? OR user_id IS NULL)",
+                (scan_id, user_id),
+            ).fetchone()
+        else:
+            row = db.execute("SELECT * FROM scan_history WHERE id = ?", (scan_id,)).fetchone()
+    if not row:
+        return None
+    d = dict(row)
+    d["findings"] = json.loads(d["findings_json"]) if d.get("findings_json") else []
+    d["scoring"] = json.loads(d["scoring_json"]) if d.get("scoring_json") else {}
+    d["certificate"] = json.loads(d["cert_json"]) if d.get("cert_json") else None
+    d["page_signals"] = json.loads(d["page_signals_json"]) if d.get("page_signals_json") else []
+    d["ai_explanation"] = json.loads(d["ai_explanation_json"]) if d.get("ai_explanation_json") else None
+    return d
+
+
+def delete_scan(db_path: str | Path, scan_id: str, user_id: str | None = None) -> bool:
+    with _connection(db_path) as db:
+        if user_id:
+            cur = db.execute("DELETE FROM scan_history WHERE id = ? AND user_id = ?", (scan_id, user_id))
+        else:
+            cur = db.execute("DELETE FROM scan_history WHERE id = ?", (scan_id,))
+        return cur.rowcount > 0
+
+
+def compare_scans(db_path: str | Path, scan_a_id: str, scan_b_id: str) -> dict:
+    scan_a = get_scan(db_path, scan_a_id)
+    scan_b = get_scan(db_path, scan_b_id)
+    if not scan_a or not scan_b:
+        raise KeyError("One or both scans not found")
+
+    findings_a_ids = {f.get("id") for f in scan_a.get("findings", [])}
+    findings_b_ids = {f.get("id") for f in scan_b.get("findings", [])}
+
+    new_in_b = [f for f in scan_b.get("findings", []) if f.get("id") not in findings_a_ids]
+    resolved_in_b = [f for f in scan_a.get("findings", []) if f.get("id") not in findings_b_ids]
+    common = [f for f in scan_b.get("findings", []) if f.get("id") in findings_a_ids]
+
+    score_diff = scan_b["score"] - scan_a["score"]
+
+    return {
+        "scan_a": {
+            "id": scan_a["id"],
+            "url": scan_a["url"],
+            "score": scan_a["score"],
+            "verdict": scan_a["verdict"],
+            "checked_at": scan_a["checked_at"],
+        },
+        "scan_b": {
+            "id": scan_b["id"],
+            "url": scan_b["url"],
+            "score": scan_b["score"],
+            "verdict": scan_b["verdict"],
+            "checked_at": scan_b["checked_at"],
+        },
+        "score_diff": score_diff,
+        "new_findings": new_in_b,
+        "resolved_findings": resolved_in_b,
+        "common_findings_count": len(common),
+    }
+
+
+# ---------------------------------------------------------------------------
+# Collaborative Threat Intelligence & Dashboard Analytics
+# ---------------------------------------------------------------------------
+
+def record_threat_intel(
+    db_path: str | Path,
+    indicator: str,
+    indicator_type: str,
+    category: str,
+    severity: str,
+    confidence: str,
+    source: str,
+    evidence: str = "",
+    status: str = "unverified",
+) -> dict:
+    entry_id = hashlib.sha256(f"{indicator}\0{category}".encode()).hexdigest()[:24]
+    now = datetime.now(timezone.utc).isoformat()
+    clean_indicator = indicator.strip().lower()
+
+    with _connection(db_path) as db:
+        db.execute(
+            """INSERT INTO threat_intel_entries
+               (id, indicator, indicator_type, category, severity, confidence, status, report_count, source, evidence, first_seen, last_seen)
+               VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?)
+               ON CONFLICT(id) DO UPDATE SET
+                 report_count = threat_intel_entries.report_count + 1,
+                 last_seen = excluded.last_seen,
+                 evidence = CASE WHEN excluded.evidence != '' THEN excluded.evidence ELSE threat_intel_entries.evidence END""",
+            (entry_id, clean_indicator, indicator_type, category, severity, confidence, status, source, evidence, now, now),
+        )
+        row = db.execute("SELECT * FROM threat_intel_entries WHERE id = ?", (entry_id,)).fetchone()
+    return dict(row)
+
+
+def search_threat_intel(
+    db_path: str | Path,
+    query: str,
+    category: str | None = None,
+    indicator_type: str | None = None,
+    status: str | None = None,
+    limit: int = 50,
+) -> list[dict]:
+    clauses: list[str] = []
+    params: list[Any] = []
+
+    if query:
+        clauses.append("(indicator LIKE ? OR source LIKE ? OR evidence LIKE ?)")
+        params.extend([f"%{query}%", f"%{query}%", f"%{query}%"])
+    if category and category != "all":
+        clauses.append("category = ?")
+        params.append(category)
+    if indicator_type and indicator_type != "all":
+        clauses.append("indicator_type = ?")
+        params.append(indicator_type)
+    if status and status != "all":
+        clauses.append("status = ?")
+        params.append(status)
+
+    where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
+
+    with _connection(db_path) as db:
+        sql = f"""SELECT * FROM threat_intel_entries
+                  {where}
+                  ORDER BY last_seen DESC
+                  LIMIT ?"""
+        rows = db.execute(sql, [*params, limit]).fetchall()
+    return [dict(row) for row in rows]
+
+
+def get_dashboard_stats(db_path: str | Path) -> dict:
+    """Aggregate live platform statistics across scans, reports, and feeds."""
+    now = datetime.now(timezone.utc)
+    yesterday = (now - timedelta(hours=24)).isoformat()
+
+    with _connection(db_path) as db:
+        # 1. Total Scans
+        total_scans_row = db.execute("SELECT COUNT(*) as cnt FROM scan_history").fetchone()
+        total_scans = total_scans_row["cnt"] if total_scans_row else 0
+
+        # 2. Total Malicious & High Risk
+        malicious_row = db.execute(
+            "SELECT COUNT(*) as cnt FROM scan_history WHERE verdict = 'known_threat' OR risk_class IN ('malicious', 'high')"
+        ).fetchone()
+        total_malicious = malicious_row["cnt"] if malicious_row else 0
+
+        # 3. Phishing URLs
+        phishing_row = db.execute(
+            "SELECT COUNT(*) as cnt FROM scan_history WHERE verdict = 'known_threat' OR url LIKE '%phish%' OR summary LIKE '%phishing%'"
+        ).fetchone()
+        total_phishing = phishing_row["cnt"] if phishing_row else 0
+
+        # 4. Total Community Reports
+        total_reports_row = db.execute("SELECT COUNT(*) as cnt FROM reports").fetchone()
+        total_reports = total_reports_row["cnt"] if total_reports_row else 0
+
+        # 5. Verified Reports
+        verified_reports_row = db.execute("SELECT COUNT(*) as cnt FROM reports WHERE state = 'approved'").fetchone()
+        total_verified_threats = verified_reports_row["cnt"] if verified_reports_row else 0
+
+        # 6. Threats in last 24h
+        threats_24h_row = db.execute(
+            "SELECT COUNT(*) as cnt FROM scan_history WHERE checked_at >= ? AND (verdict = 'known_threat' OR risk_class IN ('malicious', 'high'))",
+            (yesterday,),
+        ).fetchone()
+        threats_last_24h = threats_24h_row["cnt"] if threats_24h_row else 0
+
+        # 7. Category Distribution
+        cat_rows = db.execute(
+            "SELECT category, COUNT(*) as cnt FROM reports GROUP BY category ORDER BY cnt DESC"
+        ).fetchall()
+        category_distribution = {row["category"]: row["cnt"] for row in cat_rows}
+        if not category_distribution:
+            category_distribution = {"phishing": 0, "malware": 0, "impersonation": 0, "credential_harvesting": 0}
+
+        # 8. Severity / Risk Distribution from Scan History
+        sev_rows = db.execute(
+            "SELECT risk_class, COUNT(*) as cnt FROM scan_history GROUP BY risk_class"
+        ).fetchall()
+        severity_distribution = {
+            "safe": 0,
+            "suspicious": 0,
+            "high": 0,
+            "malicious": 0,
+            "unknown": 0,
+        }
+        for row in sev_rows:
+            severity_distribution[row["risk_class"]] = row["cnt"]
+
+        # 9. Certificate incidents (scans with certificate problems)
+        cert_incidents_row = db.execute(
+            "SELECT COUNT(*) as cnt FROM scan_history WHERE verdict = 'caution' OR findings_json LIKE '%certificate%'"
+        ).fetchone()
+        cert_incidents = cert_incidents_row["cnt"] if cert_incidents_row else 0
+
+        # 10. Recent Scans
+        recent_scans_rows = db.execute(
+            "SELECT id, url, host, score, verdict, risk_class, checked_at FROM scan_history ORDER BY checked_at DESC LIMIT 6"
+        ).fetchall()
+        recent_scans = [dict(row) for row in recent_scans_rows]
+
+        # 11. High Risk Sites
+        high_risk_rows = db.execute(
+            "SELECT id, url, host, score, verdict, risk_class, checked_at FROM scan_history WHERE risk_class IN ('malicious', 'high') ORDER BY checked_at DESC LIMIT 5"
+        ).fetchall()
+        high_risk_sites = [dict(row) for row in high_risk_rows]
+
+    return {
+        "total_scans": total_scans,
+        "total_malicious": total_malicious,
+        "total_phishing": total_phishing,
+        "total_community_reports": total_reports,
+        "total_verified_threats": total_verified_threats,
+        "threats_last_24h": threats_last_24h,
+        "category_distribution": category_distribution,
+        "severity_distribution": severity_distribution,
+        "cert_incidents": cert_incidents,
+        "recent_scans": recent_scans,
+        "high_risk_sites": high_risk_sites,
+    }

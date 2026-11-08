@@ -15,6 +15,9 @@ const clearButton = document.querySelector('#clear-input');
 const sampleButton = document.querySelector('#try-sample');
 const scanDialog = document.querySelector('#scan-consent');
 const feedDialog = document.querySelector('#feed-consent');
+const authDialog = document.querySelector('#auth-dialog');
+const compareDialog = document.querySelector('#compare-dialog');
+const scanProgress = document.querySelector('#scan-progress');
 
 const cueLabels = {
   urgency: 'Urgency or pressure',
@@ -27,19 +30,24 @@ let selectedUrl = '';
 let selectedFlags = [];
 let currentResult = null;
 let resultNotice = '';
+let currentUser = null;
+let selectedScansForCompare = [];
 
-input.addEventListener('input', updateInputPreview);
-findButton.addEventListener('click', findLinks);
-localButton.addEventListener('click', () => {
-  const links = extractUrls(input.value);
-  const choice = options.querySelector('input[name="selected-link"]:checked');
-  selectedUrl = chooseLink(links, choice?.value);
-  if (!selectedUrl) {
-    showInputError('Choose one of the links first.');
-    return;
-  }
-  checkLocally();
-});
+// Event listeners for main checker
+if (input) input.addEventListener('input', updateInputPreview);
+if (findButton) findButton.addEventListener('click', findLinks);
+if (localButton) {
+  localButton.addEventListener('click', () => {
+    const links = extractUrls(input.value);
+    const choice = options.querySelector('input[name="selected-link"]:checked');
+    selectedUrl = chooseLink(links, choice?.value);
+    if (!selectedUrl) {
+      showInputError('Choose one of the links first.');
+      return;
+    }
+    checkLocally();
+  });
+}
 
 function showToast(message, type = 'info') {
   const container = document.querySelector('#toast-container');
@@ -78,35 +86,78 @@ if (mobileMenuBtn && mobileNav) {
     }
   });
   mobileNav.querySelectorAll('a').forEach((link) => {
-    link.addEventListener('click', () => {
+    link.addEventListener('click', (e) => {
       mobileMenuBtn.setAttribute('aria-expanded', 'false');
       mobileNav.hidden = true;
+      const targetView = link.getAttribute('data-tab-target');
+      if (targetView) {
+        e.preventDefault();
+        switchView(targetView);
+      }
     });
   });
 }
 
-document.querySelector('#clear-input').addEventListener('click', () => {
-  input.value = '';
-  selectedUrl = '';
-  selectedFlags = [];
-  currentResult = null;
-  resultNotice = '';
-  count.textContent = '0 / 12,000';
-  preview.hidden = true;
-  picker.hidden = true;
-  resultRegion.hidden = true;
-  resultRegion.replaceChildren();
-  errorBox.hidden = true;
-  input.focus();
-  showToast('Input cleared.', 'info');
+// Platform View Tabs
+function switchView(viewId) {
+  document.querySelectorAll('.view-section').forEach((v) => {
+    v.hidden = v.id !== viewId;
+  });
+  document.querySelectorAll('.tab-btn').forEach((btn) => {
+    btn.classList.toggle('active', btn.getAttribute('data-view') === viewId);
+  });
+  document.querySelectorAll('.top-nav a').forEach((link) => {
+    const target = link.getAttribute('data-tab-target');
+    if (target) link.classList.toggle('nav-active', target === viewId);
+  });
+
+  if (viewId === 'view-dashboard') loadDashboardStats();
+  if (viewId === 'view-history') loadScanHistory();
+  if (viewId === 'view-intel') searchThreatIntel();
+}
+
+document.querySelectorAll('.tab-btn').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    const view = btn.getAttribute('data-view');
+    if (view) switchView(view);
+  });
 });
 
-document.querySelector('#try-sample').addEventListener('click', () => {
-  input.value = 'URGENT: Verify your account now to avoid suspension. Send your OTP and pay the ₹99 verification fee: https://secure-account-check.example/verify';
-  updateInputPreview();
-  input.focus();
-  showToast('Sample message with payment request loaded.', 'success');
+document.querySelectorAll('.top-nav a[data-tab-target]').forEach((link) => {
+  link.addEventListener('click', (e) => {
+    e.preventDefault();
+    const target = link.getAttribute('data-tab-target');
+    if (target) switchView(target);
+  });
 });
+
+// Clear & Sample buttons
+if (clearButton) {
+  clearButton.addEventListener('click', () => {
+    input.value = '';
+    selectedUrl = '';
+    selectedFlags = [];
+    currentResult = null;
+    resultNotice = '';
+    count.textContent = '0 / 12,000';
+    preview.hidden = true;
+    picker.hidden = true;
+    resultRegion.hidden = true;
+    resultRegion.replaceChildren();
+    errorBox.hidden = true;
+    input.focus();
+    showToast('Input cleared.', 'info');
+  });
+}
+
+if (sampleButton) {
+  sampleButton.addEventListener('click', () => {
+    input.value = 'URGENT: Verify your account now to avoid suspension. Send your OTP and pay the ₹99 verification fee: https://secure-account-check.example/verify';
+    updateInputPreview();
+    input.focus();
+    showToast('Sample message with payment request loaded.', 'success');
+  });
+}
 
 for (const chip of document.querySelectorAll('.example-chip')) {
   chip.addEventListener('click', () => {
@@ -120,22 +171,24 @@ for (const chip of document.querySelectorAll('.example-chip')) {
   });
 }
 
-document.querySelector('#approve-scan').addEventListener('click', async () => {
+// Scan consent dialog
+document.querySelector('#approve-scan')?.addEventListener('click', async () => {
   const ctRdapConsent = Boolean(document.querySelector('#consent-ct-rdap')?.checked);
-  scanDialog.close();
+  scanDialog?.close();
   await analyze('full_scan', true, ctRdapConsent);
 });
-document.querySelector('#decline-scan').addEventListener('click', declineLiveScan);
-document.querySelector('[data-close-dialog="scan-consent"]').addEventListener('click', declineLiveScan);
-scanDialog.addEventListener('cancel', (event) => {
+document.querySelector('#decline-scan')?.addEventListener('click', declineLiveScan);
+document.querySelector('[data-close-dialog="scan-consent"]')?.addEventListener('click', declineLiveScan);
+scanDialog?.addEventListener('cancel', (event) => {
   event.preventDefault();
   declineLiveScan();
 });
 
-document.querySelector('#refresh-feeds').addEventListener('click', () => feedDialog.showModal());
-document.querySelector('#cancel-feeds').addEventListener('click', () => feedDialog.close());
-document.querySelector('[data-close-dialog="feed-consent"]').addEventListener('click', () => feedDialog.close());
-document.querySelector('#approve-feeds').addEventListener('click', refreshFeeds);
+// Feed refresh dialog
+document.querySelector('#refresh-feeds')?.addEventListener('click', () => feedDialog?.showModal());
+document.querySelector('#cancel-feeds')?.addEventListener('click', () => feedDialog?.close());
+document.querySelector('[data-close-dialog="feed-consent"]')?.addEventListener('click', () => feedDialog?.close());
+document.querySelector('#approve-feeds')?.addEventListener('click', refreshFeeds);
 
 function updateInputPreview() {
   count.textContent = `${input.value.length.toLocaleString()} / 12,000`;
@@ -211,9 +264,30 @@ async function checkLocally() {
 }
 
 function declineLiveScan() {
-  scanDialog.close();
+  scanDialog?.close();
   resultNotice = 'Live scan not run. Your local-only result is still available.';
   if (currentResult) renderResult(currentResult);
+}
+
+function setScanProgress(step) {
+  if (!scanProgress) return;
+  scanProgress.hidden = false;
+  scanProgress.querySelectorAll('.progress-step').forEach((el) => {
+    const s = Number.parseInt(el.getAttribute('data-step') || '0', 10);
+    el.classList.toggle('done', s < step);
+    el.classList.toggle('active', s === step);
+  });
+}
+
+function finishScanProgress() {
+  if (!scanProgress) return;
+  scanProgress.querySelectorAll('.progress-step').forEach((el) => {
+    el.classList.remove('active');
+    el.classList.add('done');
+  });
+  setTimeout(() => {
+    scanProgress.hidden = true;
+  }, 1200);
 }
 
 async function analyze(mode, consent, ctRdapConsent = false) {
@@ -223,8 +297,19 @@ async function analyze(mode, consent, ctRdapConsent = false) {
   sampleButton.disabled = true;
   if (localButton) localButton.disabled = true;
   resultRegion.hidden = false;
-  resultRegion.replaceChildren(makeStatus('Checking this link…'));
+  resultRegion.replaceChildren(makeStatus('Checking this link across threat intelligence and security pillars…'));
   resultNotice = '';
+
+  setScanProgress(1);
+  setTimeout(() => setScanProgress(2), 250);
+  if (mode === 'full_scan') {
+    setTimeout(() => setScanProgress(3), 500);
+    setTimeout(() => setScanProgress(4), 800);
+    setTimeout(() => setScanProgress(5), 1100);
+  } else {
+    setTimeout(() => setScanProgress(5), 450);
+  }
+
   try {
     const response = await fetch('/api/v1/analyze', {
       method: 'POST',
@@ -234,10 +319,12 @@ async function analyze(mode, consent, ctRdapConsent = false) {
     const data = await response.json();
     if (!response.ok) throw new Error(apiError(data, 'The link could not be checked.'));
     currentResult = data;
+    finishScanProgress();
     renderResult(data);
     resultRegion.scrollIntoView({ behavior: 'smooth', block: 'start' });
     showToast(mode === 'local' ? 'Local security check completed.' : 'Live security scan completed.', 'success');
   } catch (error) {
+    if (scanProgress) scanProgress.hidden = true;
     resultRegion.replaceChildren(makeStatus(error.message || 'The check could not be completed.'));
     showToast(error.message || 'The check could not be completed.', 'error');
   } finally {
@@ -296,6 +383,32 @@ function renderResult(data) {
   header.append(verdict, checked);
   card.append(header);
 
+  // Target Sector Pill
+  if (data.target_category) {
+    const sectorPill = document.createElement('span');
+    sectorPill.className = 'target-sector-pill';
+    sectorPill.style.margin = '14px 24px 0';
+    sectorPill.textContent = `Target Category: ${data.target_category}`;
+    card.append(sectorPill);
+  }
+
+  // 5-Tier Risk Classification Banner
+  if (data.risk_classification) {
+    const banner = document.createElement('div');
+    banner.className = 'risk-classification-banner';
+    banner.style.margin = '12px 24px 0';
+    const badge = document.createElement('span');
+    badge.className = `risk-badge badge-${data.risk_classification.key}`;
+    badge.textContent = data.risk_classification.label;
+    const desc = document.createElement('span');
+    desc.style.fontSize = '12px';
+    desc.style.color = '#4b5563';
+    desc.textContent = data.risk_classification.description;
+    banner.append(badge, desc);
+    card.append(banner);
+  }
+
+  // Certificate problem banner
   const hasCertProblem = data.verdict === 'caution' || findings.some((f) => (f.group === 'certificate' || f.category === 'certificate') && (f.severity === 'medium' || f.severity === 'high'));
   if (hasCertProblem) {
     const certBanner = document.createElement('div');
@@ -309,7 +422,7 @@ function renderResult(data) {
     const bannerHeading = document.createElement('strong');
     bannerHeading.textContent = 'Certificate problem detected';
     const bannerMsg = document.createElement('p');
-    bannerMsg.textContent = 'This site has a certificate validation or trust failure. Never enter credentials or sensitive details on a site with certificate problems.';
+    bannerMsg.textContent = 'This site has a certificate validation or cryptographic trust failure. Never enter credentials or sensitive details on a site with certificate problems.';
     bannerText.append(bannerHeading, bannerMsg);
     certBanner.append(bannerIcon, bannerText);
     card.append(certBanner);
@@ -351,6 +464,44 @@ function renderResult(data) {
   coverage.textContent = coverageExplanation(data);
   card.append(coverage);
 
+  // AI Security Explanation Panel
+  if (data.ai_explanation) {
+    const aiPanel = document.createElement('section');
+    aiPanel.className = 'ai-panel';
+    const aiHeader = document.createElement('div');
+    aiHeader.className = 'ai-header';
+    const aiTitle = document.createElement('div');
+    aiTitle.className = 'ai-title';
+    aiTitle.innerHTML = '<span>🤖</span> AI Security Explanation & Threat Synthesis';
+    const aiBadge = document.createElement('span');
+    aiBadge.className = 'ai-badge';
+    aiBadge.textContent = data.ai_explanation.source || 'Intelligence Synthesis';
+    aiHeader.append(aiTitle, aiBadge);
+    aiPanel.append(aiHeader);
+
+    const summaryP = document.createElement('p');
+    summaryP.className = 'ai-summary';
+    summaryP.textContent = data.ai_explanation.summary;
+    aiPanel.append(summaryP);
+
+    if (data.ai_explanation.attack_techniques?.length) {
+      const sub = document.createElement('div');
+      sub.className = 'ai-section-subtitle';
+      sub.textContent = 'Potential Attack Vectors';
+      const tagList = document.createElement('div');
+      tagList.className = 'ai-tag-list';
+      for (const t of data.ai_explanation.attack_techniques) {
+        const tag = document.createElement('span');
+        tag.className = 'ai-tag';
+        tag.textContent = t;
+        tagList.append(tag);
+      }
+      aiPanel.append(sub, tagList);
+    }
+    card.append(aiPanel);
+  }
+
+  // Security Pillars Assessment
   if (data.scoring && data.scoring.pillars) {
     const pillarsPanel = document.createElement('section');
     pillarsPanel.className = 'pillars-panel';
@@ -526,12 +677,21 @@ function renderResult(data) {
 
   const actions = document.createElement('div');
   actions.className = 'result-actions';
+
+  // Printable Report Button
+  if (data.scan_id) {
+    const reportBtn = makeButton('🖨️ Download PDF Report', 'button button-secondary', () => {
+      window.open(`/scans/${data.scan_id}/report`, '_blank');
+    });
+    actions.append(reportBtn);
+  }
+
   if (data.coverage === 'local_only' || (data.scan_error && data.scan_error !== 'scanner_unavailable')) {
     actions.append(makeButton('Run optional live check', 'button button-primary', () => {
       document.querySelector('#consent-host').textContent = selectedUrl;
       const cb = document.querySelector('#consent-ct-rdap');
       if (cb) cb.checked = false;
-      scanDialog.showModal();
+      scanDialog?.showModal();
     }));
   }
   if (data.verdict !== 'known_threat') {
@@ -544,7 +704,15 @@ function renderResult(data) {
     placeholder.disabled = true;
     placeholder.selected = true;
     category.append(placeholder);
-    for (const [value, label] of [['phishing', 'Phishing'], ['malware', 'Malware'], ['impersonation', 'Impersonation'], ['other', 'Other']]) {
+    for (const [value, label] of [
+      ['phishing', 'Phishing'],
+      ['malware', 'Malware'],
+      ['fake_banking', 'Fake Banking Portal'],
+      ['fraudulent_payment', 'Fraudulent Payment'],
+      ['fake_recruitment', 'Fake Recruitment Portal'],
+      ['impersonation', 'Impersonation'],
+      ['other', 'Other'],
+    ]) {
       const option = document.createElement('option');
       option.value = value;
       option.textContent = label;
@@ -619,6 +787,7 @@ async function submitReport(category) {
 
 async function refreshFeeds() {
   const button = document.querySelector('#approve-feeds');
+  if (!button) return;
   button.disabled = true;
   button.textContent = 'Refreshing…';
   try {
@@ -629,15 +798,16 @@ async function refreshFeeds() {
     });
     const data = await response.json();
     if (!response.ok) throw new Error(apiError(data, 'The feeds could not be refreshed.'));
-    feedDialog.close();
+    feedDialog?.close();
     updateFeedStatus(data);
     const updated = data.results.filter((item) => item.updated).length;
     resultNotice = updated ? `${updated} threat feed${updated === 1 ? '' : 's'} refreshed.` : 'Feeds could not be refreshed. Previous saved data remains available.';
     if (currentResult) renderResult(currentResult);
     showToast(resultNotice, updated ? 'success' : 'info');
   } catch (error) {
-    feedDialog.close();
-    document.querySelector('#feed-summary').textContent = error.message;
+    feedDialog?.close();
+    const summary = document.querySelector('#feed-summary');
+    if (summary) summary.textContent = error.message;
     showToast(error.message || 'Feed refresh failed.', 'error');
   } finally {
     button.disabled = false;
@@ -647,6 +817,7 @@ async function refreshFeeds() {
 
 function updateFeedStatus(data) {
   const status = document.querySelector('#feed-status');
+  if (!status) return;
   status.replaceChildren();
   for (const item of data.providers || []) {
     const chip = document.createElement('span');
@@ -656,12 +827,16 @@ function updateFeedStatus(data) {
     chip.textContent = `${label} · ${state}`;
     status.append(chip);
   }
-  document.querySelector('#feed-summary').textContent = data.stale
-    ? 'One or more feeds are missing or stale. A no-match is not a clean bill of health.'
-    : 'Threat feeds are up to date.';
+  const summary = document.querySelector('#feed-summary');
+  if (summary) {
+    summary.textContent = data.stale
+      ? 'One or more feeds are missing or stale. A no-match is not a clean bill of health.'
+      : 'Threat feeds are up to date.';
+  }
 }
 
 function renderCuePills(container, flags, emptyMessage) {
+  if (!container) return;
   container.replaceChildren();
   if (!flags.length) {
     const empty = document.createElement('span');
@@ -767,3 +942,473 @@ function apiError(data, fallback) {
   if (Array.isArray(data?.detail)) return 'Use an HTTP or HTTPS link on port 80 or 443.';
   return typeof data?.detail === 'string' ? data.detail.replaceAll('_', ' ') : fallback;
 }
+
+// ---------------------------------------------------------------------------
+// 1. Dashboard Analytics Implementation
+// ---------------------------------------------------------------------------
+async function loadDashboardStats() {
+  try {
+    const res = await fetch('/api/v1/dashboard/stats');
+    if (!res.ok) return;
+    const stats = await res.json();
+
+    document.querySelector('#kpi-total-scans').textContent = stats.total_scans ?? 0;
+    document.querySelector('#kpi-total-malicious').textContent = stats.total_malicious ?? 0;
+    document.querySelector('#kpi-total-phishing').textContent = stats.total_phishing ?? 0;
+    document.querySelector('#kpi-total-reports').textContent = stats.total_community_reports ?? 0;
+    document.querySelector('#kpi-verified-threats').textContent = stats.total_verified_threats ?? 0;
+    document.querySelector('#kpi-threats-24h').textContent = stats.threats_last_24h ?? 0;
+
+    // Render Category Distribution
+    const catContainer = document.querySelector('#category-bars-container');
+    catContainer.replaceChildren();
+    const categories = Object.entries(stats.category_distribution || {});
+    const maxCat = Math.max(...categories.map(([, v]) => v), 1);
+    for (const [cat, count] of categories) {
+      const row = document.createElement('div');
+      row.className = 'chart-bar-row';
+      const label = document.createElement('span');
+      label.className = 'chart-bar-label';
+      label.textContent = titleCase(cat);
+      const track = document.createElement('div');
+      track.className = 'chart-bar-track';
+      const fill = document.createElement('div');
+      fill.style.height = '100%';
+      fill.style.width = `${(count / maxCat) * 100}%`;
+      fill.style.backgroundColor = '#ff385c';
+      fill.style.borderRadius = '99px';
+      track.append(fill);
+      const val = document.createElement('span');
+      val.className = 'chart-bar-value';
+      val.textContent = count;
+      row.append(label, track, val);
+      catContainer.append(row);
+    }
+
+    // Render Severity Distribution
+    const sevContainer = document.querySelector('#severity-bars-container');
+    sevContainer.replaceChildren();
+    const severities = Object.entries(stats.severity_distribution || {});
+    const maxSev = Math.max(...severities.map(([, v]) => v), 1);
+    const sevColors = { malicious: '#dc2626', high: '#e11d48', suspicious: '#d97706', safe: '#059669', unknown: '#6b7280' };
+    for (const [sev, count] of severities) {
+      const row = document.createElement('div');
+      row.className = 'chart-bar-row';
+      const label = document.createElement('span');
+      label.className = 'chart-bar-label';
+      label.textContent = titleCase(sev);
+      const track = document.createElement('div');
+      track.className = 'chart-bar-track';
+      const fill = document.createElement('div');
+      fill.style.height = '100%';
+      fill.style.width = `${(count / maxSev) * 100}%`;
+      fill.style.backgroundColor = sevColors[sev] || '#4b5563';
+      fill.style.borderRadius = '99px';
+      track.append(fill);
+      const val = document.createElement('span');
+      val.className = 'chart-bar-value';
+      val.textContent = count;
+      row.append(label, track, val);
+      sevContainer.append(row);
+    }
+
+    // Render Recent Scans
+    const tbody = document.querySelector('#dashboard-recent-scans-tbody');
+    tbody.replaceChildren();
+    if (stats.recent_scans && stats.recent_scans.length) {
+      for (const s of stats.recent_scans) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><code style="font-size:11px;">${s.url}</code></td>
+          <td><strong>${s.host}</strong></td>
+          <td><span style="font-weight:800;color:${s.score >= 50 ? '#e11d48' : '#059669'}">${s.score}/100</span></td>
+          <td><span class="risk-badge badge-${s.risk_class}">${s.risk_class}</span></td>
+          <td>${formatDate(s.checked_at)}</td>
+          <td><a href="/scans/${s.id}/report" target="_blank" class="btn-sm btn-secondary">Report</a></td>
+        `;
+        tbody.append(tr);
+      }
+    } else {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#6b7280;padding:20px;">No scans recorded yet.</td></tr>';
+    }
+  } catch (err) {
+    console.error('Failed to load dashboard stats:', err);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 2. Scan History & Compare Implementation
+// ---------------------------------------------------------------------------
+async function loadScanHistory() {
+  const search = document.querySelector('#history-search-input')?.value.trim() || '';
+  const severity = document.querySelector('#history-severity-select')?.value || 'all';
+  const tbody = document.querySelector('#history-tbody');
+  tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#6b7280;padding:20px;">Loading scan records…</td></tr>';
+
+  try {
+    const res = await fetch(`/api/v1/scans?q=${encodeURIComponent(search)}&severity=${severity}`);
+    const data = await res.json();
+    tbody.replaceChildren();
+
+    if (!data.scans || !data.scans.length) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#6b7280;padding:24px;">No scan history matching criteria.</td></tr>';
+      return;
+    }
+
+    selectedScansForCompare = [];
+    const compareBtn = document.querySelector('#compare-selected-btn');
+    if (compareBtn) compareBtn.disabled = true;
+
+    for (const scan of data.scans) {
+      const tr = document.createElement('tr');
+      const tdCheck = document.createElement('td');
+      const chk = document.createElement('input');
+      chk.type = 'checkbox';
+      chk.value = scan.id;
+      chk.addEventListener('change', () => {
+        if (chk.checked) {
+          if (selectedScansForCompare.length >= 2) {
+            chk.checked = false;
+            showToast('You can compare exactly 2 scans at a time.', 'info');
+            return;
+          }
+          selectedScansForCompare.push(scan.id);
+        } else {
+          selectedScansForCompare = selectedScansForCompare.filter((id) => id !== scan.id);
+        }
+        if (compareBtn) compareBtn.disabled = selectedScansForCompare.length !== 2;
+      });
+      tdCheck.append(chk);
+
+      const tdUrl = document.createElement('td');
+      tdUrl.innerHTML = `<code style="font-size:11px;word-break:break-all;">${scan.url}</code>`;
+
+      const tdRisk = document.createElement('td');
+      tdRisk.innerHTML = `<span class="risk-badge badge-${scan.risk_class}">${scan.risk_class}</span>`;
+
+      const tdScore = document.createElement('td');
+      tdScore.innerHTML = `<strong style="color:${scan.score >= 50 ? '#e11d48' : '#059669'};">${scan.score} / 100</strong>`;
+
+      const tdMode = document.createElement('td');
+      tdMode.textContent = scan.mode;
+
+      const tdDate = document.createElement('td');
+      tdDate.textContent = formatDate(scan.checked_at);
+
+      const tdActions = document.createElement('td');
+      const viewBtn = document.createElement('a');
+      viewBtn.href = `/scans/${scan.id}/report`;
+      viewBtn.target = '_blank';
+      viewBtn.className = 'btn-sm btn-primary';
+      viewBtn.textContent = 'Report';
+
+      const delBtn = document.createElement('button');
+      delBtn.className = 'btn-sm btn-secondary';
+      delBtn.style.color = '#dc2626';
+      delBtn.textContent = 'Delete';
+      delBtn.addEventListener('click', async () => {
+        if (confirm(`Delete scan record for ${scan.url}?`)) {
+          const delRes = await fetch(`/api/v1/scans/${scan.id}`, { method: 'DELETE' });
+          if (delRes.ok) {
+            showToast('Scan deleted.', 'info');
+            loadScanHistory();
+          }
+        }
+      });
+
+      tdActions.style.display = 'flex';
+      tdActions.style.gap = '6px';
+      tdActions.append(viewBtn, delBtn);
+
+      tr.append(tdCheck, tdUrl, tdRisk, tdScore, tdMode, tdDate, tdActions);
+      tbody.append(tr);
+    }
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="7" style="color:#dc2626;text-align:center;padding:20px;">Failed to load history: ${err.message}</td></tr>`;
+  }
+}
+
+document.querySelector('#refresh-history-btn')?.addEventListener('click', loadScanHistory);
+document.querySelector('#history-search-input')?.addEventListener('input', loadScanHistory);
+document.querySelector('#history-severity-select')?.addEventListener('change', loadScanHistory);
+
+document.querySelector('#compare-selected-btn')?.addEventListener('click', async () => {
+  if (selectedScansForCompare.length !== 2) return;
+  const [scanA, scanB] = selectedScansForCompare;
+  const content = document.querySelector('#compare-content');
+  content.innerHTML = 'Loading scan comparison…';
+  compareDialog?.showModal();
+
+  try {
+    const res = await fetch(`/api/v1/scans/compare?scan_a=${scanA}&scan_b=${scanB}`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Failed to compare scans');
+
+    content.innerHTML = `
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+        <div style="background:#fff5f7; border:1px solid #ffd0d8; border-radius:10px; padding:14px;">
+          <small>SCAN A (${formatDate(data.scan_a.checked_at)})</small>
+          <p><code style="font-size:11px;">${data.scan_a.url}</code></p>
+          <p>Score: <strong>${data.scan_a.score}/100</strong> · Verdict: <strong>${data.scan_a.verdict}</strong></p>
+        </div>
+        <div style="background:#fff5f7; border:1px solid #ffd0d8; border-radius:10px; padding:14px;">
+          <small>SCAN B (${formatDate(data.scan_b.checked_at)})</small>
+          <p><code style="font-size:11px;">${data.scan_b.url}</code></p>
+          <p>Score: <strong>${data.scan_b.score}/100</strong> · Verdict: <strong>${data.scan_b.verdict}</strong></p>
+        </div>
+      </div>
+      <div style="padding:12px; background:#fff; border:1px solid #d1d5db; border-radius:8px; margin-bottom:16px;">
+        <strong>Score Delta:</strong>
+        <span style="font-size:16px; font-weight:800; color:${data.score_diff > 0 ? '#e11d48' : data.score_diff < 0 ? '#059669' : '#374151'}">
+          ${data.score_diff > 0 ? '+' : ''}${data.score_diff}
+        </span> (${data.score_diff > 0 ? 'Risk Increased' : data.score_diff < 0 ? 'Risk Decreased' : 'No Score Change'})
+      </div>
+      <h4>New Risk Signals in Scan B (${data.new_findings.length}):</h4>
+      <ul>${data.new_findings.map((f) => `<li>[${f.severity}] ${f.summary || f.id}</li>`).join('') || '<li>None</li>'}</ul>
+      <h4>Resolved Signals (${data.resolved_findings.length}):</h4>
+      <ul>${data.resolved_findings.map((f) => `<li>[${f.severity}] ${f.summary || f.id}</li>`).join('') || '<li>None</li>'}</ul>
+    `;
+  } catch (err) {
+    content.innerHTML = `<p style="color:#dc2626;">Error comparing scans: ${err.message}</p>`;
+  }
+});
+
+document.querySelector('[data-close-dialog="compare-dialog"]')?.addEventListener('click', () => {
+  compareDialog?.close();
+});
+
+// ---------------------------------------------------------------------------
+// 3. Certificate Transparency & DNS Search
+// ---------------------------------------------------------------------------
+async function runCtSearch() {
+  const domain = document.querySelector('#ct-domain-input')?.value.trim();
+  if (!domain) {
+    showToast('Enter a valid domain name to search CT logs.', 'error');
+    return;
+  }
+  const btn = document.querySelector('#ct-search-btn');
+  btn.disabled = true;
+  btn.textContent = 'Searching CT Logs…';
+
+  try {
+    const [ctRes, dnsRes] = await Promise.all([
+      fetch(`/api/v1/ct/search?domain=${encodeURIComponent(domain)}`),
+      fetch(`/api/v1/domain/dns?domain=${encodeURIComponent(domain)}`),
+    ]);
+
+    const ctData = await ctRes.json();
+    const dnsData = await dnsRes.json();
+
+    document.querySelector('#ct-results-panel').hidden = false;
+    document.querySelector('#ct-total-certs').textContent = ctData.total_certs_logged ?? 0;
+    document.querySelector('#ct-subdomains-count').textContent = ctData.subdomains_count ?? 0;
+    document.querySelector('#ct-recent-30d').textContent = ctData.recent_certs_30d ?? 0;
+
+    // Discovered Subdomains
+    const subContainer = document.querySelector('#ct-subdomain-cloud');
+    subContainer.replaceChildren();
+    if (ctData.subdomains_discovered?.length) {
+      for (const sub of ctData.subdomains_discovered) {
+        const chip = document.createElement('span');
+        chip.className = 'subdomain-chip';
+        chip.textContent = sub;
+        subContainer.append(chip);
+      }
+    } else {
+      subContainer.innerHTML = '<span style="color:#6b7280;font-size:12px;">No separate subdomains found in CT logs.</span>';
+    }
+
+    // DNS Info
+    const dnsBox = document.querySelector('#dns-resolution-info');
+    dnsBox.innerHTML = `
+      <p><strong>Hostname:</strong> <code>${dnsData.hostname}</code> (CNAME: <code>${dnsData.cname}</code>)</p>
+      <p><strong>IPv4 Addresses:</strong> ${dnsData.ipv4?.length ? dnsData.ipv4.map((ip) => `<code>${ip}</code>`).join(', ') : 'None resolved'}</p>
+      <p><strong>IPv6 Addresses:</strong> ${dnsData.ipv6?.length ? dnsData.ipv6.map((ip) => `<code>${ip}</code>`).join(', ') : 'None resolved'}</p>
+    `;
+
+    // Issuance History Table
+    const tbody = document.querySelector('#ct-history-tbody');
+    tbody.replaceChildren();
+    if (ctData.issuance_history?.length) {
+      for (const item of ctData.issuance_history) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><code>${item.id || 'N/A'}</code></td>
+          <td><strong>${item.common_name}</strong></td>
+          <td style="max-width:260px;word-break:break-word;">${item.issuer}</td>
+          <td>${formatDate(item.logged_at)}</td>
+          <td>${formatDate(item.not_after)}</td>
+        `;
+        tbody.append(tr);
+      }
+    } else {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:16px;">No certificate history logged.</td></tr>';
+    }
+
+    showToast(`Certificate Transparency search complete for ${domain}.`, 'success');
+  } catch (err) {
+    showToast(`CT search failed: ${err.message}`, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Inspect CT Logs →';
+  }
+}
+
+document.querySelector('#ct-search-btn')?.addEventListener('click', runCtSearch);
+
+// ---------------------------------------------------------------------------
+// 4. Collaborative Threat Intelligence Search
+// ---------------------------------------------------------------------------
+async function searchThreatIntel() {
+  const query = document.querySelector('#intel-query-input')?.value.trim() || '';
+  const category = document.querySelector('#intel-category-select')?.value || 'all';
+  const tbody = document.querySelector('#intel-tbody');
+  tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#6b7280;padding:20px;">Querying threat intelligence database…</td></tr>';
+
+  try {
+    const res = await fetch(`/api/v1/intel/search?q=${encodeURIComponent(query)}&category=${category}`);
+    const data = await res.json();
+    tbody.replaceChildren();
+
+    if (!data.results || !data.results.length) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#6b7280;padding:24px;">No matching threat indicators found in local collaborative intelligence.</td></tr>';
+      return;
+    }
+
+    for (const item of data.results) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><code style="font-size:11px;word-break:break-all;">${item.indicator}</code></td>
+        <td><span class="btn-sm btn-secondary">${item.indicator_type}</span></td>
+        <td><strong>${titleCase(item.category)}</strong></td>
+        <td><span class="risk-badge badge-${item.severity}">${item.severity}</span></td>
+        <td><span style="font-weight:700;color:${item.status === 'verified' ? '#059669' : '#b45309'}">${item.status}</span></td>
+        <td><strong>${item.report_count}</strong></td>
+        <td style="max-width:280px;font-size:11px;color:#4b5563;">${item.evidence || item.source}</td>
+      `;
+      tbody.append(tr);
+    }
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="7" style="color:#dc2626;text-align:center;padding:20px;">Failed to load threat intel: ${err.message}</td></tr>`;
+  }
+}
+
+document.querySelector('#intel-search-btn')?.addEventListener('click', searchThreatIntel);
+
+// ---------------------------------------------------------------------------
+// 5. Authentication & User Profile Management
+// ---------------------------------------------------------------------------
+async function initAuth() {
+  try {
+    const res = await fetch('/api/v1/auth/me');
+    const data = await res.json();
+    currentUser = data.user;
+    renderUserHeader();
+  } catch {
+    currentUser = null;
+    renderUserHeader();
+  }
+}
+
+function renderUserHeader() {
+  const container = document.querySelector('#auth-user-container');
+  if (!container) return;
+  container.replaceChildren();
+
+  if (currentUser) {
+    const wrap = document.createElement('div');
+    wrap.className = 'auth-user-pill';
+    wrap.innerHTML = `<span>👤 ${currentUser.username}</span><span class="role-badge">${currentUser.role}</span>`;
+    const logoutBtn = document.createElement('button');
+    logoutBtn.type = 'button';
+    logoutBtn.className = 'btn-sm btn-secondary';
+    logoutBtn.textContent = 'Sign Out';
+    logoutBtn.addEventListener('click', async () => {
+      await fetch('/api/v1/auth/logout', { method: 'POST' });
+      currentUser = null;
+      renderUserHeader();
+      showToast('Signed out.', 'info');
+    });
+    wrap.append(logoutBtn);
+    container.append(wrap);
+  } else {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'auth-trigger-btn';
+    btn.textContent = 'Sign In / Register';
+    btn.addEventListener('click', () => {
+      authDialog?.showModal();
+    });
+    container.append(btn);
+  }
+}
+
+document.querySelector('#auth-tab-login')?.addEventListener('click', () => {
+  document.querySelector('#auth-tab-login').classList.add('active');
+  document.querySelector('#auth-tab-register').classList.remove('active');
+  document.querySelector('#auth-login-form').hidden = false;
+  document.querySelector('#auth-register-form').hidden = true;
+});
+
+document.querySelector('#auth-tab-register')?.addEventListener('click', () => {
+  document.querySelector('#auth-tab-register').classList.add('active');
+  document.querySelector('#auth-tab-login').classList.remove('active');
+  document.querySelector('#auth-register-form').hidden = false;
+  document.querySelector('#auth-login-form').hidden = true;
+});
+
+document.querySelector('[data-close-dialog="auth-dialog"]')?.addEventListener('click', () => {
+  authDialog?.close();
+});
+
+document.querySelector('#login-submit-btn')?.addEventListener('click', async () => {
+  const username = document.querySelector('#login-username')?.value.trim();
+  const password = document.querySelector('#login-password')?.value;
+  if (!username || !password) {
+    showToast('Enter your username and password.', 'error');
+    return;
+  }
+  try {
+    const res = await fetch('/api/v1/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Login failed');
+    currentUser = data.user;
+    renderUserHeader();
+    authDialog?.close();
+    showToast(`Signed in as ${currentUser.username}.`, 'success');
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+});
+
+document.querySelector('#reg-submit-btn')?.addEventListener('click', async () => {
+  const username = document.querySelector('#reg-username')?.value.trim();
+  const email = document.querySelector('#reg-email')?.value.trim();
+  const password = document.querySelector('#reg-password')?.value;
+  if (!username || !email || !password) {
+    showToast('Please fill in all fields.', 'error');
+    return;
+  }
+  try {
+    const res = await fetch('/api/v1/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, email, password }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Registration failed');
+    currentUser = data.user;
+    renderUserHeader();
+    authDialog?.close();
+    showToast(`Account created for ${currentUser.username}!`, 'success');
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+});
+
+// Run auth check on initialization
+initAuth();

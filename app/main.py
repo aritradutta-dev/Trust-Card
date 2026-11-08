@@ -25,19 +25,36 @@ from app.feeds import refresh_feed
 from app.scanner_client import configured_feed_fetcher, configured_scanner
 from app.storage import (
     create_report,
+    create_session,
+    create_user,
+    delete_scan,
+    delete_session,
     find_reports,
+    get_dashboard_stats,
     get_feed_status,
     get_host_approved_report_count,
+    get_scan,
+    get_session_user,
+    get_user_by_id,
+    get_user_by_username_or_email,
     import_reports,
     init_db,
     list_reports,
+    list_scans,
     lookup_feed_matches,
+    record_scan,
+    record_threat_intel,
     review_report,
+    search_threat_intel,
+    seed_default_admin,
+    verify_password,
 )
 from app.urls import canonicalize_url, host_from_url, indicator_fingerprint, url_hash
-from app.url_analysis import analyze_url
+from app.url_analysis import analyze_url, detect_target_category
 from app.verdict import decide_verdict
 from app.scoring import calculate_risk_scoring
+from app.ai_explainer import classify_risk, generate_security_explanation
+from app.ct_service import lookup_domain_dns, search_certificate_transparency
 
 BASE_DIR = Path(__file__).parent
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
@@ -67,7 +84,30 @@ class AnalyzeRequest(BaseModel):
 class ReportRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
     scan_id: str = Field(min_length=32, max_length=32)
-    category: Literal["phishing", "malware", "impersonation", "other"]
+    category: Literal[
+        "phishing",
+        "malware",
+        "impersonation",
+        "fake_banking",
+        "fake_recruitment",
+        "fraudulent_payment",
+        "other",
+    ]
+    description: str = Field(default="", max_length=1000)
+    evidence: str = Field(default="", max_length=1000)
+
+
+class RegisterRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    username: str = Field(min_length=3, max_length=50)
+    email: str = Field(min_length=5, max_length=100)
+    password: str = Field(min_length=6, max_length=100)
+
+
+class LoginRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    username: str = Field(min_length=1, max_length=100)
+    password: str = Field(min_length=1, max_length=100)
 
 
 class FeedRefreshRequest(BaseModel):
@@ -223,10 +263,26 @@ def _local_result(db_path: Path, request: AnalyzeRequest) -> dict:
         has_message_context=bool(request.context_flags),
         feed_available=not stale,
     )
+    risk_info = classify_risk(scoring["score"], decision["verdict"], checked_count=scoring["checked_count"])
+    target_category = detect_target_category(request.url, findings)
+    ai_exp = generate_security_explanation(
+        url=request.url,
+        verdict=decision["verdict"],
+        confidence=decision["confidence"],
+        score=scoring["score"],
+        risk_class=risk_info["key"],
+        findings=findings,
+        pillars=scoring.get("pillars", {}),
+        certificate=None,
+        mode="local",
+    )
     return {
         "scan_id": uuid.uuid4().hex,
         **decision,
         "scoring": scoring,
+        "risk_classification": risk_info,
+        "target_category": target_category,
+        "ai_explanation": ai_exp,
         "coverage": "local_only",
         "checked_at": datetime.now(timezone.utc).isoformat(),
         "findings": findings,
@@ -245,6 +301,10 @@ def create_app(
     configured_data_dir = Path(os.environ.get("DATA_DIR", str(DATA_DIR)))
     data_path = Path(db_path or configured_data_dir / "trust-card.sqlite3")
     init_db(data_path)
+    admin_user = os.environ.get("ADMIN_USERNAME", "AD")
+    admin_pass = os.environ.get("ADMIN_PASSWORD", "Aritra@1234")
+    seed_default_admin(data_path, admin_user, admin_pass)
+
     app = FastAPI(title="Trust Card", docs_url=None, redoc_url=None)
     app.state.db_path = data_path
     app.state.scanner_call = scanner_call if scanner_call is not None else configured_scanner()
@@ -252,6 +312,16 @@ def create_app(
     app.state.scan_sessions = {}
     app.mount("/static", StaticFiles(directory=BASE_DIR / "static"), name="static")
     templates = Jinja2Templates(directory=BASE_DIR / "templates")
+
+    def _get_user(req: Request) -> dict | None:
+        token = req.cookies.get("trustcard_session")
+        if not token:
+            auth = req.headers.get("authorization", "")
+            if auth.lower().startswith("bearer "):
+                token = auth[7:].strip()
+        if not token:
+            return None
+        return get_session_user(data_path, token)
 
     @app.middleware("http")
     async def response_safety_headers(request: Request, call_next):
@@ -367,12 +437,46 @@ def create_app(
         }
 
     @app.post("/api/v1/analyze")
-    async def analyze(payload: AnalyzeRequest):
+    async def analyze(payload: AnalyzeRequest, request: Request):
         if payload.mode == "full_scan" and not payload.consent:
             raise HTTPException(status_code=400, detail="consent_required")
         if payload.mode == "local":
             result = _local_result(data_path, payload)
             remember_scan(result, payload.url)
+            user = _get_user(request)
+            await run_in_threadpool(
+                record_scan,
+                data_path,
+                scan_id=result["scan_id"],
+                user_id=user["id"] if user else None,
+                url=payload.url,
+                host=host_from_url(payload.url),
+                mode="local",
+                verdict=result["verdict"],
+                confidence=result["confidence"],
+                score=result["scoring"]["score"],
+                risk_class=result["risk_classification"]["key"],
+                checked_at=result["checked_at"],
+                summary=result["ai_explanation"]["summary"],
+                findings=result["findings"],
+                scoring=result["scoring"],
+                cert=None,
+                page_signals=None,
+                ai_explanation=result["ai_explanation"],
+            )
+            if result["verdict"] in ("known_threat", "suspicious"):
+                await run_in_threadpool(
+                    record_threat_intel,
+                    data_path,
+                    indicator=payload.url,
+                    indicator_type="url",
+                    category=result["target_category"],
+                    severity=result["risk_classification"]["key"],
+                    confidence=result["confidence"],
+                    source="Local Threat Check",
+                    evidence=result["ai_explanation"]["summary"],
+                    status="verified" if result["verdict"] == "known_threat" else "unverified",
+                )
             return result
 
         if app.state.scanner_call is None:
@@ -417,10 +521,26 @@ def create_app(
             has_message_context=bool(payload.context_flags),
             feed_available=not local["feed_stale"],
         )
+        risk_info = classify_risk(scoring["score"], decision["verdict"], checked_count=scoring["checked_count"])
+        target_category = detect_target_category(payload.url, findings)
+        ai_exp = generate_security_explanation(
+            url=payload.url,
+            verdict=decision["verdict"],
+            confidence=decision["confidence"],
+            score=scoring["score"],
+            risk_class=risk_info["key"],
+            findings=findings,
+            pillars=scoring.get("pillars", {}),
+            certificate=scan.get("certificate"),
+            mode="full_scan",
+        )
         result = {
             **local,
             **decision,
             "scoring": scoring,
+            "risk_classification": risk_info,
+            "target_category": target_category,
+            "ai_explanation": ai_exp,
             "coverage": coverage,
             "scan_coverage": scan_coverage,
             "live_scan_complete": bool(scan.get("complete")),
@@ -431,7 +551,163 @@ def create_app(
             "next_steps": _next_steps(decision["verdict"]),
         }
         remember_scan(result, payload.url)
+        user = _get_user(request)
+        await run_in_threadpool(
+            record_scan,
+            data_path,
+            scan_id=result["scan_id"],
+            user_id=user["id"] if user else None,
+            url=payload.url,
+            host=host_from_url(payload.url),
+            mode="full_scan",
+            verdict=decision["verdict"],
+            confidence=decision["confidence"],
+            score=scoring["score"],
+            risk_class=risk_info["key"],
+            checked_at=result["checked_at"],
+            summary=ai_exp["summary"],
+            findings=findings,
+            scoring=scoring,
+            cert=scan.get("certificate"),
+            page_signals=scan.get("findings"),
+            ai_explanation=ai_exp,
+        )
+        if decision["verdict"] in ("known_threat", "suspicious"):
+            await run_in_threadpool(
+                record_threat_intel,
+                data_path,
+                indicator=payload.url,
+                indicator_type="url",
+                category=target_category,
+                severity=risk_info["key"],
+                confidence=decision["confidence"],
+                source="Consented Live Scan",
+                evidence=ai_exp["summary"],
+                status="verified" if decision["verdict"] == "known_threat" else "unverified",
+            )
         return result
+
+    # -----------------------------------------------------------------------
+    # Authentication & Session Management
+    # -----------------------------------------------------------------------
+
+    @app.post("/api/v1/auth/register")
+    async def auth_register(payload: RegisterRequest, response: Response):
+        clean_user = payload.username.strip().lower()
+        clean_email = payload.email.strip().lower()
+        existing = await run_in_threadpool(get_user_by_username_or_email, data_path, clean_user)
+        if existing:
+            raise HTTPException(status_code=400, detail="username_or_email_taken")
+        user = await run_in_threadpool(create_user, data_path, clean_user, clean_email, payload.password, "user")
+        token = await run_in_threadpool(create_session, data_path, user["id"])
+        response.set_cookie(key="trustcard_session", value=token, httponly=True, samesite="lax", max_age=7 * 86400)
+        return {"user": user, "token": token}
+
+    @app.post("/api/v1/auth/login")
+    async def auth_login(payload: LoginRequest, response: Response):
+        user = await run_in_threadpool(get_user_by_username_or_email, data_path, payload.username)
+        if not user or not verify_password(payload.password, user["password_hash"], user["salt"]):
+            raise HTTPException(status_code=401, detail="invalid_credentials")
+        token = await run_in_threadpool(create_session, data_path, user["id"])
+        response.set_cookie(key="trustcard_session", value=token, httponly=True, samesite="lax", max_age=7 * 86400)
+        user_info = {"id": user["id"], "username": user["username"], "email": user["email"], "role": user["role"]}
+        return {"user": user_info, "token": token}
+
+    @app.post("/api/v1/auth/logout")
+    async def auth_logout(request: Request, response: Response):
+        token = request.cookies.get("trustcard_session")
+        if token:
+            await run_in_threadpool(delete_session, data_path, token)
+        response.delete_cookie(key="trustcard_session")
+        return {"ok": True}
+
+    @app.get("/api/v1/auth/me")
+    async def auth_me(request: Request):
+        user = _get_user(request)
+        return {"user": user}
+
+    # -----------------------------------------------------------------------
+    # Scan History & Printable Reports
+    # -----------------------------------------------------------------------
+
+    @app.get("/api/v1/scans")
+    async def list_scans_endpoint(request: Request, q: str | None = None, severity: str | None = None, limit: int = 50, offset: int = 0):
+        user = _get_user(request)
+        user_id = user["id"] if (user and user["role"] not in ("admin", "analyst")) else None
+        scans, total = await run_in_threadpool(list_scans, data_path, user_id=user_id, query=q, severity=severity, limit=limit, offset=offset)
+        return {"scans": scans, "total": total}
+
+    @app.get("/api/v1/scans/{scan_id}")
+    async def get_scan_endpoint(scan_id: str, request: Request):
+        user = _get_user(request)
+        user_id = user["id"] if (user and user["role"] not in ("admin", "analyst")) else None
+        scan = await run_in_threadpool(get_scan, data_path, scan_id, user_id=user_id)
+        if not scan:
+            raise HTTPException(status_code=404, detail="scan_not_found")
+        return scan
+
+    @app.delete("/api/v1/scans/{scan_id}")
+    async def delete_scan_endpoint(scan_id: str, request: Request):
+        user = _get_user(request)
+        user_id = user["id"] if (user and user["role"] not in ("admin", "analyst")) else None
+        deleted = await run_in_threadpool(delete_scan, data_path, scan_id, user_id=user_id)
+        if not deleted:
+            raise HTTPException(status_code=404, detail="scan_not_found")
+        return {"deleted": True, "scan_id": scan_id}
+
+    @app.get("/api/v1/scans/compare")
+    async def compare_scans_endpoint(scan_a: str, scan_b: str):
+        try:
+            comparison = await run_in_threadpool(compare_scans, data_path, scan_a, scan_b)
+            return comparison
+        except KeyError:
+            raise HTTPException(status_code=404, detail="scans_not_found")
+
+    @app.get("/scans/{scan_id}/report", response_class=HTMLResponse)
+    @app.get("/api/v1/scans/{scan_id}/report", response_class=HTMLResponse)
+    async def scan_report_view(scan_id: str, request: Request):
+        scan = await run_in_threadpool(get_scan, data_path, scan_id)
+        if not scan:
+            raise HTTPException(status_code=404, detail="scan_not_found")
+        return templates.TemplateResponse(request=request, name="report.html", context={"request": request, "scan": scan})
+
+    # -----------------------------------------------------------------------
+    # Threat Intelligence Dashboard & CT Monitoring
+    # -----------------------------------------------------------------------
+
+    @app.get("/api/v1/dashboard/stats")
+    async def dashboard_stats_endpoint():
+        stats = await run_in_threadpool(get_dashboard_stats, data_path)
+        return stats
+
+    @app.get("/api/v1/ct/search")
+    async def ct_search_endpoint(domain: str):
+        results = await run_in_threadpool(search_certificate_transparency, domain)
+        return results
+
+    @app.get("/api/v1/domain/dns")
+    async def domain_dns_endpoint(domain: str):
+        results = await run_in_threadpool(lookup_domain_dns, domain)
+        return results
+
+    @app.get("/api/v1/intel/search")
+    async def intel_search_endpoint(
+        q: str = "",
+        category: str | None = None,
+        indicator_type: str | None = None,
+        status: str | None = None,
+        limit: int = 50,
+    ):
+        results = await run_in_threadpool(
+            search_threat_intel,
+            data_path,
+            query=q,
+            category=category,
+            indicator_type=indicator_type,
+            status=status,
+            limit=limit,
+        )
+        return {"results": results, "count": len(results)}
 
     def require_admin(request: Request):
         expected_password = os.environ.get("ADMIN_PASSWORD", "")
