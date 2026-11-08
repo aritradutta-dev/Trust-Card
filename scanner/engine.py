@@ -15,8 +15,10 @@ from html.parser import HTMLParser
 from urllib.parse import urljoin, urlsplit
 
 from app.urls import canonicalize_url
+from app.url_analysis import get_registrable_domain
 from scanner.certs import analyze_certificate_der
 from scanner.ct_rdap import lookup_ct_logs, lookup_domain_age_rdap
+from scanner.page_signals import audit_page_html, audit_security_headers
 
 MAX_REDIRECTS = 5
 MAX_HTML_BYTES = 2 * 1024 * 1024
@@ -102,9 +104,15 @@ def resolve_public_addresses(
 
 
 def _same_site(host_a: str, host_b: str) -> bool:
-    """Use a conservative hostname relationship instead of guessing public suffixes."""
+    """Compare sites accurately using the public suffix list for registrable domains."""
     a = host_a.rstrip(".").lower()
     b = host_b.rstrip(".").lower()
+    if not a or not b:
+        return False
+    reg_a = get_registrable_domain(a)
+    reg_b = get_registrable_domain(b)
+    if reg_a and reg_b:
+        return reg_a == reg_b
     return a == b or a.endswith("." + b) or b.endswith("." + a)
 
 
@@ -559,29 +567,12 @@ def scan_url(value: str, ct_rdap_consent: bool = False) -> dict:
                 "observed_at": datetime.now(timezone.utc).isoformat(),
                 "group": "tls",
             })
-        elif "strict-transport-security" not in headers:
-            findings.append({
-                "category": "security_header",
-                "severity": "low",
-                "summary": "The HTTPS site does not advertise an HSTS policy.",
-                "source": "HTTP response headers",
-                "observed_at": datetime.now(timezone.utc).isoformat(),
-                "group": "security_headers",
-            })
-        for header, label in (("content-security-policy", "Content Security Policy"), ("x-content-type-options", "X-Content-Type-Options")):
-            if header not in headers:
-                findings.append({
-                    "category": "security_header",
-                    "severity": "low",
-                    "summary": f"The response is missing {label}.",
-                    "source": "HTTP response headers",
-                    "observed_at": datetime.now(timezone.utc).isoformat(),
-                    "group": "security_headers",
-                })
+        findings.extend(audit_security_headers(headers, urlsplit(current).scheme))
         break
 
     if page_body and ("html" in content_type.lower() or page_body.lstrip().lower().startswith((b"<!doctype html", b"<html"))):
-        findings.extend(credential_form_findings(page_body.decode("utf-8", errors="replace"), current))
+        decoded_html = page_body.decode("utf-8", errors="replace")
+        findings.extend(audit_page_html(decoded_html, current))
     page_coverage = "full" if _reads_html(headers, status) and not body_truncated else "partial"
     if not _reads_html(headers, status):
         findings.append({
