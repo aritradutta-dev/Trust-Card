@@ -2648,7 +2648,7 @@ textarea:focus { border-color: rgba(65, 90, 119, 0.5); box-shadow: var(--nm-inse
 }
 
 /* =====================================================================
-   MINIMAL TRUST CARD BOOT / LOADING ANIMATION
+   MINIMAL TRUST CARD BOOT / LOADING ANIMATION (ZOOM & BLINK)
    ===================================================================== */
 .minimal-boot-overlay {
   position: fixed;
@@ -2661,11 +2661,19 @@ textarea:focus { border-color: rgba(65, 90, 119, 0.5); box-shadow: var(--nm-inse
   user-select: none;
   opacity: 1;
   visibility: visible;
-  transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.45s ease;
+  transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1), transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), filter 0.45s ease, visibility 0.45s ease;
+}
+
+.minimal-boot-overlay.boot-burst .minimal-boot-content {
+  transform: scale(1.05);
+  filter: brightness(1.12);
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), filter 0.22s ease;
 }
 
 .minimal-boot-overlay.boot-completed {
   opacity: 0;
+  transform: scale(1.03);
+  filter: blur(4px);
   visibility: hidden;
   pointer-events: none;
 }
@@ -2676,17 +2684,33 @@ textarea:focus { border-color: rgba(65, 90, 119, 0.5); box-shadow: var(--nm-inse
   align-items: center;
   justify-content: center;
   gap: 16px;
-  animation: minimalBootEntrance 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: minimalBootZoomBlink 0.75s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-@keyframes minimalBootEntrance {
+/* Dynamic Zoom & Blink Entrance */
+@keyframes minimalBootZoomBlink {
   0% {
     opacity: 0;
-    transform: scale(0.96) translateY(8px);
+    transform: scale(0.85);
+    filter: brightness(1.25) contrast(1.1);
+  }
+  30% {
+    opacity: 1;
+    transform: scale(1.04);
+    filter: brightness(1);
+  }
+  50% {
+    transform: scale(0.985);
+    filter: brightness(1.15);
+  }
+  75% {
+    transform: scale(1.015);
+    filter: brightness(0.98);
   }
   100% {
     opacity: 1;
-    transform: scale(1) translateY(0);
+    transform: scale(1);
+    filter: brightness(1);
   }
 }
 
@@ -2699,7 +2723,36 @@ textarea:focus { border-color: rgba(65, 90, 119, 0.5); box-shadow: var(--nm-inse
   border-radius: 20px;
 }
 
-/* Subtle, organic animated shimmer sweep across graphic like a live GIF */
+/* Ambient Pulsing Aura with Soft Eye Blink */
+.minimal-boot-graphic-wrap::before {
+  content: '';
+  position: absolute;
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(119, 141, 122, 0.4) 0%, rgba(65, 90, 119, 0.12) 55%, transparent 75%);
+  filter: blur(14px);
+  pointer-events: none;
+  animation: minimalAuraBlink 1.4s ease-in-out infinite alternate;
+  z-index: 0;
+}
+
+@keyframes minimalAuraBlink {
+  0% {
+    opacity: 0.25;
+    transform: scale(0.88);
+  }
+  45% {
+    opacity: 0.95;
+    transform: scale(1.22);
+  }
+  100% {
+    opacity: 0.45;
+    transform: scale(1.02);
+  }
+}
+
+/* Subtle, organic animated shimmer sweep across graphic */
 .minimal-boot-graphic-wrap::after {
   content: '';
   position: absolute;
@@ -2716,6 +2769,7 @@ textarea:focus { border-color: rgba(65, 90, 119, 0.5); box-shadow: var(--nm-inse
   transform: rotate(25deg);
   animation: minimalShimmerSweep 1.8s infinite cubic-bezier(0.4, 0, 0.2, 1);
   pointer-events: none;
+  z-index: 2;
 }
 
 @keyframes minimalShimmerSweep {
@@ -2724,18 +2778,35 @@ textarea:focus { border-color: rgba(65, 90, 119, 0.5); box-shadow: var(--nm-inse
 }
 
 .minimal-boot-img {
+  position: relative;
+  z-index: 1;
   width: 320px;
   max-width: 82vw;
   height: auto;
   display: block;
   object-fit: contain;
-  /* Gentle breathing scale animation */
-  animation: minimalEmblemBreathe 2.4s ease-in-out infinite alternate;
+  /* Smooth Zoom & Blink breathing animation */
+  animation: minimalEmblemZoomBlink 2.4s ease-in-out infinite alternate;
+  filter: drop-shadow(0 6px 20px rgba(13, 27, 42, 0.08));
 }
 
-@keyframes minimalEmblemBreathe {
-  0% { transform: scale(0.99); }
-  100% { transform: scale(1.015); }
+@keyframes minimalEmblemZoomBlink {
+  0% {
+    transform: scale(0.985);
+    filter: drop-shadow(0 4px 12px rgba(13, 27, 42, 0.06)) brightness(1);
+  }
+  40% {
+    transform: scale(1.025);
+    filter: drop-shadow(0 8px 24px rgba(13, 27, 42, 0.12)) brightness(1.06);
+  }
+  65% {
+    transform: scale(1.01);
+    filter: drop-shadow(0 6px 18px rgba(13, 27, 42, 0.08)) brightness(0.98);
+  }
+  100% {
+    transform: scale(1.03);
+    filter: drop-shadow(0 10px 28px rgba(13, 27, 42, 0.14)) brightness(1.04);
+  }
 }
 
 /* Minimal hairline loading bar */

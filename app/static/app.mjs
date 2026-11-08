@@ -2264,14 +2264,19 @@ function initBootSequence() {
     clearTimeout(timerId);
 
     if (progressBar) progressBar.style.width = '100%';
-    overlay.classList.add('boot-completed');
-    sessionStorage.setItem('tc_boot_completed', 'true');
-    document.body.style.overflow = '';
+    overlay.classList.add('boot-burst');
 
     setTimeout(() => {
-      overlay.hidden = true;
-      input?.focus();
-    }, 450);
+      overlay.classList.add('boot-completed');
+      sessionStorage.setItem('tc_boot_completed', 'true');
+      document.body.style.overflow = '';
+
+      setTimeout(() => {
+        overlay.hidden = true;
+        overlay.classList.remove('boot-burst');
+        input?.focus();
+      }, 420);
+    }, 160);
   }
 
   function startBoot(force = false) {
