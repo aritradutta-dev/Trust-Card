@@ -167,3 +167,4 @@ def generate_security_explanation(
         "recommended_remediation": mitigations,
         "source": "Deterministic Intelligence Engine",
     }
+

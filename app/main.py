@@ -24,6 +24,8 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from app.feeds import refresh_feed
 from app.scanner_client import configured_feed_fetcher, configured_scanner
 from app.storage import (
+    create_forum_reply,
+    create_forum_thread,
     create_report,
     create_session,
     create_user,
@@ -32,6 +34,7 @@ from app.storage import (
     find_reports,
     get_dashboard_stats,
     get_feed_status,
+    get_forum_thread,
     get_host_approved_report_count,
     get_scan,
     get_session_user,
@@ -39,6 +42,7 @@ from app.storage import (
     get_user_by_username_or_email,
     import_reports,
     init_db,
+    list_forum_threads,
     list_reports,
     list_scans,
     lookup_feed_matches,
@@ -47,6 +51,8 @@ from app.storage import (
     review_report,
     search_threat_intel,
     seed_default_admin,
+    seed_default_forum_threads,
+    upvote_forum_thread,
     verify_password,
 )
 from app.urls import canonicalize_url, host_from_url, indicator_fingerprint, url_hash
@@ -108,6 +114,29 @@ class LoginRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
     username: str = Field(min_length=1, max_length=100)
     password: str = Field(min_length=1, max_length=100)
+
+
+class ThreadCreateRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    title: str = Field(min_length=3, max_length=200)
+    content: str = Field(min_length=5, max_length=5000)
+    category: str = Field(default="General Discussion", max_length=50)
+    author_name: str = Field(default="", max_length=50)
+
+
+class ThreadReplyRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    content: str = Field(min_length=2, max_length=3000)
+    author_name: str = Field(default="", max_length=50)
+
+
+class IntelSubmitRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    indicator: str = Field(min_length=3, max_length=500)
+    indicator_type: Literal["url", "domain", "ip", "cert_fingerprint"] = "domain"
+    category: str = Field(default="phishing", max_length=50)
+    severity: Literal["low", "suspicious", "high", "malicious"] = "suspicious"
+    evidence: str = Field(default="", max_length=1000)
 
 
 class FeedRefreshRequest(BaseModel):
@@ -304,6 +333,7 @@ def create_app(
     admin_user = os.environ.get("ADMIN_USERNAME", "AD")
     admin_pass = os.environ.get("ADMIN_PASSWORD", "Aritra@1234")
     seed_default_admin(data_path, admin_user, admin_pass)
+    seed_default_forum_threads(data_path)
 
     app = FastAPI(title="Trust Card", docs_url=None, redoc_url=None)
     app.state.db_path = data_path
@@ -830,6 +860,86 @@ def create_app(
             "source": f"Peer: {peer_name}",
             "message": f"Successfully imported {imported_count} unverified reports.",
         }
+
+    # -----------------------------------------------------------------------
+    # Community User Forum Routes
+    # -----------------------------------------------------------------------
+
+    @app.get("/api/v1/forum/threads")
+    async def forum_list_threads(category: str | None = None, q: str | None = None, sort_by: str = "recent"):
+        threads = await run_in_threadpool(list_forum_threads, data_path, category=category, query=q, sort_by=sort_by)
+        return {"threads": threads, "count": len(threads)}
+
+    @app.post("/api/v1/forum/threads")
+    async def forum_create_thread(payload: ThreadCreateRequest, request: Request):
+        user = _get_user(request)
+        author = user["username"] if user else (payload.author_name.strip() or "SecurityAnalyst")
+        user_id = user["id"] if user else None
+        thread = await run_in_threadpool(
+            create_forum_thread,
+            data_path,
+            title=payload.title,
+            content=payload.content,
+            category=payload.category,
+            author_name=author,
+            user_id=user_id,
+        )
+        return {"thread": thread, "message": "Discussion thread created successfully."}
+
+    @app.get("/api/v1/forum/threads/{thread_id}")
+    async def forum_get_thread(thread_id: str):
+        thread = await run_in_threadpool(get_forum_thread, data_path, thread_id)
+        if not thread:
+            raise HTTPException(status_code=404, detail="thread_not_found")
+        return thread
+
+    @app.post("/api/v1/forum/threads/{thread_id}/replies")
+    async def forum_add_reply(thread_id: str, payload: ThreadReplyRequest, request: Request):
+        user = _get_user(request)
+        author = user["username"] if user else (payload.author_name.strip() or "SecurityAnalyst")
+        user_id = user["id"] if user else None
+        try:
+            reply = await run_in_threadpool(
+                create_forum_reply,
+                data_path,
+                thread_id=thread_id,
+                content=payload.content,
+                author_name=author,
+                user_id=user_id,
+            )
+            return {"reply": reply, "message": "Reply posted."}
+        except KeyError:
+            raise HTTPException(status_code=404, detail="thread_not_found")
+
+    @app.post("/api/v1/forum/threads/{thread_id}/upvote")
+    async def forum_upvote(thread_id: str):
+        try:
+            result = await run_in_threadpool(upvote_forum_thread, data_path, thread_id)
+            return result
+        except KeyError:
+            raise HTTPException(status_code=404, detail="thread_not_found")
+
+    # -----------------------------------------------------------------------
+    # Collaborative Threat Indicator Direct Submission
+    # -----------------------------------------------------------------------
+
+    @app.post("/api/v1/intel/submit")
+    async def intel_submit_endpoint(payload: IntelSubmitRequest, request: Request):
+        user = _get_user(request)
+        source = f"Community Report ({user['username']})" if user else "Community Report (Guest)"
+        entry = await run_in_threadpool(
+            record_threat_intel,
+            data_path,
+            indicator=payload.indicator,
+            indicator_type=payload.indicator_type,
+            category=payload.category,
+            severity=payload.severity,
+            confidence="medium",
+            source=source,
+            evidence=payload.evidence,
+            status="unverified",
+        )
+        return {"entry": entry, "message": "Threat indicator submitted to collaborative intelligence database."}
 
     return app
 

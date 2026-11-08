@@ -145,3 +145,4 @@ def search_certificate_transparency(domain: str, timeout: float = 5.0) -> dict:
         "issuance_history": issuance_history[:25],
         "status": "success" if entries or issuance_history else "no_records_or_timeout",
     }
+

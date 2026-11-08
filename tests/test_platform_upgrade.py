@@ -13,14 +13,20 @@ from app.storage import (
     delete_scan,
     delete_session,
     get_dashboard_stats,
+    get_forum_thread,
     get_scan,
     get_session_user,
     get_user_by_username_or_email,
     init_db,
+    list_forum_threads,
     list_scans,
     record_scan,
     record_threat_intel,
     search_threat_intel,
+    seed_default_forum_threads,
+    upvote_forum_thread,
+    create_forum_thread,
+    create_forum_reply,
     verify_password,
 )
 from app.url_analysis import analyze_url, detect_target_category
@@ -206,6 +212,53 @@ class PlatformUpgradeTests(unittest.TestCase):
         cat = detect_target_category("https://sbi-banking-verify.in/kyc", [])
         self.assertEqual(cat, "Fake Banking Portal")
 
+    def test_forum_threads_replies_and_upvotes(self):
+        # 1. Seed default threads
+        seed_default_forum_threads(self.db_path)
+        threads = list_forum_threads(self.db_path)
+        self.assertGreaterEqual(len(threads), 3)
+
+        # 2. Create a custom thread
+        new_th = create_forum_thread(
+            self.db_path,
+            title="Suspicious WhatsApp job offer claiming 5000 INR/day",
+            content="Received a WhatsApp message with shortened link asking to review Google Maps places.",
+            category="Scam Report",
+            author_name="UserAlice",
+        )
+        self.assertIsNotNone(new_th["id"])
+        self.assertEqual(new_th["title"], "Suspicious WhatsApp job offer claiming 5000 INR/day")
+        self.assertEqual(new_th["reply_count"], 0)
+        self.assertEqual(new_th["upvotes"], 0)
+
+        # 3. Add a reply to the thread
+        reply = create_forum_reply(
+            self.db_path,
+            thread_id=new_th["id"],
+            content="Classic task scam. They ask you to deposit money in a VIP telegram group.",
+            author_name="SecExpert",
+        )
+        self.assertIsNotNone(reply["id"])
+        self.assertEqual(reply["author_name"], "SecExpert")
+
+        # 4. Upvote thread
+        upvoted = upvote_forum_thread(self.db_path, new_th["id"])
+        self.assertEqual(upvoted["upvotes"], 1)
+
+        # 5. Fetch single thread with replies
+        detailed = get_forum_thread(self.db_path, new_th["id"])
+        self.assertIsNotNone(detailed)
+        self.assertEqual(detailed["reply_count"], 1)
+        self.assertEqual(detailed["upvotes"], 1)
+        self.assertEqual(len(detailed["replies"]), 1)
+        self.assertEqual(detailed["replies"][0]["content"], "Classic task scam. They ask you to deposit money in a VIP telegram group.")
+
+        # 6. Filter threads by category
+        scam_threads = list_forum_threads(self.db_path, category="Scam Report")
+        self.assertTrue(any(t["id"] == new_th["id"] for t in scam_threads))
+
+
 
 if __name__ == "__main__":
     unittest.main()
+

@@ -28,6 +28,7 @@
       <a href="#view-history" data-tab-target="view-history">Scan History</a>
       <a href="#view-ct" data-tab-target="view-ct">Cert & CT Monitor</a>
       <a href="#view-intel" data-tab-target="view-intel">Threat Search</a>
+      <a href="#view-forum" data-tab-target="view-forum">Community Forum</a>
       <a href="/api">API Reference</a>
       <a href="/admin/reports">Admin Review</a>
     </nav>
@@ -48,6 +49,7 @@
       <a class="mobile-nav-link" href="#view-history" data-tab-target="view-history">Scan History</a>
       <a class="mobile-nav-link" href="#view-ct" data-tab-target="view-ct">Certificate & CT Monitor</a>
       <a class="mobile-nav-link" href="#view-intel" data-tab-target="view-intel">Threat Search & Community</a>
+      <a class="mobile-nav-link" href="#view-forum" data-tab-target="view-forum">Community Security Forum</a>
       <a class="mobile-nav-link" href="/api">API Documentation</a>
       <a class="mobile-nav-link" href="/admin/reports">Admin Report Review</a>
       <a class="mobile-nav-link" href="#contact">Contact & Support</a>
@@ -66,6 +68,7 @@
       <button class="tab-btn" type="button" data-view="view-history"><span>🕒</span> Scan History</button>
       <button class="tab-btn" type="button" data-view="view-ct"><span>🔒</span> Cert & CT Monitor</button>
       <button class="tab-btn" type="button" data-view="view-intel"><span>🛡️</span> Collaborative Intel</button>
+      <button class="tab-btn" type="button" data-view="view-forum"><span>💬</span> Security Forum</button>
     </nav>
 
     <!-- VIEW 1: Link Checker (Main View) -->
@@ -351,6 +354,95 @@
           </tbody>
         </table>
       </div>
+
+      <!-- Collaborative Indicator Direct Submission -->
+      <div class="workspace" style="margin-top: 32px;">
+        <div class="section-head">
+          <div>
+            <p class="step-label">COMMUNITY INTELLIGENCE CONTRIBUTION</p>
+            <h2>Submit Threat Indicator to Shared Database</h2>
+          </div>
+          <span class="local-badge"><span class="status-dot" aria-hidden="true"></span> Collaborative Defense</span>
+        </div>
+        <p style="color:var(--muted); font-size:13px; margin-bottom:16px;">
+          Contribute newly discovered malicious domains, scam payment URLs, phishing hosts, or compromised CA certificates to protect other users.
+        </p>
+        <div class="intel-submit-grid">
+          <div class="form-field" style="grid-column: 1 / -1;">
+            <label for="submit-intel-val">Indicator (Domain, URL, IP, or SHA-256 Cert Fingerprint)</label>
+            <input type="text" id="submit-intel-val" placeholder="e.g. sbi-kyc-verify-portal.in or 198.51.100.42">
+          </div>
+          <div class="form-field">
+            <label for="submit-intel-type">Indicator Type</label>
+            <select id="submit-intel-type">
+              <option value="domain">Domain</option>
+              <option value="url">URL</option>
+              <option value="ip">IP Address</option>
+              <option value="cert_fingerprint">Certificate Fingerprint</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label for="submit-intel-cat">Threat Category</label>
+            <select id="submit-intel-cat">
+              <option value="phishing">Phishing</option>
+              <option value="fake_banking">Fake Banking Portal</option>
+              <option value="fraudulent_payment">Fraudulent Payment</option>
+              <option value="fake_recruitment">Fake Recruitment</option>
+              <option value="malware">Malware</option>
+              <option value="impersonation">Brand Impersonation</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label for="submit-intel-sev">Severity Level</label>
+            <select id="submit-intel-sev">
+              <option value="suspicious">Suspicious</option>
+              <option value="high">High Risk</option>
+              <option value="malicious">Malicious / Critical</option>
+            </select>
+          </div>
+          <div class="form-field" style="grid-column: 1 / -1;">
+            <label for="submit-intel-evidence">Evidence & Notes (How was it observed?)</label>
+            <input type="text" id="submit-intel-evidence" placeholder="e.g. SMS lure claiming PAN card suspension with urgent deadline">
+          </div>
+        </div>
+        <div style="display:flex; justify-content:flex-end; margin-top:14px;">
+          <button id="submit-intel-btn" class="button button-primary" type="button">
+            <span>Submit Indicator</span> <span aria-hidden="true">✓</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 6: Community Security Forum -->
+    <section id="view-forum" class="view-section" hidden>
+      <section class="hero">
+        <div class="eyebrow"><span class="eyebrow-dot" aria-hidden="true"></span> Collective Defense · Real-World Threat Debriefs</div>
+        <h1>Community Security Forum</h1>
+        <p>Ask questions, report novel scam tactics, analyze phishing incidents, and collaborate with security researchers.</p>
+      </section>
+
+      <!-- Forum Controls Bar -->
+      <div class="forum-controls-bar">
+        <div class="forum-category-pills" role="radiogroup" aria-label="Forum Categories">
+          <button class="forum-cat-pill active" type="button" data-cat="all">All Topics</button>
+          <button class="forum-cat-pill" type="button" data-cat="Phishing Alert">🚨 Phishing Alert</button>
+          <button class="forum-cat-pill" type="button" data-cat="Scam Report">⚠️ Scam Report</button>
+          <button class="forum-cat-pill" type="button" data-cat="Incident Analysis">🔬 Incident Analysis</button>
+          <button class="forum-cat-pill" type="button" data-cat="Help / Question">❓ Help / Question</button>
+          <button class="forum-cat-pill" type="button" data-cat="General Discussion">💬 General</button>
+        </div>
+        <div class="forum-actions">
+          <input type="text" id="forum-search-input" class="search-input" placeholder="Search discussion threads…">
+          <button id="btn-open-new-thread" class="button button-primary" type="button">
+            <span>+ Start a Discussion</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Forum Threads Container -->
+      <div id="forum-threads-list" class="forum-threads-container">
+        <div class="forum-loading-state">Loading security discussions…</div>
+      </div>
     </section>
 
     <!-- Support Section -->
@@ -480,5 +572,85 @@
       <button id="approve-feeds" class="button button-primary" type="button">Refresh both feeds</button>
     </div>
   </dialog>
+
+  <!-- NEW FORUM THREAD MODAL -->
+  <dialog id="new-thread-dialog" class="dialog-card" style="max-width: 680px;" aria-labelledby="new-thread-title">
+    <div class="dialog-heading">
+      <span class="dialog-icon" aria-hidden="true">💬</span>
+      <div><p class="step-label">COMMUNITY SECURITY FORUM</p><h2 id="new-thread-title">Start a Discussion</h2></div>
+      <button class="dialog-close" type="button" aria-label="Close dialog" data-close-dialog="new-thread-dialog">×</button>
+    </div>
+    <div class="thread-form" style="display:flex; flex-direction:column; gap:14px; margin-top:8px;">
+      <div class="form-field">
+        <label for="new-thread-title-input">Topic Title</label>
+        <input type="text" id="new-thread-title-input" placeholder="e.g. New SMS lure impersonating Income Tax refund with APK download">
+      </div>
+      <div class="form-field">
+        <label for="new-thread-category-select">Category</label>
+        <select id="new-thread-category-select">
+          <option value="Phishing Alert">🚨 Phishing Alert</option>
+          <option value="Scam Report">⚠️ Scam Report</option>
+          <option value="Incident Analysis">🔬 Incident Analysis</option>
+          <option value="Help / Question">❓ Help / Question</option>
+          <option value="General Discussion">💬 General Discussion</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label for="new-thread-author-input">Your Name or Handle (Optional)</label>
+        <input type="text" id="new-thread-author-input" placeholder="Anonymous Analyst or your handle">
+      </div>
+      <div class="form-field">
+        <label for="new-thread-content-input">Details & Observations</label>
+        <textarea id="new-thread-content-input" rows="5" placeholder="Describe the threat, suspicious behavior, headers observed, indicators of compromise, or your question in detail..."></textarea>
+      </div>
+      <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:6px;">
+        <button class="button button-secondary" type="button" data-close-dialog="new-thread-dialog">Cancel</button>
+        <button id="new-thread-submit-btn" class="button button-primary" type="button">Post Discussion</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- FORUM THREAD DETAIL & REPLIES MODAL -->
+  <dialog id="forum-thread-detail-dialog" class="dialog-card" style="max-width: 780px;" aria-labelledby="thread-detail-title">
+    <div class="dialog-heading">
+      <span class="dialog-icon" id="thread-detail-icon" aria-hidden="true">💬</span>
+      <div style="flex:1;">
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+          <span id="thread-detail-cat" class="cat-chip">Category</span>
+          <span id="thread-detail-author" class="thread-meta-author">By User</span>
+          <span id="thread-detail-time" class="thread-meta-time">Time</span>
+        </div>
+        <h2 id="thread-detail-title" style="margin:0; font-size:19px;">Thread Title</h2>
+      </div>
+      <button class="dialog-close" type="button" aria-label="Close thread dialog" data-close-dialog="forum-thread-detail-dialog">×</button>
+    </div>
+    <div class="thread-detail-body">
+      <div id="thread-detail-content" class="thread-body-text"></div>
+      <div class="thread-detail-actions">
+        <button id="thread-detail-upvote-btn" class="forum-upvote-btn" type="button">
+          <span aria-hidden="true">▲</span> <span id="thread-detail-upvote-count">0</span> Upvotes
+        </button>
+      </div>
+      <hr class="divider">
+      <h3 style="font-size:15px; font-weight:750; margin:16px 0 10px;">Discussion & Responses (<span id="thread-detail-reply-count">0</span>)</h3>
+      <div id="thread-replies-list" class="thread-replies-container">
+        <!-- Dynamic replies rendered here -->
+      </div>
+      <div class="reply-composer-box">
+        <label for="thread-reply-input" style="font-size:12px; font-weight:700; color:var(--ink); margin-bottom:6px; display:block;">Add to the conversation</label>
+        <div style="display:flex; gap:10px; margin-bottom:8px;">
+          <input type="text" id="thread-reply-author-input" placeholder="Your name or handle (optional)" style="flex:1;">
+        </div>
+        <textarea id="thread-reply-input" rows="3" placeholder="Share findings, verification results, or suggestions..."></textarea>
+        <div style="display:flex; justify-content:flex-end; margin-top:8px;">
+          <button id="thread-reply-submit-btn" class="button button-primary" type="button">Post Reply</button>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- DYNAMIC CYBER MOUSE CURSOR -->
+  <div id="cursor-dot" class="custom-cursor-dot" aria-hidden="true"></div>
+  <div id="cursor-ring" class="custom-cursor-ring" aria-hidden="true"></div>
 </body>
 </html>

@@ -117,6 +117,29 @@ def init_db(db_path: str | Path) -> None:
             );
             CREATE INDEX IF NOT EXISTS threat_intel_indicator_idx ON threat_intel_entries(indicator);
             CREATE INDEX IF NOT EXISTS threat_intel_category_idx ON threat_intel_entries(category);
+            CREATE TABLE IF NOT EXISTS forum_threads (
+                id TEXT PRIMARY KEY,
+                user_id TEXT,
+                author_name TEXT NOT NULL,
+                title TEXT NOT NULL,
+                content TEXT NOT NULL,
+                category TEXT NOT NULL,
+                upvotes INTEGER NOT NULL DEFAULT 0,
+                reply_count INTEGER NOT NULL DEFAULT 0,
+                created_at TEXT NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS forum_threads_cat_idx ON forum_threads(category);
+            CREATE INDEX IF NOT EXISTS forum_threads_created_idx ON forum_threads(created_at DESC);
+            CREATE TABLE IF NOT EXISTS forum_replies (
+                id TEXT PRIMARY KEY,
+                thread_id TEXT NOT NULL,
+                user_id TEXT,
+                author_name TEXT NOT NULL,
+                content TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY (thread_id) REFERENCES forum_threads(id) ON DELETE CASCADE
+            );
+            CREATE INDEX IF NOT EXISTS forum_replies_thread_idx ON forum_replies(thread_id);
             """
         )
 
@@ -805,3 +828,175 @@ def get_dashboard_stats(db_path: str | Path) -> dict:
         "recent_scans": recent_scans,
         "high_risk_sites": high_risk_sites,
     }
+
+
+# ---------------------------------------------------------------------------
+# Community User Forum Storage
+# ---------------------------------------------------------------------------
+
+def create_forum_thread(
+    db_path: str | Path,
+    title: str,
+    content: str,
+    category: str,
+    author_name: str,
+    user_id: str | None = None,
+) -> dict:
+    thread_id = secrets.token_hex(12)
+    now = datetime.now(timezone.utc).isoformat()
+    clean_title = title.strip()
+    clean_content = content.strip()
+    clean_author = author_name.strip() or "SecurityAnalyst"
+
+    with _connection(db_path) as db:
+        db.execute(
+            """INSERT INTO forum_threads
+               (id, user_id, author_name, title, content, category, upvotes, reply_count, created_at)
+               VALUES (?, ?, ?, ?, ?, ?, 0, 0, ?)""",
+            (thread_id, user_id, clean_author, clean_title, clean_content, category, now),
+        )
+        row = db.execute("SELECT * FROM forum_threads WHERE id = ?", (thread_id,)).fetchone()
+    return dict(row)
+
+
+def list_forum_threads(
+    db_path: str | Path,
+    category: str | None = None,
+    query: str | None = None,
+    sort_by: str = "recent",
+    limit: int = 50,
+) -> list[dict]:
+    clauses: list[str] = []
+    params: list[Any] = []
+
+    if category and category != "all":
+        clauses.append("category = ?")
+        params.append(category)
+    if query:
+        clauses.append("(title LIKE ? OR content LIKE ? OR author_name LIKE ?)")
+        params.extend([f"%{query}%", f"%{query}%", f"%{query}%"])
+
+    where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
+    order = "ORDER BY upvotes DESC, created_at DESC" if sort_by == "top" else "ORDER BY created_at DESC"
+
+    with _connection(db_path) as db:
+        rows = db.execute(f"SELECT * FROM forum_threads {where} {order} LIMIT ?", [*params, limit]).fetchall()
+    return [dict(row) for row in rows]
+
+
+def get_forum_thread(db_path: str | Path, thread_id: str) -> dict | None:
+    with _connection(db_path) as db:
+        thread_row = db.execute("SELECT * FROM forum_threads WHERE id = ?", (thread_id,)).fetchone()
+        if not thread_row:
+            return None
+        thread = dict(thread_row)
+        reply_rows = db.execute(
+            "SELECT * FROM forum_replies WHERE thread_id = ? ORDER BY created_at ASC",
+            (thread_id,),
+        ).fetchall()
+        thread["replies"] = [dict(r) for r in reply_rows]
+    return thread
+
+
+def create_forum_reply(
+    db_path: str | Path,
+    thread_id: str,
+    content: str,
+    author_name: str,
+    user_id: str | None = None,
+) -> dict:
+    reply_id = secrets.token_hex(12)
+    now = datetime.now(timezone.utc).isoformat()
+    clean_content = content.strip()
+    clean_author = author_name.strip() or "SecurityAnalyst"
+
+    with _connection(db_path) as db:
+        thread = db.execute("SELECT id FROM forum_threads WHERE id = ?", (thread_id,)).fetchone()
+        if not thread:
+            raise KeyError(f"Thread {thread_id} not found")
+
+        db.execute(
+            """INSERT INTO forum_replies (id, thread_id, user_id, author_name, content, created_at)
+               VALUES (?, ?, ?, ?, ?, ?)""",
+            (reply_id, thread_id, user_id, clean_author, clean_content, now),
+        )
+        db.execute(
+            "UPDATE forum_threads SET reply_count = reply_count + 1 WHERE id = ?",
+            (thread_id,),
+        )
+        row = db.execute("SELECT * FROM forum_replies WHERE id = ?", (reply_id,)).fetchone()
+    return dict(row)
+
+
+def upvote_forum_thread(db_path: str | Path, thread_id: str) -> dict:
+    with _connection(db_path) as db:
+        db.execute("UPDATE forum_threads SET upvotes = upvotes + 1 WHERE id = ?", (thread_id,))
+        row = db.execute("SELECT id, upvotes FROM forum_threads WHERE id = ?", (thread_id,)).fetchone()
+    if not row:
+        raise KeyError(f"Thread {thread_id} not found")
+    return dict(row)
+
+
+def seed_default_forum_threads(db_path: str | Path) -> None:
+    """Pre-seed realistic security forum discussions if the forum is empty."""
+    with _connection(db_path) as db:
+        count = db.execute("SELECT COUNT(*) as cnt FROM forum_threads").fetchone()["cnt"]
+        if count > 0:
+            return
+
+        seeds = [
+            (
+                "thread-sbi-phish-alert-2026",
+                "SecurityDesk",
+                "🚨 Wave of SMS messages claiming ₹99 verification fee for SBI KYC",
+                "We have observed multiple reports today of SMS phishing campaigns claiming the victim's State Bank of India account will be suspended unless a ₹99 verification fee is paid at lookalike domains like `sbi-kyc-verify.in`. Remember that legitimate banks never ask for payment to verify KYC. Trust Card flags these as Fraudulent Payment / Fake Banking portals.",
+                "Phishing Alert",
+                14,
+                2,
+                "2026-11-08T09:15:00Z",
+                [
+                    ("Aritra", "Great catch. Added the domain patterns and brand homoglyphs to our local threat analysis rules.", "2026-11-08T09:30:00Z"),
+                    ("Analyst_Priya", "The attackers are using fake UPI handle embeds in the link path. The URL analysis module correctly classifies this as an active threat.", "2026-11-08T10:05:00Z"),
+                ],
+            ),
+            (
+                "thread-emudhra-weak-crypto-2026",
+                "CryptoAuditor",
+                "Understanding the eMudhra TLS Certificate incident & weak key generation",
+                "The recent discussions around Certificate Authority key generation highlights why testing for shared small prime factors (p < 10,000) in RSA moduli is crucial. Trust Card's certificate scanner runs this check on every live inspection so that certificates with weak primes are caught before credentials can be intercepted.",
+                "Incident Analysis",
+                9,
+                1,
+                "2026-11-08T10:45:00Z",
+                [
+                    ("SecurityDesk", "Notice that even if the certificate is technically signed by a recognized root, weak cryptographic parameters undermine all transport privacy.", "2026-11-08T11:20:00Z"),
+                ],
+            ),
+            (
+                "thread-fake-recruitment-warning",
+                "Rohan_Dev",
+                "How to spot fake recruitment portals charging 'Registration Fees'",
+                "Received an offer letter email asking me to pay ₹2,500 for onboarding kit delivery on an unfamiliar site. How does Trust Card evaluate these?",
+                "Help / Question",
+                6,
+                1,
+                "2026-11-08T11:50:00Z",
+                [
+                    ("Aritra", "Trust Card detects 'offer letter', 'registration fee', and 'interview' keywords in the message cues and matches them against unrelated domain structures, elevating the verdict to Suspicious.", "2026-11-08T12:10:00Z"),
+                ],
+            ),
+        ]
+
+        for tid, author, title, content, cat, upvotes, reply_cnt, created, replies in seeds:
+            db.execute(
+                """INSERT INTO forum_threads (id, user_id, author_name, title, content, category, upvotes, reply_count, created_at)
+                   VALUES (?, NULL, ?, ?, ?, ?, ?, ?, ?)""",
+                (tid, author, title, content, cat, upvotes, reply_cnt, created),
+            )
+            for r_author, r_content, r_created in replies:
+                db.execute(
+                    """INSERT INTO forum_replies (id, thread_id, user_id, author_name, content, created_at)
+                       VALUES (?, ?, NULL, ?, ?, ?)""",
+                    (secrets.token_hex(12), tid, r_author, r_content, r_created),
+                )
+

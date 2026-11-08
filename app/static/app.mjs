@@ -114,6 +114,7 @@ function switchView(viewId) {
   if (viewId === 'view-dashboard') loadDashboardStats();
   if (viewId === 'view-history') loadScanHistory();
   if (viewId === 'view-intel') searchThreatIntel();
+  if (viewId === 'view-forum') loadForumThreads();
 }
 
 document.querySelectorAll('.tab-btn').forEach((btn) => {
@@ -1412,3 +1413,405 @@ document.querySelector('#reg-submit-btn')?.addEventListener('click', async () =>
 
 // Run auth check on initialization
 initAuth();
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+// =========================================================================
+// Collaborative Threat Intelligence Direct Submission
+// =========================================================================
+const submitIntelBtn = document.querySelector('#submit-intel-btn');
+if (submitIntelBtn) {
+  submitIntelBtn.addEventListener('click', async () => {
+    const indicator = document.querySelector('#submit-intel-val')?.value.trim();
+    const indicatorType = document.querySelector('#submit-intel-type')?.value;
+    const category = document.querySelector('#submit-intel-cat')?.value;
+    const severity = document.querySelector('#submit-intel-sev')?.value;
+    const evidence = document.querySelector('#submit-intel-evidence')?.value.trim();
+
+    if (!indicator) {
+      showToast('Please enter an indicator (domain, URL, IP, or cert fingerprint).', 'error');
+      return;
+    }
+
+    try {
+      submitIntelBtn.disabled = true;
+      const res = await fetch('/api/v1/intel/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          indicator,
+          indicator_type: indicatorType,
+          category,
+          severity,
+          evidence,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'Failed to submit threat indicator.');
+      showToast('Threat indicator contributed to community database!', 'success');
+      document.querySelector('#submit-intel-val').value = '';
+      document.querySelector('#submit-intel-evidence').value = '';
+      searchThreatIntel();
+    } catch (err) {
+      showToast(err.message, 'error');
+    } finally {
+      submitIntelBtn.disabled = false;
+    }
+  });
+}
+
+// =========================================================================
+// Community Security Forum
+// =========================================================================
+let currentForumCat = 'all';
+let currentForumQuery = '';
+const newThreadDialog = document.querySelector('#new-thread-dialog');
+const threadDetailDialog = document.querySelector('#forum-thread-detail-dialog');
+let activeDetailThreadId = null;
+
+async function loadForumThreads(cat = currentForumCat, q = currentForumQuery) {
+  const container = document.querySelector('#forum-threads-list');
+  if (!container) return;
+  container.innerHTML = '<div class="forum-loading-state">Loading security discussions…</div>';
+
+  try {
+    let url = `/api/v1/forum/threads?sort_by=recent`;
+    if (cat && cat !== 'all') url += `&category=${encodeURIComponent(cat)}`;
+    if (q) url += `&q=${encodeURIComponent(q)}`;
+
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Failed to load forum threads.');
+    const data = await res.json();
+    const threads = data.threads || [];
+
+    if (threads.length === 0) {
+      container.innerHTML = `
+        <div class="forum-empty-state">
+          <p style="font-size:16px; font-weight:750; margin-bottom:6px;">No discussions found in this category.</p>
+          <p style="color:var(--muted); font-size:13px; margin-bottom:16px;">Have you analyzed a new phishing attempt or suspicious certificate? Share it with the community.</p>
+          <button class="button button-primary" type="button" id="forum-empty-create-btn">+ Start a Discussion</button>
+        </div>
+      `;
+      document.querySelector('#forum-empty-create-btn')?.addEventListener('click', () => {
+        newThreadDialog?.showModal();
+      });
+      return;
+    }
+
+    container.replaceChildren();
+    threads.forEach((th) => {
+      const card = document.createElement('article');
+      card.className = 'forum-thread-card';
+      card.setAttribute('role', 'button');
+      card.setAttribute('tabindex', '0');
+
+      const dateStr = th.created_at ? new Date(th.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Recent';
+
+      card.innerHTML = `
+        <div class="thread-card-left">
+          <button class="forum-upvote-btn" type="button" aria-label="Upvote thread" data-thread-id="${th.id}">
+            <span aria-hidden="true">▲</span>
+            <span class="upvote-num">${th.upvotes || 0}</span>
+          </button>
+        </div>
+        <div class="thread-card-center">
+          <div class="thread-card-header">
+            <span class="cat-chip">${th.category || 'General'}</span>
+            <span class="thread-meta-author">By ${escapeHtml(th.author_name || 'Anonymous')}</span>
+            <span class="thread-meta-time">· ${dateStr}</span>
+          </div>
+          <h3 class="thread-card-title">${escapeHtml(th.title)}</h3>
+          <p class="thread-card-excerpt">${escapeHtml((th.content || '').slice(0, 160))}${th.content && th.content.length > 160 ? '…' : ''}</p>
+          <div class="thread-card-footer">
+            <span class="thread-reply-count">💬 ${th.reply_count || 0} ${th.reply_count === 1 ? 'reply' : 'replies'}</span>
+            <span>Click to view analysis & responses →</span>
+          </div>
+        </div>
+      `;
+
+      // Upvote click handler
+      const upvoteBtn = card.querySelector('.forum-upvote-btn');
+      upvoteBtn?.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        await upvoteThread(th.id, upvoteBtn);
+      });
+
+      // Card open detail handler
+      card.addEventListener('click', () => {
+        openThreadDetail(th.id);
+      });
+      card.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          openThreadDetail(th.id);
+        }
+      });
+
+      container.append(card);
+    });
+  } catch (err) {
+    container.innerHTML = `<div class="forum-empty-state"><p style="color:var(--red);">Error loading discussions: ${escapeHtml(err.message)}</p></div>`;
+  }
+}
+
+async function upvoteThread(threadId, btnElement) {
+  try {
+    const res = await fetch(`/api/v1/forum/threads/${encodeURIComponent(threadId)}/upvote`, { method: 'POST' });
+    if (!res.ok) throw new Error('Upvote failed');
+    const data = await res.json();
+    btnElement.classList.add('upvoted');
+    const numSpan = btnElement.querySelector('.upvote-num');
+    if (numSpan) numSpan.textContent = data.upvotes;
+    showToast('Upvoted!', 'success');
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+async function openThreadDetail(threadId) {
+  if (!threadDetailDialog) return;
+  activeDetailThreadId = threadId;
+
+  try {
+    const res = await fetch(`/api/v1/forum/threads/${encodeURIComponent(threadId)}`);
+    if (!res.ok) throw new Error('Failed to load discussion thread.');
+    const th = await res.json();
+
+    document.querySelector('#thread-detail-title').textContent = th.title;
+    document.querySelector('#thread-detail-cat').textContent = th.category || 'General';
+    document.querySelector('#thread-detail-author').textContent = `By ${th.author_name || 'Anonymous'}`;
+    const dateStr = th.created_at ? new Date(th.created_at).toLocaleString() : 'Recent';
+    document.querySelector('#thread-detail-time').textContent = `· ${dateStr}`;
+    document.querySelector('#thread-detail-content').textContent = th.content;
+    document.querySelector('#thread-detail-upvote-count').textContent = th.upvotes || 0;
+    document.querySelector('#thread-detail-reply-count').textContent = (th.replies || []).length;
+
+    // Upvote button inside detail dialog
+    const detailUpvoteBtn = document.querySelector('#thread-detail-upvote-btn');
+    if (detailUpvoteBtn) {
+      detailUpvoteBtn.onclick = async () => {
+        await upvoteThread(th.id, detailUpvoteBtn);
+        const countSpan = document.querySelector('#thread-detail-upvote-count');
+        if (countSpan) countSpan.textContent = (parseInt(countSpan.textContent, 10) || 0) + 1;
+      };
+    }
+
+    // Render replies
+    const repliesContainer = document.querySelector('#thread-replies-list');
+    repliesContainer.replaceChildren();
+
+    if (!th.replies || th.replies.length === 0) {
+      repliesContainer.innerHTML = '<p style="color:var(--quiet); font-size:12px; margin:8px 0;">No responses yet. Share your findings or questions below.</p>';
+    } else {
+      th.replies.forEach((r) => {
+        const item = document.createElement('div');
+        item.className = 'thread-reply-item';
+        const rDate = r.created_at ? new Date(r.created_at).toLocaleString() : '';
+        item.innerHTML = `
+          <div class="thread-reply-meta">
+            <strong style="color:var(--ink);">${escapeHtml(r.author_name || 'Analyst')}</strong>
+            <span style="color:var(--quiet); font-size:10px;">${rDate}</span>
+          </div>
+          <div class="thread-reply-content">${escapeHtml(r.content)}</div>
+        `;
+        repliesContainer.append(item);
+      });
+    }
+
+    // Prefill author name if user signed in
+    const replyAuthorInput = document.querySelector('#thread-reply-author-input');
+    if (replyAuthorInput && currentUser) {
+      replyAuthorInput.value = currentUser.username;
+    }
+
+    threadDetailDialog.showModal();
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+// Forum category filter listeners
+document.querySelectorAll('.forum-cat-pill').forEach((pill) => {
+  pill.addEventListener('click', () => {
+    document.querySelectorAll('.forum-cat-pill').forEach((p) => p.classList.remove('active'));
+    pill.classList.add('active');
+    currentForumCat = pill.getAttribute('data-cat') || 'all';
+    loadForumThreads(currentForumCat, currentForumQuery);
+  });
+});
+
+const forumSearchInput = document.querySelector('#forum-search-input');
+if (forumSearchInput) {
+  let searchTimeout = null;
+  forumSearchInput.addEventListener('input', () => {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+      currentForumQuery = forumSearchInput.value.trim();
+      loadForumThreads(currentForumCat, currentForumQuery);
+    }, 250);
+  });
+}
+
+document.querySelector('#btn-open-new-thread')?.addEventListener('click', () => {
+  const authorInput = document.querySelector('#new-thread-author-input');
+  if (authorInput && currentUser) {
+    authorInput.value = currentUser.username;
+  }
+  newThreadDialog?.showModal();
+});
+
+document.querySelectorAll('[data-close-dialog="new-thread-dialog"]').forEach((el) => {
+  el.addEventListener('click', () => newThreadDialog?.close());
+});
+
+document.querySelectorAll('[data-close-dialog="forum-thread-detail-dialog"]').forEach((el) => {
+  el.addEventListener('click', () => threadDetailDialog?.close());
+});
+
+// Submit new discussion thread
+document.querySelector('#new-thread-submit-btn')?.addEventListener('click', async () => {
+  const title = document.querySelector('#new-thread-title-input')?.value.trim();
+  const category = document.querySelector('#new-thread-category-select')?.value;
+  const author = document.querySelector('#new-thread-author-input')?.value.trim();
+  const content = document.querySelector('#new-thread-content-input')?.value.trim();
+
+  if (!title || title.length < 3) {
+    showToast('Please enter a clear topic title.', 'error');
+    return;
+  }
+  if (!content || content.length < 5) {
+    showToast('Please provide details or observations.', 'error');
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/v1/forum/threads', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title,
+        category,
+        author_name: author,
+        content,
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Failed to create discussion thread.');
+    showToast('Discussion thread created!', 'success');
+    document.querySelector('#new-thread-title-input').value = '';
+    document.querySelector('#new-thread-content-input').value = '';
+    newThreadDialog?.close();
+    loadForumThreads(currentForumCat, currentForumQuery);
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+});
+
+// Submit reply to thread
+document.querySelector('#thread-reply-submit-btn')?.addEventListener('click', async () => {
+  if (!activeDetailThreadId) return;
+  const content = document.querySelector('#thread-reply-input')?.value.trim();
+  const author = document.querySelector('#thread-reply-author-input')?.value.trim();
+
+  if (!content || content.length < 2) {
+    showToast('Reply cannot be empty.', 'error');
+    return;
+  }
+
+  try {
+    const res = await fetch(`/api/v1/forum/threads/${encodeURIComponent(activeDetailThreadId)}/replies`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content, author_name: author }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Failed to post reply.');
+    showToast('Reply posted.', 'success');
+    document.querySelector('#thread-reply-input').value = '';
+    openThreadDetail(activeDetailThreadId);
+    loadForumThreads(currentForumCat, currentForumQuery);
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+});
+
+// =========================================================================
+// Dynamic Cyber Mouse Cursor Implementation
+// =========================================================================
+function initDynamicCursor() {
+  const dot = document.querySelector('#cursor-dot');
+  const ring = document.querySelector('#cursor-ring');
+  if (!dot || !ring) return;
+
+  // Respect touch devices and reduced-motion preference
+  if (!window.matchMedia('(pointer: fine)').matches || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    return;
+  }
+
+  let mouseX = window.innerWidth / 2;
+  let mouseY = window.innerHeight / 2;
+  let ringX = mouseX;
+  let ringY = mouseY;
+  let isVisible = false;
+
+  document.addEventListener('mousemove', (e) => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+    dot.style.transform = `translate3d(${mouseX}px, ${mouseY}px, 0) translate(-50%, -50%)`;
+    if (!isVisible) {
+      dot.style.opacity = '1';
+      ring.style.opacity = '1';
+      isVisible = true;
+    }
+  });
+
+  document.addEventListener('mouseleave', () => {
+    dot.style.opacity = '0';
+    ring.style.opacity = '0';
+    isVisible = false;
+  });
+
+  document.addEventListener('mouseenter', () => {
+    dot.style.opacity = '1';
+    ring.style.opacity = '1';
+    isVisible = true;
+  });
+
+  document.addEventListener('mousedown', () => {
+    ring.classList.add('cursor-click');
+  });
+
+  document.addEventListener('mouseup', () => {
+    ring.classList.remove('cursor-click');
+  });
+
+  const interactiveSelectors = 'a, button, input, textarea, select, [role="button"], .tab-btn, .example-chip, .cat-chip, .forum-cat-pill, .forum-thread-card';
+  document.addEventListener('mouseover', (e) => {
+    if (e.target.closest(interactiveSelectors)) {
+      ring.classList.add('cursor-hover');
+    }
+  });
+  document.addEventListener('mouseout', (e) => {
+    if (e.target.closest(interactiveSelectors)) {
+      ring.classList.remove('cursor-hover');
+    }
+  });
+
+  function renderCursor() {
+    ringX += (mouseX - ringX) * 0.18;
+    ringY += (mouseY - ringY) * 0.18;
+    ring.style.transform = `translate3d(${ringX}px, ${ringY}px, 0) translate(-50%, -50%)`;
+    requestAnimationFrame(renderCursor);
+  }
+  requestAnimationFrame(renderCursor);
+}
+
+initDynamicCursor();
