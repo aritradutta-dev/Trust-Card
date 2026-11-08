@@ -1,0 +1,27 @@
+[
+  {
+    "name": "Apache 2.2 / 2.0 / 1.3",
+    "pattern": "Apache/(?:1\\.|2\\.[0-2])",
+    "note": "Apache 2.2 reached end of life in December 2017 and lacks active security maintenance."
+  },
+  {
+    "name": "nginx 0.x / 1.0 - 1.14",
+    "pattern": "nginx/(?:0\\.|1\\.(?:[0-9]|1[0-4])\\b)",
+    "note": "Legacy nginx release branch that has passed standard upstream maintenance."
+  },
+  {
+    "name": "PHP 5.x / 7.0 - 7.4",
+    "pattern": "PHP/(?:[45]\\.|7\\.[0-4])",
+    "note": "PHP 7.4 and earlier reached official end of life in November 2022."
+  },
+  {
+    "name": "Microsoft IIS 5.0 - 7.5",
+    "pattern": "Microsoft-IIS/(?:[5-6]\\.|7\\.[05])",
+    "note": "Legacy Microsoft IIS version associated with unsupported Windows Server versions."
+  },
+  {
+    "name": "OpenSSL 0.9.8 / 1.0.x",
+    "pattern": "OpenSSL/(?:0\\.9|1\\.0)",
+    "note": "OpenSSL 1.0.2 reached end of life in December 2019."
+  }
+]

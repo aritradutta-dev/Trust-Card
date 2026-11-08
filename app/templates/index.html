@@ -102,6 +102,33 @@
         <article class="how-card"><span class="how-icon" aria-hidden="true">02</span><h3>Local threat data</h3><p>Cached feed matches and reviewed reports can explain a known warning. Feed age stays visible.</p></article>
         <article class="how-card"><span class="how-icon" aria-hidden="true">03</span><h3>Live scan by choice</h3><p>Review the site and redirect scope before the separate scanner connects to it.</p></article>
       </div>
+
+      <div class="how-to-read-container">
+        <details class="how-to-read-details">
+          <summary class="how-to-read-summary">
+            <span>📖 How to read this card: Understanding pillars, coverage, and verdicts</span>
+          </summary>
+          <div class="how-to-read-content">
+            <div class="read-block">
+              <h4>1. Why "No warning found" is never "Safe"</h4>
+              <p>Attackers register new domains daily, use legitimate cloud hosting, and obtain valid certificates. A clean result means our automated checks detected no known threat signatures across the checked scope — it is never an endorsement or guarantee of safety. Always visit official services directly.</p>
+            </div>
+            <div class="read-block">
+              <h4>2. The 7 Security Pillars</h4>
+              <p>Trust Card unifies 7 security dimensions: Threat Intelligence, URL & Impersonation, Page Content, Certificate & Trust, Web Security, Community Intelligence, and Message Context. Pillars clearly display status badges: <strong>Alert</strong>, <strong>Attention</strong>, <strong>Clear</strong>, or <strong>Not checked</strong>.</p>
+            </div>
+            <div class="read-block">
+              <h4>3. Local vs. Full Scan Coverage</h4>
+              <p><strong>Local-only check:</strong> Zero outbound network connections. Evaluates cached threat intelligence, brand lookalikes, URL structure, and community reports.</p>
+              <p><strong>Full live scan:</strong> Consented connection with IP pinning. Performs deep TLS validation, checks for weak cryptographic key generation, detects credential-harvesting forms, and audits HTTP security headers.</p>
+            </div>
+            <div class="read-block">
+              <h4>4. Indicator Score vs. Authoritative Verdict</h4>
+              <p>The 0–100 indicator score provides transparent risk ranking across completed checks. However, deterministic verdict rules remain authoritative: technical findings like missing headers or certificate expiration will never turn a link into a "Known threat".</p>
+            </div>
+          </div>
+        </details>
+      </div>
     </section>
 
     <section class="feed-panel" aria-labelledby="intel-heading">

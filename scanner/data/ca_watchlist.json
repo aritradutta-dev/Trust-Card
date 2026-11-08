@@ -1,0 +1,9 @@
+[
+  {
+    "issuer_match": "eMudhra",
+    "status": "under_review",
+    "reason": "Under review regarding certificate authority key generation practices and operational incident reports.",
+    "source_url": "https://example.com/placeholder-ca-watchlist-emudhra-citation",
+    "date": "2026-01-01"
+  }
+]

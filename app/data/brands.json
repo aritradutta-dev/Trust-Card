@@ -1,0 +1,206 @@
+[
+  {
+    "name": "PayPal",
+    "slug": "paypal",
+    "domains": ["paypal.com", "paypal.me"],
+    "aliases": ["paypal", "paypa1", "paypaI"]
+  },
+  {
+    "name": "Google",
+    "slug": "google",
+    "domains": ["google.com", "google.co.in", "google.co.uk", "google.com.au"],
+    "aliases": ["google", "g00gle"]
+  },
+  {
+    "name": "Google Pay",
+    "slug": "gpay",
+    "domains": ["pay.google.com", "google.com"],
+    "aliases": ["gpay", "googlepay"]
+  },
+  {
+    "name": "Microsoft",
+    "slug": "microsoft",
+    "domains": ["microsoft.com", "live.com", "office.com", "outlook.com", "windows.com"],
+    "aliases": ["microsoft", "rnicrosoft", "microsof"]
+  },
+  {
+    "name": "Apple",
+    "slug": "apple",
+    "domains": ["apple.com", "icloud.com"],
+    "aliases": ["apple", "app1e", "icloud"]
+  },
+  {
+    "name": "Amazon",
+    "slug": "amazon",
+    "domains": ["amazon.com", "amazon.in", "amazon.co.uk"],
+    "aliases": ["amazon", "arnazon", "amaz0n"]
+  },
+  {
+    "name": "Netflix",
+    "slug": "netflix",
+    "domains": ["netflix.com"],
+    "aliases": ["netflix", "netflx"]
+  },
+  {
+    "name": "Meta / Facebook",
+    "slug": "facebook",
+    "domains": ["facebook.com", "fb.com", "meta.com"],
+    "aliases": ["facebook", "faceb00k"]
+  },
+  {
+    "name": "WhatsApp",
+    "slug": "whatsapp",
+    "domains": ["whatsapp.com", "wa.me"],
+    "aliases": ["whatsapp", "whatsap"]
+  },
+  {
+    "name": "Instagram",
+    "slug": "instagram",
+    "domains": ["instagram.com"],
+    "aliases": ["instagram", "instagrarn"]
+  },
+  {
+    "name": "State Bank of India (SBI)",
+    "slug": "sbi",
+    "domains": ["sbi.co.in", "onlinesbi.sbi", "onlinesbi.com"],
+    "aliases": ["onlinesbi", "sbibank", "statesbi"]
+  },
+  {
+    "name": "HDFC Bank",
+    "slug": "hdfcbank",
+    "domains": ["hdfcbank.com"],
+    "aliases": ["hdfcbank", "hdfc-bank", "hdfcsec"]
+  },
+  {
+    "name": "ICICI Bank",
+    "slug": "icicibank",
+    "domains": ["icicibank.com"],
+    "aliases": ["icicibank", "icici-bank"]
+  },
+  {
+    "name": "Axis Bank",
+    "slug": "axisbank",
+    "domains": ["axisbank.com"],
+    "aliases": ["axisbank", "axis-bank"]
+  },
+  {
+    "name": "Punjab National Bank (PNB)",
+    "slug": "pnb",
+    "domains": ["pnbindia.in", "pnbnet.in"],
+    "aliases": ["pnbindia", "pnbbank"]
+  },
+  {
+    "name": "Bank of Baroda",
+    "slug": "bankofbaroda",
+    "domains": ["bankofbaroda.in", "bankofbaroda.com", "bobibanking.com"],
+    "aliases": ["bankofbaroda", "bobibanking"]
+  },
+  {
+    "name": "Kotak Mahindra Bank",
+    "slug": "kotak",
+    "domains": ["kotak.com"],
+    "aliases": ["kotakbank", "kotak"]
+  },
+  {
+    "name": "Paytm",
+    "slug": "paytm",
+    "domains": ["paytm.com", "paytmbank.com"],
+    "aliases": ["paytm", "paytmpayment"]
+  },
+  {
+    "name": "PhonePe",
+    "slug": "phonepe",
+    "domains": ["phonepe.com"],
+    "aliases": ["phonepe", "phone-pe"]
+  },
+  {
+    "name": "BharatPe",
+    "slug": "bharatpe",
+    "domains": ["bharatpe.com"],
+    "aliases": ["bharatpe"]
+  },
+  {
+    "name": "BHIM / NPCI",
+    "slug": "bhim",
+    "domains": ["bhimupi.org.in", "npci.org.in"],
+    "aliases": ["bhimupi", "npci"]
+  },
+  {
+    "name": "IRCTC",
+    "slug": "irctc",
+    "domains": ["irctc.co.in", "irctc.com"],
+    "aliases": ["irctc", "irctctourism"]
+  },
+  {
+    "name": "UIDAI / Aadhaar",
+    "slug": "uidai",
+    "domains": ["uidai.gov.in", "eaadhaar.uidai.gov.in"],
+    "aliases": ["uidai", "myaadhaar", "eaadhaar"]
+  },
+  {
+    "name": "Income Tax Department India",
+    "slug": "incometax",
+    "domains": ["incometax.gov.in", "incometaxindia.gov.in", "incometaxindiaefiling.gov.in"],
+    "aliases": ["incometaxindia", "incometaxefiling"]
+  },
+  {
+    "name": "EPFO",
+    "slug": "epfo",
+    "domains": ["epfindia.gov.in"],
+    "aliases": ["epfindia", "epfopassbook"]
+  },
+  {
+    "name": "DigiLocker",
+    "slug": "digilocker",
+    "domains": ["digilocker.gov.in"],
+    "aliases": ["digilocker"]
+  },
+  {
+    "name": "Parivahan",
+    "slug": "parivahan",
+    "domains": ["parivahan.gov.in"],
+    "aliases": ["parivahan", "sarathi.parivahan"]
+  },
+  {
+    "name": "Flipkart",
+    "slug": "flipkart",
+    "domains": ["flipkart.com"],
+    "aliases": ["flipkart", "f1ipkart"]
+  },
+  {
+    "name": "Naukri",
+    "slug": "naukri",
+    "domains": ["naukri.com"],
+    "aliases": ["naukri", "naukr1"]
+  },
+  {
+    "name": "Indeed",
+    "slug": "indeed",
+    "domains": ["indeed.com", "indeed.co.in"],
+    "aliases": ["indeed", "1ndeed"]
+  },
+  {
+    "name": "LinkedIn",
+    "slug": "linkedin",
+    "domains": ["linkedin.com"],
+    "aliases": ["linkedin", "1inkedin"]
+  },
+  {
+    "name": "Internshala",
+    "slug": "internshala",
+    "domains": ["internshala.com"],
+    "aliases": ["internshala"]
+  },
+  {
+    "name": "Dropbox",
+    "slug": "dropbox",
+    "domains": ["dropbox.com"],
+    "aliases": ["dropbox", "dr0pbox"]
+  },
+  {
+    "name": "GitHub",
+    "slug": "github",
+    "domains": ["github.com"],
+    "aliases": ["github", "g1thub"]
+  }
+]

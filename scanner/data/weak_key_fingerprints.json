@@ -1,0 +1,6 @@
+{
+  "_comment": "SHA-256 fingerprints of SubjectPublicKeyInfo (SPKI) known to be generated with flawed or compromised keys (e.g. Debian weak keys, known test vectors). To add an entry: compute hashlib.sha256(spki_der).hexdigest() in lowercase hex.",
+  "fingerprints": [
+    "0000000000000000000000000000000000000000000000000000000000000000"
+  ]
+}

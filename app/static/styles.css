@@ -473,6 +473,55 @@ textarea:focus { border-color: #7996e9; box-shadow: 0 0 0 4px rgba(48, 92, 207, 
 .how-card h3 { margin: 0 0 5px; font-size: 12px; font-weight: 720; }
 .how-card p { margin: 0; color: #666c7b; font-size: 10px; line-height: 1.5; }
 
+.how-to-read-container {
+  margin-top: 14px;
+}
+.how-to-read-details {
+  border: 1px solid #e1e3ee;
+  border-radius: 12px;
+  background: #fbfbfe;
+  overflow: hidden;
+}
+.how-to-read-summary {
+  padding: 12px 16px;
+  font-size: 12px;
+  font-weight: 750;
+  color: #2b3a58;
+  background: #f4f5fc;
+  cursor: pointer;
+  user-select: none;
+  transition: background .15s;
+}
+.how-to-read-summary:hover {
+  background: #eef0fa;
+}
+.how-to-read-content {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+  padding: 16px 18px;
+}
+.read-block h4 {
+  margin: 0 0 5px;
+  font-size: 11px;
+  font-weight: 750;
+  color: #22314d;
+}
+.read-block p {
+  margin: 0 0 6px;
+  font-size: 10px;
+  line-height: 1.45;
+  color: #555f75;
+}
+.read-block p:last-child {
+  margin-bottom: 0;
+}
+@media (max-width: 700px) {
+  .how-to-read-content {
+    grid-template-columns: 1fr;
+  }
+}
+
 .feed-panel { display: flex; align-items: center; justify-content: space-between; gap: 22px; max-width: 1000px; margin: 21px auto 0; padding: 19px 21px; box-shadow: none; }
 .feed-panel h2 { margin: 0 0 4px; font-size: 15px; }
 .feed-summary { margin: 0 0 7px; color: var(--muted); font-size: 10px; }

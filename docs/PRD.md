@@ -267,3 +267,27 @@ Before a public launch, add isolated worker infrastructure, queueing, authentica
 ## 19. Product boundaries
 
 Trust Card is a cautious aid for deciding how to handle a link. It is not an antivirus product, a comprehensive vulnerability scanner, a certificate authority monitor, or a guarantee against fraud. The MVP improves the user’s ability to inspect evidence and act carefully; it cannot prove that an unflagged website is legitimate.
+
+
+## 20. Hackathon Extension: Scope Expansion and Superseded Non-Goals
+
+To fully address the hackathon challenge ("Build an intelligent platform combining threat analysis, web security assessment, certificate validation, and collaborative threat intelligence"), the following MVP non-goals from Section 6 are intentionally superseded and implemented in the current release:
+
+1. **Certificate Transparency and Continuous Trust Monitoring**:
+   - *Superseded non-goal:* "Automated or continuous Certificate Transparency monitoring."
+   - *Implementation:* Embedded Signed Certificate Timestamp (SCT) presence is audited on every scanned leaf certificate. In addition, an optional, explicitly consent-gated third-party check queries `crt.sh` and `rdap.org` (sending hostname only) to identify newly logged certificates, rapid CA churn, and domain registration age $< 30$ days.
+
+2. **Certificate Trust, Weak Key Generation, and Watchlist Checks**:
+   - *Superseded non-goal:* "Cipher-suite grading, or claims to detect compromised certificate authorities."
+   - *Implementation:* The platform inspects key strength (RSA $< 2048$ bits, signature algorithms MD5/SHA-1), tests RSA public moduli for weak key generation (small-prime trial division for $p < 10{,}000$ to detect shared small factors, addressing the eMudhra theme), matches SPKI fingerprints against weak key databases, and flags certificates issued by authorities on a conservative CA watchlist (`scanner/data/ca_watchlist.json`).
+
+3. **In-Depth Web Security Assessment & Outdated Software**:
+   - *Superseded non-goal:* "General-purpose vulnerability scanning..."
+   - *Implementation:* Static inspection audits security headers (HSTS $\ge 15{,}552{,}000$s, CSP `unsafe-inline`, `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`), insecure cookies, cross-domain password posting, plain HTTP password posting, form actions targeting raw IPs or third-party form builders, hidden login iframes, meta-refresh redirects, script obfuscation patterns, and server banner matches against outdated software catalogs (`scanner/data/outdated_software.json`).
+
+4. **Collaborative Threat Intelligence & Cross-Install Sharing**:
+   - *Superseded non-goal:* "Public, multi-tenant scanning or cross-install report sharing."
+   - *Implementation:* Local reports now support deduplication and count tracking. Host-level reputation flags other paths when $\ge 2$ approved reports share a host. Administrators can export approved reports with SHA-256 HMAC cryptographic signatures (`GET /api/v1/admin/export`) and ingest peer threat feeds (`POST /api/v1/admin/import`) strictly as unverified review queue items with size caps.
+
+5. **7-Pillar Indicator Scoring & Synthesis**:
+   - *Implementation:* A transparent, weighted indicator score ($0$–$100$) across 7 security pillars (`Threat Intelligence`, `URL & Impersonation`, `Page Content`, `Certificate & Trust`, `Web Security`, `Community Intelligence`, and `Message Context`) provides clear visibility while ensuring deterministic verdicts remain authoritative.
