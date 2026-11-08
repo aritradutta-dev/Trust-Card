@@ -2264,19 +2264,14 @@ function initBootSequence() {
     clearTimeout(timerId);
 
     if (progressBar) progressBar.style.width = '100%';
-    overlay.classList.add('boot-burst');
+    overlay.classList.add('boot-completed');
+    sessionStorage.setItem('tc_boot_completed', 'true');
+    document.body.style.overflow = '';
 
     setTimeout(() => {
-      overlay.classList.add('boot-completed');
-      sessionStorage.setItem('tc_boot_completed', 'true');
-      document.body.style.overflow = '';
-
-      setTimeout(() => {
-        overlay.hidden = true;
-        overlay.classList.remove('boot-burst');
-        input?.focus();
-      }, 420);
-    }, 160);
+      overlay.hidden = true;
+      input?.focus();
+    }, 500);
   }
 
   function startBoot(force = false) {
@@ -2301,19 +2296,19 @@ function initBootSequence() {
       progressBar.style.width = '0%';
       requestAnimationFrame(() => {
         setTimeout(() => {
-          if (progressBar && isBooting) progressBar.style.width = '55%';
-        }, 140);
+          if (progressBar && isBooting) progressBar.style.width = '45%';
+        }, 350);
         setTimeout(() => {
-          if (progressBar && isBooting) progressBar.style.width = '88%';
-        }, 600);
+          if (progressBar && isBooting) progressBar.style.width = '78%';
+        }, 1200);
         setTimeout(() => {
           if (progressBar && isBooting) progressBar.style.width = '100%';
-        }, 950);
+        }, 2100);
       });
     }
 
-    // Dismiss seamlessly at 1.25s
-    timerId = setTimeout(dismissBoot, 1250);
+    // Smoothly complete after one full cycle (~2.5s)
+    timerId = setTimeout(dismissBoot, 2500);
   }
 
   // Any click or keypress dismisses immediately
