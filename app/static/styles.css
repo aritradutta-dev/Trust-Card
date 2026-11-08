@@ -2648,20 +2648,23 @@ textarea:focus { border-color: rgba(65, 90, 119, 0.5); box-shadow: var(--nm-inse
 }
 
 /* =====================================================================
-   MINIMAL TRUST CARD BOOT / LOADING ANIMATION (SOFT BREATH)
+   MINIMAL TRUST CARD LOGO SPLASH (FADE & ZOOM IN -> ZOOM OUT & FADE OUT)
    ===================================================================== */
 .minimal-boot-overlay {
   position: fixed;
   inset: 0;
   z-index: 100000;
-  background-color: var(--bg, #F4F1DE);
+  /* Frosted translucent backdrop that blends seamlessly into the webpage without any solid off-white box */
+  background: rgba(244, 241, 222, 0.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   display: flex;
   align-items: center;
   justify-content: center;
   user-select: none;
   opacity: 1;
   visibility: visible;
-  transition: opacity 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), visibility 0.5s ease;
+  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.6s ease;
 }
 
 .minimal-boot-overlay.boot-completed {
@@ -2675,20 +2678,30 @@ textarea:focus { border-color: rgba(65, 90, 119, 0.5); box-shadow: var(--nm-inse
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 16px;
-  animation: softBreathEntrance 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  /* Cinematic Fade In + Zoom In Entrance */
+  animation: splashFadeZoomIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.55s ease, filter 0.55s ease;
 }
 
-/* Smooth, calm entrance fade and soft scale */
-@keyframes softBreathEntrance {
+/* Fade in + Zoom in */
+@keyframes splashFadeZoomIn {
   0% {
     opacity: 0;
-    transform: scale(0.96);
+    transform: scale(0.82);
+    filter: blur(6px);
   }
   100% {
     opacity: 1;
     transform: scale(1);
+    filter: blur(0px);
   }
+}
+
+/* When exiting: Zoom Out + Fade Out Disappear */
+.minimal-boot-overlay.boot-completed .minimal-boot-content {
+  opacity: 0;
+  transform: scale(0.86);
+  filter: blur(6px);
 }
 
 .minimal-boot-graphic-wrap {
@@ -2696,57 +2709,17 @@ textarea:focus { border-color: rgba(65, 90, 119, 0.5); box-shadow: var(--nm-inse
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
-  border-radius: 20px;
 }
 
-/* The User's Animated GIF with a relaxed, slow, soft breathing cycle (no heartbeat!) */
+/* Transparent Animated GIF without off-white box */
 .minimal-boot-img {
-  width: 330px;
-  max-width: 84vw;
+  width: 340px;
+  max-width: 86vw;
   height: auto;
   display: block;
   object-fit: contain;
-  animation: softBreathCycle 4s ease-in-out infinite alternate;
-  filter: drop-shadow(0 6px 18px rgba(13, 27, 42, 0.05));
-}
-
-@keyframes softBreathCycle {
-  0% {
-    transform: scale(0.992);
-  }
-  100% {
-    transform: scale(1.018);
-  }
-}
-
-/* Minimal hairline loading bar */
-.minimal-boot-loader {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  margin-top: 4px;
-}
-
-.minimal-boot-bar {
-  width: 130px;
-  height: 2.5px;
-  background: rgba(65, 90, 119, 0.15);
-  border-radius: 99px;
-  overflow: hidden;
-  position: relative;
-}
-
-.minimal-boot-progress {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  width: 0%;
-  background: linear-gradient(90deg, #415A77 0%, #778D7A 100%);
-  border-radius: 99px;
-  transition: width 0.25s ease-out;
+  background: transparent;
+  filter: drop-shadow(0 10px 24px rgba(13, 27, 42, 0.08));
 }
   position: absolute;
   top: 0;

@@ -2251,7 +2251,6 @@ function initBootSequence() {
   const overlay = document.querySelector('#system-boot-overlay');
   if (!overlay) return;
 
-  const progressBar = document.querySelector('#boot-progress-bar');
   const rebootBtn = document.querySelector('#reboot-system-btn');
   const brandEmblem = document.querySelector('.brand-mark');
 
@@ -2263,7 +2262,7 @@ function initBootSequence() {
     isBooting = false;
     clearTimeout(timerId);
 
-    if (progressBar) progressBar.style.width = '100%';
+    // Zoom out with fade out
     overlay.classList.add('boot-completed');
     sessionStorage.setItem('tc_boot_completed', 'true');
     document.body.style.overflow = '';
@@ -2271,7 +2270,7 @@ function initBootSequence() {
     setTimeout(() => {
       overlay.hidden = true;
       input?.focus();
-    }, 500);
+    }, 600);
   }
 
   function startBoot(force = false) {
@@ -2292,24 +2291,29 @@ function initBootSequence() {
     overlay.classList.remove('boot-completed');
     document.body.style.overflow = 'hidden';
 
-    if (progressBar) {
-      progressBar.style.width = '0%';
-      requestAnimationFrame(() => {
-        setTimeout(() => {
-          if (progressBar && isBooting) progressBar.style.width = '45%';
-        }, 350);
-        setTimeout(() => {
-          if (progressBar && isBooting) progressBar.style.width = '78%';
-        }, 1200);
-        setTimeout(() => {
-          if (progressBar && isBooting) progressBar.style.width = '100%';
-        }, 2100);
-      });
-    }
-
-    // Smoothly complete after one full cycle (~2.5s)
-    timerId = setTimeout(dismissBoot, 2500);
+    // Cinematic hold while transparent GIF plays, then zooms out and disappears
+    timerId = setTimeout(dismissBoot, 2400);
   }
+
+  // Any click or keypress dismisses immediately
+  overlay.addEventListener('click', dismissBoot);
+  window.addEventListener('keydown', (e) => {
+    if (isBooting && (e.key === 'Escape' || e.key === ' ' || e.key === 'Enter')) {
+      e.preventDefault();
+      dismissBoot();
+    }
+  });
+
+  rebootBtn?.addEventListener('click', () => startBoot(true));
+  brandEmblem?.addEventListener('click', (e) => {
+    if (e.altKey) {
+      e.preventDefault();
+      startBoot(true);
+    }
+  });
+
+  startBoot(false);
+}
 
   // Any click or keypress dismisses immediately
   overlay.addEventListener('click', dismissBoot);
