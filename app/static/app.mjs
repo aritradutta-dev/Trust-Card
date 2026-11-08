@@ -41,6 +41,50 @@ localButton.addEventListener('click', () => {
   checkLocally();
 });
 
+function showToast(message, type = 'info') {
+  const container = document.querySelector('#toast-container');
+  if (!container) return;
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.dataset.type = type;
+  const icon = document.createElement('span');
+  icon.setAttribute('aria-hidden', 'true');
+  icon.textContent = type === 'success' ? '✓' : type === 'error' ? '⚠' : '🍉';
+  const text = document.createElement('span');
+  text.textContent = message;
+  toast.append(icon, text);
+  container.append(toast);
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateY(8px)';
+    toast.style.transition = 'all 0.25s ease';
+    setTimeout(() => toast.remove(), 250);
+  }, 3500);
+}
+
+// Mobile menu toggle
+const mobileMenuBtn = document.querySelector('#mobile-menu-btn');
+const mobileNav = document.querySelector('#mobile-nav');
+if (mobileMenuBtn && mobileNav) {
+  mobileMenuBtn.addEventListener('click', () => {
+    const isExpanded = mobileMenuBtn.getAttribute('aria-expanded') === 'true';
+    mobileMenuBtn.setAttribute('aria-expanded', String(!isExpanded));
+    mobileNav.hidden = isExpanded;
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !mobileNav.hidden) {
+      mobileMenuBtn.setAttribute('aria-expanded', 'false');
+      mobileNav.hidden = true;
+    }
+  });
+  mobileNav.querySelectorAll('a').forEach((link) => {
+    link.addEventListener('click', () => {
+      mobileMenuBtn.setAttribute('aria-expanded', 'false');
+      mobileNav.hidden = true;
+    });
+  });
+}
+
 document.querySelector('#clear-input').addEventListener('click', () => {
   input.value = '';
   selectedUrl = '';
@@ -54,12 +98,14 @@ document.querySelector('#clear-input').addEventListener('click', () => {
   resultRegion.replaceChildren();
   errorBox.hidden = true;
   input.focus();
+  showToast('Input cleared.', 'info');
 });
 
 document.querySelector('#try-sample').addEventListener('click', () => {
   input.value = 'URGENT: Verify your account now to avoid suspension. Send your OTP and pay the ₹99 verification fee: https://secure-account-check.example/verify';
   updateInputPreview();
   input.focus();
+  showToast('Sample message with payment request loaded.', 'success');
 });
 
 for (const chip of document.querySelectorAll('.example-chip')) {
@@ -69,6 +115,7 @@ for (const chip of document.querySelectorAll('.example-chip')) {
       input.value = url;
       updateInputPreview();
       input.focus();
+      showToast(`Example link loaded: ${url}`, 'info');
     }
   });
 }
@@ -111,6 +158,7 @@ function findLinks() {
   const links = extractUrls(input.value);
   if (!links.length) {
     showInputError('We could not find an HTTP or HTTPS link. Paste a link or a message that contains one.');
+    showToast('No valid link found. Please enter an HTTP or HTTPS URL.', 'error');
     return;
   }
   selectedFlags = detectContextFlags(input.value);
@@ -188,8 +236,10 @@ async function analyze(mode, consent, ctRdapConsent = false) {
     currentResult = data;
     renderResult(data);
     resultRegion.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    showToast(mode === 'local' ? 'Local security check completed.' : 'Live security scan completed.', 'success');
   } catch (error) {
     resultRegion.replaceChildren(makeStatus(error.message || 'The check could not be completed.'));
+    showToast(error.message || 'The check could not be completed.', 'error');
   } finally {
     input.disabled = false;
     findButton.disabled = false;
@@ -559,9 +609,11 @@ async function submitReport(category) {
     if (!response.ok) throw new Error(apiError(data, 'The report could not be submitted.'));
     resultNotice = data.message;
     renderResult(currentResult);
+    showToast(data.message || 'Report submitted for review.', 'success');
   } catch (error) {
     resultNotice = error.message;
     renderResult(currentResult);
+    showToast(error.message || 'Report could not be submitted.', 'error');
   }
 }
 
@@ -582,9 +634,11 @@ async function refreshFeeds() {
     const updated = data.results.filter((item) => item.updated).length;
     resultNotice = updated ? `${updated} threat feed${updated === 1 ? '' : 's'} refreshed.` : 'Feeds could not be refreshed. Previous saved data remains available.';
     if (currentResult) renderResult(currentResult);
+    showToast(resultNotice, updated ? 'success' : 'info');
   } catch (error) {
     feedDialog.close();
     document.querySelector('#feed-summary').textContent = error.message;
+    showToast(error.message || 'Feed refresh failed.', 'error');
   } finally {
     button.disabled = false;
     button.textContent = 'Refresh feeds';

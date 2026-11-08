@@ -2,20 +2,23 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Local report review · Trust Card</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Report Review Console · Trust Card Admin</title>
+  <meta name="description" content="Local threat report review and decision console for Trust Card platform administrators.">
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
   <link rel="stylesheet" href="/static/styles.css">
   <style>
     .admin-filters {
       display: flex;
+      flex-wrap: wrap;
       gap: 8px;
       margin-bottom: 20px;
     }
     .filter-tab {
-      padding: 6px 14px;
-      border: 1px solid #dce0ed;
+      padding: 7px 15px;
+      border: 1px solid #ffd0d8;
       border-radius: 8px;
-      background: #fbfbfe;
+      background: #fff;
       color: #4b556f;
       font-size: 11px;
       font-weight: 700;
@@ -23,51 +26,63 @@
       transition: all .15s;
     }
     .filter-tab:hover {
-      background: #f0f3ff;
-      border-color: #7996e9;
-      color: #174fc7;
+      background: #fff0f3;
+      border-color: #ff385c;
+      color: #ff385c;
     }
     .filter-tab.active {
-      background: var(--blue);
-      border-color: var(--blue);
+      background: var(--melon-red, #ff385c);
+      border-color: var(--melon-red, #ff385c);
       color: #fff;
+      box-shadow: 0 4px 12px rgba(255, 56, 92, 0.25);
     }
     .report-meta-badges {
       display: flex;
+      flex-wrap: wrap;
       align-items: center;
       gap: 6px;
-      margin-bottom: 4px;
+      margin-bottom: 6px;
     }
     .badge-count {
-      padding: 2px 7px;
+      padding: 3px 8px;
       border-radius: 99px;
-      background: #eef1f9;
-      color: #3b4661;
+      background: #fff0f3;
+      color: #e0284b;
       font-size: 9px;
       font-weight: 700;
+      border: 1px solid #fecdd3;
     }
     .badge-state {
-      padding: 2px 7px;
+      padding: 3px 8px;
       border-radius: 99px;
       font-size: 9px;
       font-weight: 750;
       text-transform: uppercase;
+      letter-spacing: .04em;
     }
-    .badge-state[data-state="approved"] { background: #e6f6f3; color: #0b6957; }
-    .badge-state[data-state="unverified"] { background: #fef4e2; color: #8c520a; }
-    .badge-state[data-state="rejected"] { background: #fde8e8; color: #b01a1a; }
+    .badge-state[data-state="approved"] { background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
+    .badge-state[data-state="unverified"] { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
+    .badge-state[data-state="rejected"] { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
   </style>
 </head>
 <body>
   <header class="topbar">
-    <a class="brand" href="/"><span class="brand-mark">T</span><span>Trust Card</span></a>
-    <a class="quiet-link" href="/">Back to checker</a>
+    <a class="brand" href="/" aria-label="Trust Card Home">
+      <span class="brand-mark">🍉</span>
+      <span class="brand-name">Trust Card</span>
+    </a>
+    <nav class="top-nav">
+      <a class="quiet-link" href="/">Link Checker</a>
+      <a class="quiet-link" href="/api">API Reference</a>
+      <a class="quiet-link active" href="/admin/reports">Admin Review</a>
+    </nav>
   </header>
+
   <main class="shell admin-shell">
     <section class="hero admin-hero">
-      <div class="eyebrow"><span class="eyebrow-dot"></span> Local administrator</div>
+      <div class="eyebrow"><span class="eyebrow-dot"></span> Local Administrator</div>
       <h1>Review community reports.</h1>
-      <p>Reports remain unverified until you make a decision. Approved reports affect future checks on this installation.</p>
+      <p>Reports remain unverified until reviewed. Approved reports generate high-confidence threat findings for subsequent scans on this installation.</p>
     </section>
 
     <div class="admin-filters">
@@ -91,7 +106,7 @@
             {% endif %}
           </div>
           <h2>{{ report.host }}</h2>
-          <p>Reported {{ report.created_at }} · Indicator fingerprint {{ report.indicator_hash[:12] }}…</p>
+          <p>Reported {{ report.created_at }} · Indicator fingerprint <code>{{ report.indicator_hash[:12] }}…</code></p>
         </div>
         <div class="report-actions">
           {% if report.state != 'rejected' %}
@@ -105,13 +120,28 @@
       {% endfor %}
       {% else %}
       <div class="empty-state">
-        <span aria-hidden="true">✓</span>
+        <span aria-hidden="true">🍉</span>
         <h2>No reports found</h2>
-        <p>No community reports match the "{{ current_state }}" filter.</p>
+        <p>No community threat reports match the "{{ current_state }}" filter.</p>
       </div>
       {% endif %}
     </section>
   </main>
+
+  <footer class="footer">
+    <div class="footer-meta">
+      <span>Trust Card offers cautious signals, not guarantees.</span>
+      <span id="copyright-year">© 2026 Trust Card Platform. All rights reserved.</span>
+    </div>
+    <div class="footer-links">
+      <a href="/">Home</a>
+      <a href="/api">API Reference</a>
+      <a href="/admin/reports">Admin Review</a>
+      <a href="mailto:security@trustcard.local">Email Inquiries</a>
+      <a href="tel:+18005550199">Hotline: +1 (800) 555-0199</a>
+    </div>
+  </footer>
+
   <script type="module" src="/static/admin.mjs"></script>
 </body>
 </html>

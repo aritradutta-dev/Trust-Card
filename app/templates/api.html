@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Public API Documentation · Trust Card</title>
+  <meta name="description" content="Technical documentation and integration guide for the Trust Card public link verification and threat assessment API.">
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <link rel="stylesheet" href="/static/styles.css">
+  <style>
+    .api-shell { max-width: 960px; margin: 32px auto; padding: 0 16px; }
+    .api-hero { text-align: center; margin-bottom: 36px; }
+    .api-hero h1 { font-size: clamp(28px, 5vw, 42px); color: var(--ink); margin: 8px 0; }
+    .api-hero p { font-size: 14px; color: var(--muted); max-width: 620px; margin: 0 auto; }
+    .api-card { background: #fff; border: 1px solid #ffd0d8; border-radius: 14px; padding: 24px; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(255, 59, 92, 0.05); }
+    .api-card h2 { font-size: 18px; color: #16202e; margin-top: 0; display: flex; align-items: center; gap: 10px; }
+    .api-method { font-size: 11px; font-weight: 800; padding: 4px 8px; border-radius: 6px; text-transform: uppercase; }
+    .method-post { background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
+    .method-get { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
+    .api-endpoint { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; color: #334155; }
+    .api-code-block { background: #182234; color: #f8fafc; border-radius: 10px; padding: 16px; overflow-x: auto; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; line-height: 1.5; margin: 12px 0; }
+    .api-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 12px; }
+    .api-table th { text-align: left; padding: 8px 12px; background: #fff5f7; color: #475569; font-weight: 700; border-bottom: 1px solid #fecdd3; }
+    .api-table td { padding: 9px 12px; border-bottom: 1px solid #f1f5f9; color: #334155; }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="Trust Card Home">
+      <span class="brand-mark">🍉</span>
+      <span class="brand-name">Trust Card</span>
+    </a>
+    <nav class="top-nav">
+      <a class="quiet-link" href="/">Link Checker</a>
+      <a class="quiet-link active" href="/api">API Reference</a>
+      <a class="quiet-link" href="/admin/reports">Admin Review</a>
+    </nav>
+  </header>
+
+  <main class="api-shell">
+    <section class="api-hero">
+      <div class="eyebrow"><span class="eyebrow-dot"></span> Developer Reference</div>
+      <h1>Trust Card Check API</h1>
+      <p>Integrate automated link safety verification, brand impersonation detection, and certificate validation into email gateways, chat bots, and security pipelines.</p>
+    </section>
+
+    <article class="api-card">
+      <h2><span class="api-method method-post">POST</span> <span class="api-endpoint">/api/v1/analyze</span></h2>
+      <p>Submits a link for local threat intelligence matching, URL lookalike analysis, and optional live certificate and web safety auditing.</p>
+
+      <h3>1. Local-Only Check (Zero Outbound Network)</h3>
+      <pre class="api-code-block"><code>curl -s -X POST http://127.0.0.1:8000/api/v1/analyze \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://example.com/login",
+    "mode": "local",
+    "context_flags": ["credential_request"]
+  }'</code></pre>
+
+      <h3>2. Consented Live Website Scan</h3>
+      <pre class="api-code-block"><code>curl -s -X POST http://127.0.0.1:8000/api/v1/analyze \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://example.com/",
+    "mode": "full_scan",
+    "consent": true,
+    "ct_rdap_consent": true
+  }'</code></pre>
+
+      <h3>Request Body Schema</h3>
+      <table class="api-table">
+        <thead>
+          <tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>url</code></td><td>string</td><td>Yes</td><td>HTTP or HTTPS URL to verify (8–2048 characters).</td></tr>
+          <tr><td><code>mode</code></td><td>string</td><td>Yes</td><td><code>"local"</code> for offline analysis or <code>"full_scan"</code> for live scanning.</td></tr>
+          <tr><td><code>consent</code></td><td>boolean</td><td>Conditional</td><td>Required when <code>mode="full_scan"</code>. Authorizes outbound connection.</td></tr>
+          <tr><td><code>ct_rdap_consent</code></td><td>boolean</td><td>No</td><td>Optional consent to query CT logs (crt.sh) and domain age (rdap.org).</td></tr>
+          <tr><td><code>context_flags</code></td><td>array</td><td>No</td><td>Cues detected by client (<code>"urgency"</code>, <code>"credential_request"</code>, <code>"payment_request"</code>, <code>"personal_data_request"</code>).</td></tr>
+        </tbody>
+      </table>
+    </article>
+
+    <article class="api-card">
+      <h2><span class="api-method method-get">GET</span> <span class="api-endpoint">/api/v1/admin/export</span></h2>
+      <p>Exports approved local threat reports signed with HMAC-SHA256 for peer sharing between Trust Card instances. Requires Admin Basic Authentication and configured <code>SHARING_KEY</code>.</p>
+      <pre class="api-code-block"><code>curl -s -u "AD:Aritra@1234" http://127.0.0.1:8000/api/v1/admin/export</code></pre>
+    </article>
+
+    <article class="api-card">
+      <h2><span class="api-method method-post">POST</span> <span class="api-endpoint">/api/v1/admin/import</span></h2>
+      <p>Ingests signed threat reports from a peer Trust Card node into the local unverified review queue. Enforces HMAC-SHA256 signature verification and a 1 MiB size limit.</p>
+    </article>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-meta">
+      <span>Trust Card offers cautious signals, not guarantees.</span>
+      <span id="copyright-year">© 2026 Trust Card Platform. All rights reserved.</span>
+    </div>
+    <div class="footer-links">
+      <a href="/">Home</a>
+      <a href="/api">API Reference</a>
+      <a href="/admin/reports">Admin Review</a>
+      <a href="mailto:security@trustcard.local">Email Inquiries</a>
+      <a href="tel:+18005550199">Hotline: +1 (800) 555-0199</a>
+    </div>
+  </footer>
+</body>
+</html>

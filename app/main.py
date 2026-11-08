@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Literal
 
 from fastapi import FastAPI, HTTPException, Request, Response
+from starlette.exceptions import HTTPException as StarletteHTTPException
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
@@ -262,6 +263,37 @@ def create_app(
         response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
         response.headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'"
         return response
+
+    @app.exception_handler(StarletteHTTPException)
+    async def custom_http_exception_handler(request: Request, exc: StarletteHTTPException):
+        if exc.status_code == 404:
+            if request.url.path.startswith("/api/"):
+                return Response(
+                    content=json.dumps({"detail": exc.detail}),
+                    status_code=404,
+                    media_type="application/json",
+                )
+            return templates.TemplateResponse(
+                request=request,
+                name="404.html",
+                context={"request": request},
+                status_code=404,
+            )
+        headers = dict(exc.headers) if exc.headers else None
+        return Response(
+            content=json.dumps({"detail": exc.detail}),
+            status_code=exc.status_code,
+            media_type="application/json",
+            headers=headers,
+        )
+
+    @app.get("/favicon.ico", include_in_schema=False)
+    async def favicon():
+        return Response(status_code=302, headers={"Location": "/static/favicon.svg"})
+
+    @app.get("/api", response_class=HTMLResponse)
+    async def api_docs(request: Request):
+        return templates.TemplateResponse(request=request, name="api.html", context={"request": request})
 
     @app.get("/", response_class=HTMLResponse)
     async def home(request: Request):

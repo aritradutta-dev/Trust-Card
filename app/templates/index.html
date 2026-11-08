@@ -2,9 +2,14 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#faf8ff">
-  <title>Trust Card · Check a suspicious link</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#ff385c">
+  <title>Trust Card · Intelligent Link Trust & Phishing Detection Platform</title>
+  <meta name="description" content="Trust Card is a privacy-first web link checker combining message cues, local threat intelligence, brand lookalike detection, and consent-gated TLS assessment.">
+  <meta property="og:title" content="Trust Card · Intelligent Link Trust Platform">
+  <meta property="og:description" content="Inspect suspicious links with client-side privacy, deep certificate inspection, and multi-pillar threat intelligence.">
+  <meta property="og:type" content="website">
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
   <link rel="stylesheet" href="/static/styles.css">
   <script type="module" src="/static/app.mjs"></script>
 </head>
@@ -12,18 +17,39 @@
   <noscript><p class="noscript-note">Enable JavaScript to extract links and message cues in this browser. Your message is not sent to the app.</p></noscript>
 
   <header class="topbar">
-    <a class="brand" href="/" aria-label="Trust Card home">
-      <span class="brand-mark" aria-hidden="true">T</span>
+    <a class="brand" href="/" aria-label="Trust Card Home">
+      <span class="brand-mark" aria-hidden="true">🍉</span>
       <span class="brand-name">Trust Card</span>
       <span class="brand-privacy"><span class="status-dot" aria-hidden="true"></span> Local-first privacy</span>
     </a>
     <nav class="top-nav" aria-label="Main navigation">
       <a class="nav-active" href="#check-link">Check link</a>
       <a href="#how-it-works">How it works</a>
-      <a href="/admin/reports">Report review</a>
+      <a href="/api">API Reference</a>
+      <a href="/admin/reports">Admin Review</a>
+      <a href="#contact">Contact</a>
     </nav>
-    <span class="system-status"><span class="status-dot" aria-hidden="true"></span> Local checks ready</span>
+    <div class="topbar-right">
+      <span class="system-status"><span class="status-dot" aria-hidden="true"></span> Local checks ready</span>
+      <button id="mobile-menu-btn" class="mobile-menu-btn" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="mobile-nav">
+        <span class="menu-icon" aria-hidden="true">☰</span>
+      </button>
+    </div>
   </header>
+
+  <nav id="mobile-nav" class="mobile-nav" hidden aria-label="Mobile Navigation">
+    <div class="mobile-nav-inner">
+      <a class="mobile-nav-link" href="#check-link">Check a Link</a>
+      <a class="mobile-nav-link" href="#how-it-works">How It Works</a>
+      <a class="mobile-nav-link" href="/api">API Documentation</a>
+      <a class="mobile-nav-link" href="/admin/reports">Admin Report Review</a>
+      <a class="mobile-nav-link" href="#contact">Contact & Support</a>
+      <div class="mobile-nav-contact">
+        <a href="mailto:security@trustcard.local" class="contact-pill"><span aria-hidden="true">✉️</span> security@trustcard.local</a>
+        <a href="tel:+18005550199" class="contact-pill"><span aria-hidden="true">📞</span> +1 (800) 555-0199</a>
+      </div>
+    </div>
+  </nav>
 
   <main class="shell">
     <section class="hero">
@@ -42,7 +68,7 @@
       </div>
 
       <label class="field-label" for="message-input">Paste a link or the message it came with</label>
-      <textarea id="message-input" rows="5" maxlength="12000" aria-label="Paste a link or the message it came with" placeholder="Paste a suspicious link or a message that includes one…"></textarea>
+      <textarea id="message-input" rows="5" maxlength="12000" aria-label="Paste a link or the message it came with" placeholder="e.g. Urgent: Your account has been suspended. Please verify your payment details immediately at https://sbi-login.account-verify.in/kyc"></textarea>
       <div class="input-meta"><span>Your message stays in this browser. Up to five links can be checked.</span><span id="char-count">0 / 12,000</span></div>
 
       <div id="context-preview" class="context-preview" hidden aria-live="polite">
@@ -145,8 +171,36 @@
       <button id="refresh-feeds" class="button button-secondary" type="button">Refresh feeds <span aria-hidden="true">↻</span></button>
     </section>
 
-    <footer class="footer"><span>Trust Card offers cautious signals, not guarantees.</span><a href="/admin/reports">Local report review</a></footer>
+    <section id="contact" class="support-panel" aria-labelledby="contact-heading">
+      <div class="support-card">
+        <div class="support-text">
+          <p class="step-label">SECURITY INCIDENTS & HOTLINE</p>
+          <h2 id="contact-heading">Need help with a targeted phishing attempt?</h2>
+          <p>If you or your organization received a sophisticated spear-phishing attack or fraudulent payment link, report it to our security response desk.</p>
+        </div>
+        <div class="support-links">
+          <a href="mailto:security@trustcard.local" class="contact-pill"><span class="pill-icon" aria-hidden="true">✉️</span> security@trustcard.local</a>
+          <a href="tel:+18005550199" class="contact-pill"><span class="pill-icon" aria-hidden="true">📞</span> +1 (800) 555-0199</a>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div class="footer-meta">
+        <span>Trust Card offers cautious signals, not guarantees.</span>
+        <span id="copyright-year">© 2026 Trust Card Platform. All rights reserved.</span>
+      </div>
+      <div class="footer-links">
+        <a href="/">Home</a>
+        <a href="/api">API Documentation</a>
+        <a href="/admin/reports">Admin Review</a>
+        <a href="mailto:security@trustcard.local">Email Response</a>
+        <a href="tel:+18005550199">Hotline: +1 (800) 555-0199</a>
+      </div>
+    </footer>
   </main>
+
+  <div id="toast-container" class="toast-container" aria-live="polite" aria-atomic="true"></div>
 
   <dialog id="scan-consent" class="dialog-card" aria-labelledby="consent-title">
     <div class="dialog-heading">
