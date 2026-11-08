@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"on-secondary-fixed-variant":"#3a485b","on-surface-variant":"#434655","primary-fixed-dim":"#b4c5ff","tertiary-fixed":"#89f5e7","on-tertiary-container":"#b3fff3","primary-container":"#2563eb","primary":"#004ac6","secondary-fixed-dim":"#b9c7df","outline-variant":"#c3c6d7","tertiary-container":"#007b71","surface-container":"#eaedff","surface-variant":"#dae2fd","surface-container-highest":"#dae2fd","tertiary":"#006058","error-container":"#ffdad6","surface-container-high":"#e2e7ff","on-surface":"#131b2e","on-tertiary-fixed":"#00201d","outline":"#737686","primary-fixed":"#dbe1ff","on-secondary-container":"#57657a","on-secondary":"#ffffff","on-primary-fixed":"#00174b","surface-dim":"#d2d9f4","surface-container-low":"#f2f3ff","surface-container-lowest":"#ffffff","on-error":"#ffffff","error":"#ba1a1a","on-secondary-fixed":"#0d1c2e","inverse-surface":"#283044","on-primary-fixed-variant":"#003ea8","on-background":"#131b2e","secondary-container":"#d5e3fc","on-tertiary":"#ffffff","background":"#faf8ff","on-primary-container":"#eeefff","inverse-primary":"#b4c5ff","secondary":"#515f74","inverse-on-surface":"#eef0ff","on-primary":"#ffffff","secondary-fixed":"#d5e3fc","on-tertiary-fixed-variant":"#005049","surface-tint":"#0053db","surface-bright":"#faf8ff","tertiary-fixed-dim":"#6bd8cb","on-error-container":"#93000a","surface":"#faf8ff"},borderRadius:{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},spacing:{"space-xl":"2rem","space-xs":"0.25rem","gutter-desktop":"1.5rem","space-lg":"1.5rem","margin-tablet":"2rem","gutter":"1rem","space-md":"1rem","margin":"1rem","space-sm":"0.5rem","margin-desktop":"2.5rem"},fontFamily:{"mono-inspection":["JetBrains Mono"],"headline-md":["Inter"],"mono-inspection-sm":["JetBrains Mono"],"headline-lg":["Inter"],"body-lg":["Inter"],"body-md":["Inter"],"label-badge":["Inter"],"headline-sm":["Inter"],"headline-lg-mobile":["Inter"],"headline-xl":["Inter"],"headline-xl-mobile":["Inter"],"body-sm":["Inter"]},fontSize:{"mono-inspection":["13px",{lineHeight:"20px",letterSpacing:"-0.01em",fontWeight:"500"}],"headline-md":["20px",{lineHeight:"28px",letterSpacing:"-0.01em",fontWeight:"600"}],"mono-inspection-sm":["11px",{lineHeight:"16px",fontWeight:"500"}],"headline-lg":["28px",{lineHeight:"36px",letterSpacing:"-0.015em",fontWeight:"600"}],"body-lg":["16px",{lineHeight:"26px",fontWeight:"400"}],"body-md":["14px",{lineHeight:"22px",fontWeight:"400"}],"label-badge":["12px",{lineHeight:"16px",letterSpacing:"0.02em",fontWeight:"600"}],"headline-sm":["16px",{lineHeight:"24px",letterSpacing:"-0.005em",fontWeight:"600"}],"headline-lg-mobile":["22px",{lineHeight:"30px",letterSpacing:"-0.01em",fontWeight:"600"}],"headline-xl":["36px",{lineHeight:"44px",letterSpacing:"-0.02em",fontWeight:"600"}],"headline-xl-mobile":["28px",{lineHeight:"36px",letterSpacing:"-0.015em",fontWeight:"600"}],"body-sm":["13px",{lineHeight:"20px",fontWeight:"400"}]}}}};</script></head><body class="bg-surface font-body-md text-on-surface min-h-screen antialiased selection:bg-secondary-container selection:text-on-secondary-fixed"><aside class="fixed left-0 top-0 h-full w-64 bg-surface-container-low shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-50 flex flex-col justify-between p-space-md"><div class="flex flex-col gap-space-lg"><div class="flex items-center gap-space-sm px-2"><img alt="Trust Card Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1WY_VUctcQpP5LsBbAvUz5oC61t7Y1UJ8BUGRglxs3CtnyOB19IDw-LSbockEdkcliJE0H1FZ7bMbXm7-pubeDqkJz0WW4PRwkKy6ywV17oKVonRyK59aNWbo9IuqlJ706FLptDkry-mMAeg2YOJ9j2Yw2WKUzVOgqAyTKF5QmyjtDCbqUZf_Q-Szh3_V8zc9hYSIIFEZr7_SIzElvGg-4Fp0jmbxuFA5F2c1SP0g"/><span class="font-headline-sm text-headline-sm text-on-surface font-semibold">Trust Card</span></div><nav class="flex flex-col gap-1" data-active-classes="bg-surface-container-highest text-on-surface font-semibold rounded-lg"><a class="flex items-center gap-space-sm px-3 py-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors font-body-md text-body-md" data-path="check-link" href="#"><span class="material-symbols-outlined text-[20px]">search_check</span><span>Check Link</span></a><a class="flex items-center gap-space-sm px-3 py-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors font-body-md text-body-md" data-path="how-it-works" href="#"><span class="material-symbols-outlined text-[20px]">info</span><span>How It Works</span></a><a class="flex items-center gap-space-sm px-3 py-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors font-body-md text-body-md" data-path="report-feed-admin" href="#"><span class="material-symbols-outlined text-[20px]">shield</span><span>Report Feed (Admin)</span></a><a class="flex items-center gap-space-sm px-3 py-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors font-body-md text-body-md" data-path="forensic-telemetry" href="#"><span class="material-symbols-outlined text-[20px]">database</span><span>Forensic Logs</span></a></nav></div><div class="flex flex-col gap-space-sm bg-surface-container-lowest p-space-md rounded-xl shadow-[0_1px_3px_0_rgba(15,23,42,0.04)]"><div class="flex items-center gap-1.5 text-tertiary font-label-badge text-label-badge"><span class="material-symbols-outlined text-[16px]">lock</span><span>Local-first Engine</span></div><p class="font-mono-inspection-sm text-mono-inspection-sm text-on-surface-variant">No external URL callbacks initiated without review.</p></div></aside><div class="pl-64 flex flex-col min-h-screen"><header class="fixed top-0 left-64 right-0 h-16 bg-surface/90 backdrop-blur-md shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 px-gutter-desktop flex items-center justify-between"><div class="flex items-center gap-space-sm"><div class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container text-tertiary font-label-badge text-label-badge"><span class="material-symbols-outlined text-[16px]">shield_lock</span><span>All scans run on-device by default</span></div></div><div class="flex items-center gap-space-md"><div class="flex items-center gap-2 font-mono-inspection text-mono-inspection text-on-surface-variant bg-surface-container-low px-3 py-1.5 rounded-lg"><span class="w-2 h-2 rounded-full bg-tertiary"></span><span>Threat Engine v3.1</span></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></header><main class="relative pt-16 bg-surface flex-1 w-full px-gutter-desktop py-space-lg"><div class="flex flex-col w-full">
+<!-- Top Epistemic Notice Banner -->
+<div class="mb-space-lg rounded-xl bg-surface-container-low p-space-md shadow-sm relative overflow-hidden">
+<div class="flex items-start gap-space-sm">
+<div class="flex items-center justify-center w-8 h-8 rounded-lg bg-surface-container text-tertiary shrink-0 mt-0.5">
+<span class="material-symbols-outlined text-[20px]">verified_user</span>
+</div>
+<div class="flex flex-col gap-0.5">
+<div class="flex items-center gap-space-sm flex-wrap">
+<span class="font-headline-sm text-headline-sm text-on-surface">Community Review Protocol Active</span>
+<span class="px-2.5 py-0.5 rounded-full bg-secondary-container text-on-secondary-fixed font-label-badge text-label-badge">Zero Public Impact</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-4xl">
+          Unverified community reports do NOT affect public verdicts or trust cards until manually examined and validated by an authorized local investigator. Submissions remain quarantined in sandbox quarantine storage.
+        </p>
+</div>
+</div>
+<div class="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-surface-container-high/40 to-transparent pointer-events-none"></div>
+</div>
+<!-- Main Multi-Column Split Workbench -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg items-start">
+<!-- Left: Primary Triage Column (8 Cols) -->
+<div class="lg:col-span-8 flex flex-col gap-space-md">
+<!-- Filter and Diagnostic Command Strip -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col gap-space-md">
+<div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-space-sm">
+<!-- Live Status Segmented Control -->
+<div class="inline-flex p-1 bg-surface-container-low rounded-lg gap-1" id="statusFilterBar">
+<button class="status-tab px-3 py-1.5 rounded-lg font-headline-sm text-headline-sm bg-surface-container-lowest text-primary shadow-sm transition-all" data-filter="pending">
+              Pending review <span class="ml-1 px-1.5 py-0.2 rounded-full bg-primary-fixed text-on-primary-fixed font-mono-inspection-sm text-mono-inspection-sm">8</span>
+</button>
+<button class="status-tab px-3 py-1.5 rounded-lg font-body-md text-body-md text-on-surface-variant hover:text-on-surface transition-all" data-filter="approved">
+              Approved <span class="ml-1 px-1.5 py-0.2 rounded-full bg-surface-container text-on-surface-variant font-mono-inspection-sm text-mono-inspection-sm">42</span>
+</button>
+<button class="status-tab px-3 py-1.5 rounded-lg font-body-md text-body-md text-on-surface-variant hover:text-on-surface transition-all" data-filter="rejected">
+              Rejected <span class="ml-1 px-1.5 py-0.2 rounded-full bg-surface-container text-on-surface-variant font-mono-inspection-sm text-mono-inspection-sm">19</span>
+</button>
+</div>
+<div class="flex items-center gap-space-xs font-mono-inspection-sm text-mono-inspection-sm text-secondary bg-surface-container-low px-2.5 py-1.5 rounded-lg">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+<span>Local Sync: Real-time</span>
+</div>
+</div>
+<!-- Filter Row & Search -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-space-sm items-center">
+<div class="md:col-span-7 relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">search</span>
+<input class="w-full pl-9 pr-space-md py-2.5 bg-surface-container-low text-on-surface rounded-lg font-mono-inspection text-mono-inspection placeholder:text-outline focus:outline-none focus:bg-surface-container-lowest transition-colors" id="reportSearchInput" placeholder="Filter by hostname, hash, or lure token..." type="text"/>
+</div>
+<div class="md:col-span-5 relative">
+<select class="w-full appearance-none pl-space-md pr-8 py-2.5 bg-surface-container-low text-on-surface rounded-lg font-body-md text-body-md focus:outline-none cursor-pointer" id="categoryFilterSelect">
+<option value="all">All Incident Categories</option>
+<option value="credential">Credential Harvesting</option>
+<option value="payment">Urgent Payment Lure</option>
+<option value="impersonation">Brand Impersonation</option>
+<option value="malware">Malware Delivery</option>
+<option value="smishing">SMS Parcel Smishing</option>
+</select>
+<span class="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none text-[18px]">expand_more</span>
+</div>
+</div>
+</div>
+<!-- Report Feed List Items -->
+<div class="flex flex-col gap-space-md" id="reportsFeed">
+<!-- ITEM 1: Urgent Payment Lure & Fake Auth -->
+<article class="report-card bg-surface-container-lowest rounded-xl p-space-md shadow-sm transition-all flex flex-col gap-space-md relative overflow-hidden" data-category="payment" data-id="rep-901" data-status="pending">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm pb-space-sm">
+<div class="flex items-center gap-space-xs flex-wrap">
+<span class="px-2.5 py-1 rounded-full bg-error-container text-on-error-container font-label-badge text-label-badge flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">warning</span>
+                Urgent Payment Lure &amp; Fake Auth
+              </span>
+<span class="font-mono-inspection-sm text-mono-inspection-sm text-on-surface-variant bg-surface-container-low px-2 py-0.5 rounded">ID: 884-FLX</span>
+</div>
+<div class="flex items-center gap-1.5 font-mono-inspection-sm text-mono-inspection-sm text-secondary">
+<span class="material-symbols-outlined text-[15px]">schedule</span>
+<span>Today, 14:22 UTC</span>
+<span class="text-outline">•</span>
+<span>Anon Contributor #402</span>
+</div>
+</div>
+<!-- Inspected URL display with mono breakdown -->
+<div class="bg-surface-container-low p-space-sm rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm">
+<div class="flex items-center gap-2 overflow-hidden">
+<div class="w-7 h-7 rounded-lg bg-surface-container-highest flex items-center justify-center shrink-0 text-primary">
+<span class="material-symbols-outlined text-[16px]">link</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-mono-inspection text-mono-inspection text-on-surface truncate select-all">
+                  https://<span class="text-error font-semibold">account-check.example</span>/login
+                </span>
+<span class="font-mono-inspection-sm text-mono-inspection-sm text-secondary truncate">
+                  DNS: 198.51.100.44 • ASN: 13335 (Cloud Provider Mask) • Age: 11 days
+                </span>
+</div>
+</div>
+<div class="flex items-center gap-1 shrink-0 self-end sm:self-center">
+<button class="p-1.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors" onclick="navigator.clipboard.writeText('https://account-check.example/login')" title="Copy raw URL">
+<span class="material-symbols-outlined text-[18px]">content_copy</span>
+</button>
+<button class="p-1.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors" title="Launch Sandbox Isolator">
+<span class="material-symbols-outlined text-[18px]">open_in_new</span>
+</button>
+</div>
+</div>
+<!-- Extracted Context Cues & Payloads -->
+<div class="bg-surface-container-lowest rounded-lg p-space-sm flex flex-col gap-2">
+<div class="flex items-center gap-1.5 font-label-badge text-label-badge text-on-surface">
+<span class="material-symbols-outlined text-[16px] text-tertiary">psychology</span>
+<span>Heuristic &amp; Payload Context Signals:</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">
+              Urgency cue detected (“<span class="text-error font-mono-inspection text-mono-inspection">verify within 24h to prevent suspension</span>”). Unsigned corporate vector graphic matching target banking brand detected in HTML shadow DOM.
+            </p>
+<div class="flex flex-wrap gap-2 pt-1">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-container text-on-surface-variant font-mono-inspection-sm text-mono-inspection-sm">
+<span class="material-symbols-outlined text-[13px] text-error">priority_high</span> 24h Countdown Clock
+              </span>
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-container text-on-surface-variant font-mono-inspection-sm text-mono-inspection-sm">
+<span class="material-symbols-outlined text-[13px] text-tertiary">image</span> Brand SVG Mismatch (0.94 cosine)
+              </span>
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-container text-on-surface-variant font-mono-inspection-sm text-mono-inspection-sm">
+<span class="material-symbols-outlined text-[13px] text-secondary">input</span> Credit Card Sub-form
+              </span>
+</div>
+</div>
+<!-- Interactive Diff Panel (Toggled via button) -->
+<div class="hidden flex-col gap-2 p-space-sm bg-surface-container-high rounded-lg" id="diff-panel-901">
+<div class="flex items-center justify-between">
+<span class="font-headline-sm text-headline-sm text-on-surface">Forensic Evidence Comparison</span>
+<span class="font-mono-inspection-sm text-mono-inspection-sm text-secondary">Diff Against Official Baseline</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-space-sm font-mono-inspection text-mono-inspection text-[12px]">
+<div class="bg-surface-container-lowest p-space-sm rounded-lg">
+<p class="font-label-badge text-label-badge text-tertiary mb-1">Authentic Authority Profile</p>
+<p class="text-on-surface-variant">Issuer: DigiCert Global Root G2</p>
+<p class="text-on-surface-variant">Origin: Autonomous ASN 15169</p>
+<p class="text-on-surface-variant">Registrar: MarkMonitor Inc. (21 yrs)</p>
+</div>
+<div class="bg-surface-container-lowest p-space-sm rounded-lg">
+<p class="font-label-badge text-label-badge text-error mb-1">Reported Domain Footprint</p>
+<p class="text-error">Issuer: Let's Encrypt R3 (Issued 48h ago)</p>
+<p class="text-error">Origin: Bulletproof Net Co. (Russia)</p>
+<p class="text-error">Registrar: NameCheap Private Proxy (11d)</p>
+</div>
+</div>
+</div>
+<!-- Action Footer Strip -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm pt-space-xs">
+<button class="inline-flex items-center gap-1.5 text-primary hover:text-on-primary-fixed-variant font-headline-sm text-headline-sm transition-colors self-start sm:self-center" onclick="toggleDiff('diff-panel-901', this)">
+<span class="material-symbols-outlined text-[18px]">difference</span>
+<span>View Evidence Diff</span>
+</button>
+<div class="flex items-center gap-space-sm justify-end">
+<button class="px-3.5 py-2 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-body-md text-body-md transition-colors flex items-center gap-1.5" onclick="rejectReport('rep-901')">
+<span class="material-symbols-outlined text-[18px] text-secondary">close</span>
+<span>Reject Report</span>
+</button>
+<button class="px-4 py-2 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-headline-sm text-headline-sm shadow-sm transition-colors flex items-center gap-1.5" onclick="approveReport('rep-901')">
+<span class="material-symbols-outlined text-[18px]">verified</span>
+<span>Approve Report</span>
+</button>
+</div>
+</div>
+</article>
+<!-- ITEM 2: Credential Harvesting -->
+<article class="report-card bg-surface-container-lowest rounded-xl p-space-md shadow-sm transition-all flex flex-col gap-space-md relative overflow-hidden" data-category="credential" data-id="rep-902" data-status="pending">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm pb-space-sm">
+<div class="flex items-center gap-space-xs flex-wrap">
+<span class="px-2.5 py-1 rounded-full bg-secondary-container text-on-secondary-fixed font-label-badge text-label-badge flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">key_off</span>
+                Credential Harvesting
+              </span>
+<span class="font-mono-inspection-sm text-mono-inspection-sm text-on-surface-variant bg-surface-container-low px-2 py-0.5 rounded">ID: 419-SEC</span>
+</div>
+<div class="flex items-center gap-1.5 font-mono-inspection-sm text-mono-inspection-sm text-secondary">
+<span class="material-symbols-outlined text-[15px]">schedule</span>
+<span>Yesterday, 09:15 UTC</span>
+<span class="text-outline">•</span>
+<span>Automated Honeypot Feed</span>
+</div>
+</div>
+<!-- URL Breakdown -->
+<div class="bg-surface-container-low p-space-sm rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm">
+<div class="flex items-center gap-2 overflow-hidden">
+<div class="w-7 h-7 rounded-lg bg-surface-container-highest flex items-center justify-center shrink-0 text-primary">
+<span class="material-symbols-outlined text-[16px]">domain_verification</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-mono-inspection text-mono-inspection text-on-surface truncate select-all">
+                  https://<span class="text-error font-semibold">security-verify-portal-99.biz</span>
+</span>
+<span class="font-mono-inspection-sm text-mono-inspection-sm text-secondary truncate">
+                  Target: Okta SSO Emulation • Reverse Proxy: Modlishka Active • IP: 104.21.72.19
+                </span>
+</div>
+</div>
+<div class="flex items-center gap-1 shrink-0 self-end sm:self-center">
+<button class="p-1.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors" onclick="navigator.clipboard.writeText('https://security-verify-portal-99.biz')" title="Copy raw URL">
+<span class="material-symbols-outlined text-[18px]">content_copy</span>
+</button>
+</div>
+</div>
+<div class="bg-surface-container-lowest rounded-lg p-space-sm flex flex-col gap-1.5">
+<div class="flex items-center gap-1.5 font-label-badge text-label-badge text-on-surface">
+<span class="material-symbols-outlined text-[16px] text-tertiary">fingerprint</span>
+<span>Payload Indicators:</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">
+              Intermediate login challenge script passes OTP keystrokes to a Telegram C2 bot webhook (<span class="font-mono-inspection text-mono-inspection-sm text-on-surface">api.telegram.org/bot710...</span>). Validated by 3 honeypot intercepts.
+            </p>
+</div>
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm pt-space-xs">
+<div class="flex items-center gap-1 text-on-surface-variant font-mono-inspection-sm text-mono-inspection-sm">
+<span class="material-symbols-outlined text-[16px] text-tertiary">check_circle</span>
+<span>Heuristic score: 0.98 high certainty</span>
+</div>
+<div class="flex items-center gap-space-sm justify-end">
+<button class="px-3.5 py-2 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-body-md text-body-md transition-colors flex items-center gap-1.5" onclick="rejectReport('rep-902')">
+<span class="material-symbols-outlined text-[18px] text-secondary">close</span>
+<span>Reject Report</span>
+</button>
+<button class="px-4 py-2 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-headline-sm text-headline-sm shadow-sm transition-colors flex items-center gap-1.5" onclick="approveReport('rep-902')">
+<span class="material-symbols-outlined text-[18px]">verified</span>
+<span>Approve Report</span>
+</button>
+</div>
+</div>
+</article>
+<!-- ITEM 3: SMS Parcel Smishing -->
+<article class="report-card bg-surface-container-lowest rounded-xl p-space-md shadow-sm transition-all flex flex-col gap-space-md relative overflow-hidden" data-category="smishing" data-id="rep-903" data-status="pending">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm pb-space-sm">
+<div class="flex items-center gap-space-xs flex-wrap">
+<span class="px-2.5 py-1 rounded-full bg-secondary-container text-on-secondary-fixed font-label-badge text-label-badge flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">sms</span>
+                SMS Parcel Smishing
+              </span>
+<span class="font-mono-inspection-sm text-mono-inspection-sm text-on-surface-variant bg-surface-container-low px-2 py-0.5 rounded">ID: 290-PKG</span>
+</div>
+<div class="flex items-center gap-1.5 font-mono-inspection-sm text-mono-inspection-sm text-secondary">
+<span class="material-symbols-outlined text-[15px]">schedule</span>
+<span>2 days ago</span>
+<span class="text-outline">•</span>
+<span>Reported via iOS Share Sheet</span>
+</div>
+</div>
+<!-- URL Breakdown -->
+<div class="bg-surface-container-low p-space-sm rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm">
+<div class="flex items-center gap-2 overflow-hidden">
+<div class="w-7 h-7 rounded-lg bg-surface-container-highest flex items-center justify-center shrink-0 text-primary">
+<span class="material-symbols-outlined text-[16px]">local_shipping</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-mono-inspection text-mono-inspection text-on-surface truncate select-all">
+                  https://<span class="text-error font-semibold">shipping-reschedule-fee.info</span>
+</span>
+<span class="font-mono-inspection-sm text-mono-inspection-sm text-secondary truncate">
+                  Impersonated Carrier: USPS Post / Royal Mail blend • TLD: .info (Domain age: 3 days)
+                </span>
+</div>
+</div>
+<div class="flex items-center gap-1 shrink-0 self-end sm:self-center">
+<button class="p-1.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors" onclick="navigator.clipboard.writeText('https://shipping-reschedule-fee.info')" title="Copy raw URL">
+<span class="material-symbols-outlined text-[18px]">content_copy</span>
+</button>
+</div>
+</div>
+<div class="bg-surface-container-lowest rounded-lg p-space-sm flex flex-col gap-1.5">
+<div class="flex items-center gap-1.5 font-label-badge text-label-badge text-on-surface">
+<span class="material-symbols-outlined text-[16px] text-tertiary">chat</span>
+<span>Submitted Inbound Message Header:</span>
+</div>
+<div class="p-2.5 bg-surface-container-low rounded-lg font-mono-inspection-sm text-mono-inspection-sm text-on-surface-variant">
+              “USPS: Your package has an unpaid redelivery fee of $1.85. Settle within 12h or parcel will be returned to sender: https://shipping-reschedule-fee.info”
+            </div>
+</div>
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm pt-space-xs">
+<div class="flex items-center gap-1 text-on-surface-variant font-mono-inspection-sm text-mono-inspection-sm">
+<span class="material-symbols-outlined text-[16px] text-secondary">analytics</span>
+<span>23 identical SMS strings logged across network</span>
+</div>
+<div class="flex items-center gap-space-sm justify-end">
+<button class="px-3.5 py-2 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-body-md text-body-md transition-colors flex items-center gap-1.5" onclick="rejectReport('rep-903')">
+<span class="material-symbols-outlined text-[18px] text-secondary">close</span>
+<span>Reject Report</span>
+</button>
+<button class="px-4 py-2 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-headline-sm text-headline-sm shadow-sm transition-colors flex items-center gap-1.5" onclick="approveReport('rep-903')">
+<span class="material-symbols-outlined text-[18px]">verified</span>
+<span>Approve Report</span>
+</button>
+</div>
+</div>
+</article>
+</div>
+<!-- Empty Filter State (Hidden by default) -->
+<div class="hidden bg-surface-container-lowest rounded-xl p-space-xl shadow-sm text-center flex flex-col items-center justify-center gap-space-sm py-12" id="emptyFilterState">
+<div class="w-12 h-12 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined text-[24px]">filter_alt_off</span>
+</div>
+<p class="font-headline-sm text-headline-sm text-on-surface">No reports match your active filters</p>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-sm">Try clearing your keyword query or switching review status queues.</p>
+<button class="mt-2 px-4 py-2 rounded-lg bg-surface-container hover:bg-surface-container-high text-primary font-headline-sm text-headline-sm transition-colors" onclick="resetFilters()">
+          Reset Filter Parameters
+        </button>
+</div>
+</div>
+<!-- Right: Sidebar Diagnostics & Review Guidelines (4 Cols) -->
+<div class="lg:col-span-4 flex flex-col gap-space-md">
+<!-- Metrics Dashboard Box -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col gap-space-md">
+<div class="flex items-center justify-between pb-space-sm">
+<span class="font-headline-sm text-headline-sm text-on-surface">Queue Diagnostics</span>
+<span class="font-mono-inspection-sm text-mono-inspection-sm text-tertiary bg-surface-container px-2 py-0.5 rounded-full">Node #01</span>
+</div>
+<div class="grid grid-cols-2 gap-space-sm">
+<div class="bg-surface-container-low p-space-sm rounded-lg flex flex-col">
+<span class="font-mono-inspection-sm text-mono-inspection-sm text-secondary">Pending Action</span>
+<span class="font-headline-lg text-headline-lg text-primary font-bold" id="pendingCounter">8</span>
+<span class="font-mono-inspection-sm text-mono-inspection-sm text-on-surface-variant mt-1">~14 min avg resolution</span>
+</div>
+<div class="bg-surface-container-low p-space-sm rounded-lg flex flex-col">
+<span class="font-mono-inspection-sm text-mono-inspection-sm text-secondary">24h Approved</span>
+<span class="font-headline-lg text-headline-lg text-on-surface font-bold">42</span>
+<span class="font-mono-inspection-sm text-mono-inspection-sm text-tertiary mt-1">98.2% peer agreement</span>
+</div>
+</div>
+<!-- Inline SVG Sparkline / Activity Graph -->
+<div class="bg-surface-container-low p-space-sm rounded-lg flex flex-col gap-1.5">
+<div class="flex items-center justify-between font-mono-inspection-sm text-mono-inspection-sm text-on-surface-variant">
+<span>Inflow Velocity (Last 7 Days)</span>
+<span class="text-tertiary">+14.2%</span>
+</div>
+<div class="w-full h-12 flex items-end">
+<svg class="w-full h-10 text-primary overflow-visible" fill="none" preserveaspectratio="none" viewbox="0 0 200 40">
+<path d="M0 32 L30 28 L60 35 L90 18 L120 22 L150 10 L180 14 L200 6" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"></path>
+<path d="M0 32 L30 28 L60 35 L90 18 L120 22 L150 10 L180 14 L200 6 L200 40 L0 40 Z" fill="currentColor" fill-opacity="0.08"></path>
+</svg>
+</div>
+<div class="flex justify-between font-mono-inspection-sm text-mono-inspection-sm text-outline pt-1">
+<span>Mon</span>
+<span>Wed</span>
+<span>Fri</span>
+<span>Today</span>
+</div>
+</div>
+</div>
+<!-- Protocol Review Guidelines Checklist -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col gap-space-md">
+<div class="flex items-center gap-space-xs text-on-surface">
+<span class="material-symbols-outlined text-[20px] text-tertiary">checklist</span>
+<span class="font-headline-sm text-headline-sm">Review Guidelines Checklist</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">
+          Adhere strictly to verified criteria before certifying a link as malicious or dismissing as benign.
+        </p>
+<div class="flex flex-col gap-space-sm">
+<label class="flex items-start gap-space-sm p-space-sm bg-surface-container-low rounded-lg cursor-pointer hover:bg-surface-container transition-colors">
+<input checked="" class="mt-1 w-4 h-4 text-primary rounded bg-surface-container-lowest focus:ring-0" type="checkbox"/>
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-on-surface">1. Check TLS validity</span>
+<span class="font-body-md text-body-md text-on-surface-variant">Verify certificate issuance date, SAN host coverage, and presence of free automated proxies.</span>
+</div>
+</label>
+<label class="flex items-start gap-space-sm p-space-sm bg-surface-container-low rounded-lg cursor-pointer hover:bg-surface-container transition-colors">
+<input checked="" class="mt-1 w-4 h-4 text-primary rounded bg-surface-container-lowest focus:ring-0" type="checkbox"/>
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-on-surface">2. Verify domain ownership</span>
+<span class="font-body-md text-body-md text-on-surface-variant">Rule out legitimate subdomains or subsidiary entities owned by the authentic institution.</span>
+</div>
+</label>
+<label class="flex items-start gap-space-sm p-space-sm bg-surface-container-low rounded-lg cursor-pointer hover:bg-surface-container transition-colors">
+<input checked="" class="mt-1 w-4 h-4 text-primary rounded bg-surface-container-lowest focus:ring-0" type="checkbox"/>
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-on-surface">3. Confirm malicious intent</span>
+<span class="font-body-md text-body-md text-on-surface-variant">Confirm presence of deceptive credential inputs, spoofed identity banners, or forced malware payloads.</span>
+</div>
+</label>
+</div>
+<div class="p-space-sm rounded-lg bg-surface-container-high/60 flex items-center gap-space-xs font-mono-inspection-sm text-mono-inspection-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px] text-tertiary">policy</span>
+<span>Requires 2-key local reviewer cryptographic authorization.</span>
+</div>
+</div>
+<!-- Quick Operational Advice Card -->
+<div class="bg-surface-container-low rounded-xl p-space-md flex flex-col gap-space-xs text-on-surface">
+<div class="flex items-center gap-1 font-label-badge text-label-badge text-secondary">
+<span class="material-symbols-outlined text-[16px]">info</span>
+<span>EPISTEMIC NOTICE</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">
+          Approval propagates verified IOCs directly into the on-device Trust Card ruleset within 300ms without sending telemetry to remote centralized clouds.
+        </p>
+</div>
+</div>
+</div>
+<!-- Notification Toast Container -->
+<div class="fixed bottom-space-lg right-space-lg bg-inverse-surface text-inverse-on-surface px-space-md py- space-sm rounded-xl shadow-lg transition-all transform translate-y-16 opacity-0 pointer-events-none flex items-center gap-space-sm z-50" id="toastNotification">
+<span class="material-symbols-outlined text-tertiary-fixed text-[20px]" id="toastIcon">check_circle</span>
+<span class="font-body-md text-body-md" id="toastMessage">Action recorded</span>
+</div>
+</div>
+<script>
+  let pendingCount = 8;
+
+  function showToast(message, icon = 'check_circle') {
+    const toast = document.getElementById('toastNotification');
+    const toastMsg = document.getElementById('toastMessage');
+    const toastIcon = document.getElementById('toastIcon');
+    if (!toast) return;
+
+    toastMsg.textContent = message;
+    toastIcon.textContent = icon;
+    toast.classList.remove('translate-y-16', 'opacity-0', 'pointer-events-none');
+    toast.classList.add('translate-y-0', 'opacity-100');
+
+    setTimeout(() => {
+      toast.classList.add('translate-y-16', 'opacity-0', 'pointer-events-none');
+      toast.classList.remove('translate-y-0', 'opacity-100');
+    }, 3200);
+  }
+
+  function approveReport(id) {
+    const card = document.querySelector(`[data-id="${id}"]`);
+    if (!card) return;
+
+    card.classList.add('opacity-40', 'scale-[0.98]');
+    setTimeout(() => {
+      card.remove();
+      decrementPending();
+      showToast(`Report ${id.toUpperCase()} approved & IOCs distributed to local-first sandbox.`);
+      checkFeedState();
+    }, 280);
+  }
+
+  function rejectReport(id) {
+    const card = document.querySelector(`[data-id="${id}"]`);
+    if (!card) return;
+
+    card.classList.add('opacity-40', 'scale-[0.98]');
+    setTimeout(() => {
+      card.remove();
+      decrementPending();
+      showToast(`Report ${id.toUpperCase()} rejected. No verdict change applied.`, 'cancel');
+      checkFeedState();
+    }, 280);
+  }
+
+  function decrementPending() {
+    if (pendingCount > 0) {
+      pendingCount--;
+      const counter = document.getElementById('pendingCounter');
+      if (counter) counter.textContent = pendingCount;
+    }
+  }
+
+  function toggleDiff(diffId, btn) {
+    const panel = document.getElementById(diffId);
+    if (!panel) return;
+    const isHidden = panel.classList.contains('hidden');
+    if (isHidden) {
+      panel.classList.remove('hidden');
+      panel.classList.add('flex');
+      btn.innerHTML = `<span class="material-symbols-outlined text-[18px]">expand_less</span><span>Hide Evidence Diff</span>`;
+    } else {
+      panel.classList.add('hidden');
+      panel.classList.remove('flex');
+      btn.innerHTML = `<span class="material-symbols-outlined text-[18px]">difference</span><span>View Evidence Diff</span>`;
+    }
+  }
+
+  // Filter interaction
+  const searchInput = document.getElementById('reportSearchInput');
+  const catSelect = document.getElementById('categoryFilterSelect');
+  const statusTabs = document.querySelectorAll('.status-tab');
+  let currentStatus = 'pending';
+
+  statusTabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      statusTabs.forEach(t => {
+        t.className = 'status-tab px-3 py-1.5 rounded-lg font-body-md text-body-md text-on-surface-variant hover:text-on-surface transition-all';
+      });
+      tab.className = 'status-tab px-3 py-1.5 rounded-lg font-headline-sm text-headline-sm bg-surface-container-lowest text-primary shadow-sm transition-all';
+      currentStatus = tab.dataset.filter;
+      applyFilters();
+    });
+  });
+
+  if (searchInput) searchInput.addEventListener('input', applyFilters);
+  if (catSelect) catSelect.addEventListener('change', applyFilters);
+
+  function applyFilters() {
+    const query = (searchInput ? searchInput.value : '').toLowerCase().trim();
+    const category = catSelect ? catSelect.value : 'all';
+    const cards = document.querySelectorAll('.report-card');
+    let visibleCount = 0;
+
+    cards.forEach(card => {
+      const cardText = card.textContent.toLowerCase();
+      const cardCat = card.dataset.category || '';
+      const cardStat = card.dataset.status || 'pending';
+
+      const matchesStatus = (currentStatus === 'pending') ? (cardStat === 'pending') : false;
+      const matchesSearch = !query || cardText.includes(query);
+      const matchesCategory = (category === 'all') || (cardCat.includes(category));
+
+      if (matchesStatus && matchesSearch && matchesCategory) {
+        card.style.display = 'flex';
+        visibleCount++;
+      } else {
+        card.style.display = 'none';
+      }
+    });
+
+    const empty = document.getElementById('emptyFilterState');
+    if (empty) {
+      if (visibleCount === 0) {
+        empty.classList.remove('hidden');
+      } else {
+        empty.classList.add('hidden');
+      }
+    }
+  }
+
+  function resetFilters() {
+    if (searchInput) searchInput.value = '';
+    if (catSelect) catSelect.value = 'all';
+    if (statusTabs[0]) statusTabs[0].click();
+    applyFilters();
+  }
+
+  function checkFeedState() {
+    applyFilters();
+  }
+</script></main><footer class="w-full bg-surface-container-low py-space-md px-gutter-desktop text-on-surface-variant font-body-sm text-body-sm flex justify-between items-center"><p>Message text never leaves your browser. Designed for high accessibility and clarity.</p><p class="font-mono-inspection-sm text-mono-inspection-sm text-secondary">© 2025 Trust Card Admin Interface</p></footer></div></body></html>

@@ -1,0 +1,65 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp:mode=1777,size=32m
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    environment:
+      DATA_DIR: /app/data
+      SCANNER_URL: http://scanner:8080
+      SCANNER_TOKEN: ${SCANNER_TOKEN:?Set SCANNER_TOKEN in .env}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:?Set ADMIN_USERNAME in .env}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Set ADMIN_PASSWORD in .env}
+    ports:
+      - "127.0.0.1:${APP_PORT:-8000}:8000"
+    volumes:
+      - trust_card_data:/app/data
+    networks: [app_internal, web_ingress]
+    depends_on:
+      scanner:
+        condition: service_healthy
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2)"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+
+  scanner:
+    build:
+      context: .
+      dockerfile: Dockerfile.scanner
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp:mode=1777,size=32m
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    environment:
+      SCANNER_TOKEN: ${SCANNER_TOKEN:?Set SCANNER_TOKEN in .env}
+      PHISHTANK_APP_KEY: ${PHISHTANK_APP_KEY:-}
+      URLHAUS_AUTH_KEY: ${URLHAUS_AUTH_KEY:-}
+    networks: [app_internal, scanner_egress]
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health', timeout=2)"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
+networks:
+  app_internal:
+    internal: true
+  web_ingress:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: "false"
+  scanner_egress: {}
+
+volumes:
+  trust_card_data:

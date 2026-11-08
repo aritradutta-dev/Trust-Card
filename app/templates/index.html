@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#faf8ff">
+  <title>Trust Card · Check a suspicious link</title>
+  <link rel="stylesheet" href="/static/styles.css">
+  <script type="module" src="/static/app.mjs"></script>
+</head>
+<body>
+  <noscript><p class="noscript-note">Enable JavaScript to extract links and message cues in this browser. Your message is not sent to the app.</p></noscript>
+
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="Trust Card home">
+      <span class="brand-mark" aria-hidden="true">T</span>
+      <span class="brand-name">Trust Card</span>
+      <span class="brand-privacy"><span class="status-dot" aria-hidden="true"></span> Local-first privacy</span>
+    </a>
+    <nav class="top-nav" aria-label="Main navigation">
+      <a class="nav-active" href="#check-link">Check link</a>
+      <a href="#how-it-works">How it works</a>
+      <a href="/admin/reports">Report review</a>
+    </nav>
+    <span class="system-status"><span class="status-dot" aria-hidden="true"></span> Local checks ready</span>
+  </header>
+
+  <main class="shell">
+    <section class="hero">
+      <div class="eyebrow"><span class="eyebrow-dot" aria-hidden="true"></span> Message context · Link evidence</div>
+      <h1>Check a link before you click.</h1>
+      <p>Paste a link or the message it came with. Trust Card explains the signals it finds and a safer next step.</p>
+    </section>
+
+    <section id="check-link" class="workspace" aria-labelledby="check-title">
+      <div class="section-head">
+        <div>
+          <p class="step-label">START A CHECK</p>
+          <h2 id="check-title">What are you unsure about?</h2>
+        </div>
+        <span class="local-badge"><span class="status-dot" aria-hidden="true"></span> Message parsed here</span>
+      </div>
+
+      <label class="field-label" for="message-input">Paste a link or the message it came with</label>
+      <textarea id="message-input" rows="5" maxlength="12000" aria-label="Paste a link or the message it came with" placeholder="Paste a suspicious link or a message that includes one…"></textarea>
+      <div class="input-meta"><span>Your message stays in this browser. Up to five links can be checked.</span><span id="char-count">0 / 12,000</span></div>
+
+      <div id="context-preview" class="context-preview" hidden aria-live="polite">
+        <div class="preview-line"><span class="preview-label">Detected links</span><span id="detected-count" class="preview-value"></span></div>
+        <div class="preview-line"><span class="preview-label">Message cues</span><span id="detected-cues" class="cue-list"></span></div>
+      </div>
+      <p id="input-error" class="inline-error" role="alert" hidden></p>
+
+      <div id="link-picker" class="link-picker" hidden>
+        <div class="picker-heading">
+          <div><p class="step-label">STEP 1 · LINK SELECTION</p><h3 class="picker-title">Choose a link to check</h3></div>
+          <span id="picker-count" class="count-chip"></span>
+        </div>
+        <div class="selection-layout">
+          <div id="link-options" class="link-options" role="radiogroup" aria-label="Links found in the message"></div>
+          <aside class="selection-context">
+            <span class="mini-icon" aria-hidden="true">i</span>
+            <h4>Message context</h4>
+            <p id="context-summary">Detected cues are shown as evidence. They do not determine the verdict by themselves.</p>
+            <div id="selection-cues" class="cue-list"></div>
+          </aside>
+        </div>
+        <button id="check-local" class="button button-primary" type="button">Check selected link locally <span aria-hidden="true">→</span></button>
+      </div>
+
+      <div class="example-links-row">
+        <span class="example-label">Try an example:</span>
+        <div class="example-chips">
+          <button type="button" class="example-chip" data-example-url="https://expired.badssl.com/">expired.badssl.com</button>
+          <button type="button" class="example-chip" data-example-url="https://self-signed.badssl.com/">self-signed.badssl.com</button>
+          <button type="button" class="example-chip" data-example-url="https://wrong.host.badssl.com/">wrong.host.badssl.com</button>
+          <button type="button" class="example-chip" data-example-url="https://untrusted-root.badssl.com/">untrusted-root.badssl.com</button>
+          <button type="button" class="example-chip" data-example-url="https://example.com/">example.com</button>
+          <button type="button" class="example-chip demo-threat-chip" data-example-url="http://demo-phish.trustcard.test/login">demo-phish (Demo threat)</button>
+        </div>
+      </div>
+
+      <div class="input-actions">
+        <button id="clear-input" class="button button-quiet" type="button">Clear</button>
+        <button id="try-sample" class="button button-quiet sample-button" type="button">Try a sample message</button>
+        <button id="find-links" class="button button-primary" type="button">Check this link <span aria-hidden="true">→</span></button>
+      </div>
+
+      <div class="privacy-strip">
+        <span class="privacy-icon" aria-hidden="true">✓</span>
+        <div><strong>Message text stays in this browser</strong><p>Only the selected link and detected cue names go to this local app.</p></div>
+        <span class="privacy-caption"><span class="status-dot" aria-hidden="true"></span> No message upload</span>
+      </div>
+    </section>
+
+    <section id="result-region" class="result-region" aria-live="polite" aria-atomic="true" hidden></section>
+
+    <section id="how-it-works" class="how-section" aria-labelledby="how-title">
+      <div class="section-heading"><p class="step-label">A CLEARER SECOND OPINION</p><h2 id="how-title">Why check the message too?</h2><p>Risk can come from the request around a link as well as the destination itself.</p></div>
+      <div class="how-grid">
+        <article class="how-card"><span class="how-icon" aria-hidden="true">01</span><h3>Message context</h3><p>Urgency, credential, payment, and personal-data cues are detected in your browser.</p></article>
+        <article class="how-card"><span class="how-icon" aria-hidden="true">02</span><h3>Local threat data</h3><p>Cached feed matches and reviewed reports can explain a known warning. Feed age stays visible.</p></article>
+        <article class="how-card"><span class="how-icon" aria-hidden="true">03</span><h3>Live scan by choice</h3><p>Review the site and redirect scope before the separate scanner connects to it.</p></article>
+      </div>
+    </section>
+
+    <section class="feed-panel" aria-labelledby="intel-heading">
+      <div class="feed-copy">
+        <p class="step-label">LOCAL THREAT DATA</p>
+        <h2 id="intel-heading">Your community feeds</h2>
+        <p id="feed-summary" class="feed-summary">{% if feed_stale %}No fresh feed data is available yet.{% else %}Threat feeds are up to date.{% endif %}</p>
+        <div id="feed-status" class="feed-status">
+          {% for item in feed_status %}
+          <span class="feed-chip">{% if item.source == "Demo seed" %}Demo data, not real threat intelligence{% else %}{{ item.source }}{% endif %} · {% if not item.available %}not loaded{% elif item.stale %}stale{% else %}updated {{ item.updated_at }}{% endif %}</span>
+          {% endfor %}
+        </div>
+      </div>
+      <button id="refresh-feeds" class="button button-secondary" type="button">Refresh feeds <span aria-hidden="true">↻</span></button>
+    </section>
+
+    <footer class="footer"><span>Trust Card offers cautious signals, not guarantees.</span><a href="/admin/reports">Local report review</a></footer>
+  </main>
+
+  <dialog id="scan-consent" class="dialog-card" aria-labelledby="consent-title">
+    <div class="dialog-heading">
+      <span class="dialog-icon" aria-hidden="true">↗</span>
+      <div><p class="step-label">ONE-TIME CONSENT · THIS LINK</p><h2 id="consent-title">Before we run a live check</h2></div>
+      <button class="dialog-close" type="button" aria-label="Close consent dialog" data-close-dialog="scan-consent">×</button>
+    </div>
+    <div class="consent-site"><span>Submitted URL</span><strong id="consent-host"></strong></div>
+    <div class="consent-columns">
+      <section class="consent-list will-list"><h3>What the scanner will do</h3><ul><li>Make one read-only GET request to the URL above using its HTTP or HTTPS scheme on port 80 or 443.</li><li>If it redirects, make up to five more GET requests to public destinations — six GET requests total.</li><li>Finish within 20 seconds. Read response headers and up to 2 MiB of HTML for static password-form checks.</li></ul></section>
+      <section class="consent-list wont-list"><h3>What it will not do</h3><ul><li>Try alternate schemes, <code>www</code>, or guessed URL variants.</li><li>Run page scripts, submit forms, or send the URL to reputation providers.</li></ul></section>
+    </div>
+    <div class="consent-actions">
+      <button id="decline-scan" class="button button-secondary" type="button">Not now</button>
+      <button id="approve-scan" class="button button-primary" type="button">Allow this check</button>
+    </div>
+    <p class="dialog-footnote">Your local-only result remains available if you decline.</p>
+  </dialog>
+
+  <dialog id="feed-consent" class="dialog-card" aria-labelledby="feed-consent-title">
+    <div class="dialog-heading">
+      <span class="dialog-icon" aria-hidden="true">↻</span>
+      <div><p class="step-label">MANUAL UPDATE</p><h2 id="feed-consent-title">Refresh local threat feeds?</h2></div>
+      <button class="dialog-close" type="button" aria-label="Close feed dialog" data-close-dialog="feed-consent">×</button>
+    </div>
+    <p class="consent-copy">This requests feed files from the providers below. No link you checked or message text is included.</p>
+    <ul class="provider-list">
+      <li>PhishTank verified phishing data</li>
+      <li>URLhaus malware URL data</li>
+      <li>OpenPhish community feed (no API key required)</li>
+    </ul>
+    <div class="consent-actions">
+      <button id="cancel-feeds" class="button button-secondary" type="button">Cancel</button>
+      <button id="approve-feeds" class="button button-primary" type="button">Refresh both feeds</button>
+    </div>
+  </dialog>
+</body>
+</html>

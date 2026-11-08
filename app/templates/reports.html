@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Local report review · Trust Card</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <header class="topbar"><a class="brand" href="/"><span class="brand-mark">T</span><span>Trust Card</span></a><a class="quiet-link" href="/">Back to checker</a></header>
+  <main class="shell admin-shell">
+    <section class="hero admin-hero"><div class="eyebrow"><span class="eyebrow-dot"></span> Local administrator</div><h1>Review community reports.</h1><p>Reports remain unverified until you make a decision. Approved reports affect future checks on this installation.</p></section>
+    <section class="report-list" aria-label="Unverified reports">
+      {% if reports %}
+      {% for report in reports %}
+      <article class="report-row" data-report-id="{{ report.id }}">
+        <div><span class="report-category">{{ report.category|title }}</span><h2>{{ report.host }}</h2><p>Reported {{ report.created_at }} · Indicator fingerprint {{ report.indicator_hash[:12] }}…</p></div>
+        <div class="report-actions"><button class="button button-secondary" type="button" data-decision="reject">Reject</button><button class="button button-primary" type="button" data-decision="approve">Approve</button></div>
+      </article>
+      {% endfor %}
+      {% else %}
+      <div class="empty-state"><span aria-hidden="true">✓</span><h2>No reports need review</h2><p>New reports from this installation will appear here.</p></div>
+      {% endif %}
+    </section>
+  </main>
+  <script type="module" src="/static/admin.mjs"></script>
+</body>
+</html>
