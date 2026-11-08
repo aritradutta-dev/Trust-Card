@@ -1744,74 +1744,352 @@ document.querySelector('#thread-reply-submit-btn')?.addEventListener('click', as
 });
 
 // =========================================================================
-// Dynamic Cyber Mouse Cursor Implementation
+// Mouse Splash & Fluid Simulation Cursor Effect (Holst Palette)
 // =========================================================================
-function initDynamicCursor() {
-  const dot = document.querySelector('#cursor-dot');
-  const ring = document.querySelector('#cursor-ring');
-  if (!dot || !ring) return;
-
-  // Respect touch devices and reduced-motion preference
+function initFluidCursor() {
+  // Respect touch devices and reduced-motion preferences
   if (!window.matchMedia('(pointer: fine)').matches || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     return;
   }
 
-  let mouseX = window.innerWidth / 2;
-  let mouseY = window.innerHeight / 2;
-  let ringX = mouseX;
-  let ringY = mouseY;
-  let isVisible = false;
+  let canvas = document.querySelector('#fluid-cursor-canvas');
+  if (!canvas) {
+    canvas = document.createElement('canvas');
+    canvas.id = 'fluid-cursor-canvas';
+    canvas.className = 'fluid-cursor-canvas';
+    canvas.setAttribute('aria-hidden', 'true');
+    document.body.append(canvas);
+  }
 
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  let width = 0;
+  let height = 0;
+  let dpr = 1;
+
+  function resizeCanvas() {
+    dpr = window.devicePixelRatio || 1;
+    width = window.innerWidth;
+    height = window.innerHeight;
+    canvas.width = Math.floor(width * dpr);
+    canvas.height = Math.floor(height * dpr);
+    canvas.style.width = `${width}px`;
+    canvas.style.height = `${height}px`;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.scale(dpr, dpr);
+  }
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+
+  // Holst Color Palette: Midnight, Oxford Blue, Slate, Sage Green, Sand
+  const FLUID_COLORS = [
+    { r: 27, g: 38, b: 59 },    // #1B263B Oxford Blue
+    { r: 13, g: 27, b: 42 },    // #0D1B2A Midnight Dark
+    { r: 65, g: 90, b: 119 },   // #415A77 Muted Slate
+    { r: 119, g: 141, b: 122 }, // #778D7A Earthy Sage
+    { r: 212, g: 196, b: 168 }  // #D4C4A8 Warm Sand
+  ];
+
+  let colorIndex = 0;
+  function getNextColor() {
+    const col = FLUID_COLORS[colorIndex];
+    colorIndex = (colorIndex + 1) % FLUID_COLORS.length;
+    return col;
+  }
+
+  // Particle and Ripple Pools
+  const particles = [];
+  const MAX_PARTICLES = 220;
+  for (let i = 0; i < MAX_PARTICLES; i++) {
+    particles.push({
+      active: false,
+      x: 0,
+      y: 0,
+      vx: 0,
+      vy: 0,
+      radius: 0,
+      maxRadius: 0,
+      alpha: 1,
+      decay: 0.03,
+      color: FLUID_COLORS[0],
+      isSplash: false,
+      swirl: 0
+    });
+  }
+
+  const ripples = [];
+  const MAX_RIPPLES = 12;
+  for (let i = 0; i < MAX_RIPPLES; i++) {
+    ripples.push({
+      active: false,
+      x: 0,
+      y: 0,
+      radius: 0,
+      maxRadius: 0,
+      alpha: 1,
+      decay: 0.04,
+      color: FLUID_COLORS[0]
+    });
+  }
+
+  function spawnParticle(x, y, vx, vy, radius, color, decay, isSplash = false, swirl = 0) {
+    const p = particles.find((pt) => !pt.active);
+    if (!p) return;
+    p.active = true;
+    p.x = x;
+    p.y = y;
+    p.vx = vx;
+    p.vy = vy;
+    p.radius = radius;
+    p.maxRadius = radius;
+    p.alpha = 1;
+    p.decay = decay;
+    p.color = color;
+    p.isSplash = isSplash;
+    p.swirl = swirl;
+  }
+
+  function spawnRipple(x, y, maxRadius, color) {
+    const r = ripples.find((rp) => !rp.active);
+    if (!r) return;
+    r.active = true;
+    r.x = x;
+    r.y = y;
+    r.radius = 4;
+    r.maxRadius = maxRadius;
+    r.alpha = 0.65;
+    r.decay = 0.032;
+    r.color = color;
+  }
+
+  let mouseX = -100;
+  let mouseY = -100;
+  let prevMouseX = -100;
+  let prevMouseY = -100;
+  let mouseSpeed = 0;
+  let isMouseMoving = false;
+  let isHoveringInteractive = false;
+  let isRunning = false;
+  let lastMoveTime = 0;
+
+  function ensureAnimationRunning() {
+    if (!isRunning) {
+      isRunning = true;
+      requestAnimationFrame(animate);
+    }
+  }
+
+  // Pointer position tracking & continuous fluid stream
   document.addEventListener('mousemove', (e) => {
+    lastMoveTime = performance.now();
+    isMouseMoving = true;
+
+    if (prevMouseX < 0) {
+      prevMouseX = e.clientX;
+      prevMouseY = e.clientY;
+    }
+
     mouseX = e.clientX;
     mouseY = e.clientY;
-    dot.style.transform = `translate3d(${mouseX}px, ${mouseY}px, 0) translate(-50%, -50%)`;
-    if (!isVisible) {
-      dot.style.opacity = '1';
-      ring.style.opacity = '1';
-      isVisible = true;
+
+    const dx = mouseX - prevMouseX;
+    const dy = mouseY - prevMouseY;
+    const dist = Math.hypot(dx, dy);
+    mouseSpeed = Math.min(dist, 40);
+
+    // Spawn fluid stream along movement vector
+    const step = Math.max(4, 18 - mouseSpeed * 0.3);
+    const count = Math.min(Math.floor(dist / step) + 1, 6);
+
+    for (let i = 0; i < count; i++) {
+      const t = count === 1 ? 1 : i / count;
+      const px = prevMouseX + dx * t;
+      const py = prevMouseY + dy * t;
+      const col = getNextColor();
+      const baseRadius = isHoveringInteractive
+        ? 8 + Math.random() * 8
+        : 6 + Math.min(mouseSpeed * 0.35, 12) + (Math.random() - 0.5) * 4;
+
+      const pvx = dx * 0.15 + (Math.random() - 0.5) * 1.8;
+      const pvy = dy * 0.15 + (Math.random() - 0.5) * 1.8;
+      const swirl = (Math.random() - 0.5) * 0.08;
+      const decay = 0.026 + Math.random() * 0.018;
+
+      spawnParticle(px, py, pvx, pvy, Math.max(3, baseRadius), col, decay, false, swirl);
     }
+
+    prevMouseX = mouseX;
+    prevMouseY = mouseY;
+    ensureAnimationRunning();
   });
 
   document.addEventListener('mouseleave', () => {
-    dot.style.opacity = '0';
-    ring.style.opacity = '0';
-    isVisible = false;
+    mouseX = -100;
+    mouseY = -100;
+    prevMouseX = -100;
+    prevMouseY = -100;
   });
 
-  document.addEventListener('mouseenter', () => {
-    dot.style.opacity = '1';
-    ring.style.opacity = '1';
-    isVisible = true;
+  // MOUSE SPLASH EFFECT (Burst on Click)
+  document.addEventListener('mousedown', (e) => {
+    const splashX = e.clientX;
+    const splashY = e.clientY;
+
+    // 1. Expanding shockwave fluid ripples
+    spawnRipple(splashX, splashY, 48, FLUID_COLORS[0]);
+    spawnRipple(splashX, splashY, 78, FLUID_COLORS[2]);
+
+    // 2. High-energy splashing droplets radiating outward
+    const splashDropletCount = 32;
+    for (let i = 0; i < splashDropletCount; i++) {
+      const angle = (i / splashDropletCount) * (Math.PI * 2) + (Math.random() - 0.5) * 0.45;
+      const velocity = 2.2 + Math.random() * 8.5;
+      const vx = Math.cos(angle) * velocity;
+      const vy = Math.sin(angle) * velocity;
+      const radius = 3 + Math.random() * 8.5;
+      const col = FLUID_COLORS[Math.floor(Math.random() * FLUID_COLORS.length)];
+      const decay = 0.02 + Math.random() * 0.022;
+
+      spawnParticle(splashX, splashY, vx, vy, radius, col, decay, true, (Math.random() - 0.5) * 0.05);
+    }
+
+    // 3. Central fluid splash blob
+    spawnParticle(splashX, splashY, 0, 0, 16, FLUID_COLORS[0], 0.035, false, 0);
+
+    ensureAnimationRunning();
   });
 
-  document.addEventListener('mousedown', () => {
-    ring.classList.add('cursor-click');
-  });
-
-  document.addEventListener('mouseup', () => {
-    ring.classList.remove('cursor-click');
-  });
-
+  // Interactive Hover Detection (Creates subtle buoyancy & vortex)
   const interactiveSelectors = 'a, button, input, textarea, select, [role="button"], .tab-btn, .example-chip, .cat-chip, .forum-cat-pill, .forum-thread-card';
   document.addEventListener('mouseover', (e) => {
     if (e.target.closest(interactiveSelectors)) {
-      ring.classList.add('cursor-hover');
+      isHoveringInteractive = true;
     }
   });
   document.addEventListener('mouseout', (e) => {
     if (e.target.closest(interactiveSelectors)) {
-      ring.classList.remove('cursor-hover');
+      isHoveringInteractive = false;
     }
   });
 
-  function renderCursor() {
-    ringX += (mouseX - ringX) * 0.18;
-    ringY += (mouseY - ringY) * 0.18;
-    ring.style.transform = `translate3d(${ringX}px, ${ringY}px, 0) translate(-50%, -50%)`;
-    requestAnimationFrame(renderCursor);
+  // Main 60fps Fluid Simulation Render Loop
+  function animate() {
+    ctx.clearRect(0, 0, width, height);
+
+    let activeCount = 0;
+
+    // 1. Render & update expanding splash ripples
+    for (let i = 0; i < MAX_RIPPLES; i++) {
+      const r = ripples[i];
+      if (!r.active) continue;
+      activeCount++;
+
+      r.radius += (r.maxRadius - r.radius) * 0.12 + 1.2;
+      r.alpha -= r.decay;
+
+      if (r.alpha <= 0.01 || r.radius >= r.maxRadius) {
+        r.active = false;
+        continue;
+      }
+
+      ctx.beginPath();
+      ctx.arc(r.x, r.y, r.radius, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(${r.color.r}, ${r.color.g}, ${r.color.b}, ${Math.max(0, r.alpha)})`;
+      ctx.lineWidth = Math.max(0.6, 2.8 * (r.alpha / 0.65));
+      ctx.stroke();
+    }
+
+    // 2. Viscous Fluid Stream Connections (Bridge between close stream particles)
+    const activeStreamParticles = particles.filter((p) => p.active && !p.isSplash);
+    for (let i = 0; i < activeStreamParticles.length - 1; i++) {
+      const p1 = activeStreamParticles[i];
+      const p2 = activeStreamParticles[i + 1];
+      const dist = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+
+      if (dist < 32 && dist > 1) {
+        const avgAlpha = (p1.alpha + p2.alpha) * 0.28;
+        const avgRadius = (p1.radius + p2.radius) * 0.5;
+
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+        ctx.strokeStyle = `rgba(${p1.color.r}, ${p1.color.g}, ${p1.color.b}, ${avgAlpha})`;
+        ctx.lineWidth = avgRadius * 1.25;
+        ctx.lineCap = 'round';
+        ctx.stroke();
+      }
+    }
+
+    // 3. Render & update individual fluid droplets & splash particles
+    for (let i = 0; i < MAX_PARTICLES; i++) {
+      const p = particles[i];
+      if (!p.active) continue;
+      activeCount++;
+
+      // Viscous dissipation & air drag
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vx *= 0.94;
+      p.vy *= 0.94;
+
+      // Swirling turbulence
+      if (p.swirl !== 0) {
+        p.x += -p.vy * p.swirl;
+        p.y += p.vx * p.swirl;
+      }
+
+      // Splash gravity & arc
+      if (p.isSplash) {
+        p.vy += 0.08;
+      }
+
+      p.alpha -= p.decay;
+      p.radius = p.maxRadius * (p.alpha > 0 ? Math.pow(p.alpha, 0.65) : 0);
+
+      if (p.alpha <= 0.01 || p.radius <= 0.6) {
+        p.active = false;
+        continue;
+      }
+
+      // Soft fluid droplet rendering
+      const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, Math.max(1, p.radius));
+      grad.addColorStop(0, `rgba(${p.color.r}, ${p.color.g}, ${p.color.b}, ${p.alpha * 0.85})`);
+      grad.addColorStop(0.65, `rgba(${p.color.r}, ${p.color.g}, ${p.color.b}, ${p.alpha * 0.45})`);
+      grad.addColorStop(1, `rgba(${p.color.r}, ${p.color.g}, ${p.color.b}, 0)`);
+
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, Math.max(0.5, p.radius), 0, Math.PI * 2);
+      ctx.fillStyle = grad;
+      ctx.fill();
+    }
+
+    // 4. Subtle center precision fluid dot at pointer tip
+    if (mouseX > 0 && mouseY > 0) {
+      const pointerRadius = isHoveringInteractive ? 5 : 3.5;
+      ctx.beginPath();
+      ctx.arc(mouseX, mouseY, pointerRadius, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(27, 38, 59, 0.88)'; // Oxford Blue core
+      ctx.fill();
+
+      // Subtle outer aura
+      ctx.beginPath();
+      ctx.arc(mouseX, mouseY, pointerRadius + 3, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(65, 90, 119, 0.35)';
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+    }
+
+    // 5. Throttling: Pause render loop if completely quiet for >120ms to achieve 0% idle CPU
+    if (activeCount === 0 && (performance.now() - lastMoveTime > 120)) {
+      isRunning = false;
+      return;
+    }
+
+    requestAnimationFrame(animate);
   }
-  requestAnimationFrame(renderCursor);
+
+  ensureAnimationRunning();
 }
 
-initDynamicCursor();
+initFluidCursor();

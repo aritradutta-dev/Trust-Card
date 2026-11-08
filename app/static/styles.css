@@ -1650,53 +1650,22 @@ textarea:focus { border-color: rgba(65, 90, 119, 0.5); box-shadow: var(--nm-inse
 }
 
 /* ==========================================================================
-   Dynamic Cyber Mouse Cursor
+   Fluid Simulation & Mouse Splash Cursor Canvas
    ========================================================================== */
-.custom-cursor-dot {
+.fluid-cursor-canvas {
   position: fixed;
   top: 0;
   left: 0;
-  width: 8px;
-  height: 8px;
-  background: #1B263B;
-  border-radius: 50%;
-  pointer-events: none;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none !important;
   z-index: 99999;
-  box-shadow: 0 0 10px rgba(27, 38, 59, 0.8), 0 0 18px rgba(27, 38, 59, 0.5);
-  transform: translate(-50%, -50%);
-  transition: width .15s ease, height .15s ease, background .2s ease, opacity .2s ease;
-  opacity: 0;
+  mix-blend-mode: multiply;
+  opacity: 1;
 }
-.custom-cursor-ring {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 34px;
-  height: 34px;
-  border: 2px solid rgba(65, 90, 119, 0.45);
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 99998;
-  transform: translate(-50%, -50%);
-  box-shadow: 3px 3px 8px var(--nm-shadow-dark), -3px -3px 8px var(--nm-shadow-light);
-  transition: width .2s cubic-bezier(0.16, 1, 0.3, 1), height .2s cubic-bezier(0.16, 1, 0.3, 1), border-color .2s ease, background .2s ease, opacity .2s ease;
-  opacity: 0;
-}
-.custom-cursor-ring.cursor-hover {
-  width: 52px;
-  height: 52px;
-  border-color: #1B263B;
-  background: rgba(65, 90, 119, 0.12);
-  backdrop-filter: blur(1px);
-  box-shadow: 0 0 16px rgba(27, 38, 59, 0.3);
-}
-.custom-cursor-ring.cursor-click {
-  transform: translate(-50%, -50%) scale(0.85);
-  border-color: #778D7A;
-  box-shadow: 0 0 20px rgba(119, 141, 122, 0.7);
-}
+
 @media (pointer: coarse), (prefers-reduced-motion: reduce) {
-  .custom-cursor-dot, .custom-cursor-ring {
+  .fluid-cursor-canvas {
     display: none !important;
   }
 }
