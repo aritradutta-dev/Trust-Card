@@ -62,12 +62,13 @@
   <main class="shell">
     <!-- Platform Navigation Tabs -->
     <nav class="platform-tabs-nav" aria-label="Platform Views" role="tablist">
-      <button class="tab-btn active" type="button" role="tab" aria-selected="true" data-view="view-checker"><span>🔍</span> Check a Link</button>
-      <button class="tab-btn" type="button" role="tab" aria-selected="false" data-view="view-dashboard"><span>📊</span> Threat Dashboard</button>
-      <button class="tab-btn" type="button" role="tab" aria-selected="false" data-view="view-history"><span>🕒</span> Scan History</button>
-      <button class="tab-btn" type="button" role="tab" aria-selected="false" data-view="view-ct"><span>🔒</span> Cert & CT Monitor</button>
-      <button class="tab-btn" type="button" role="tab" aria-selected="false" data-view="view-intel"><span>🛡️</span> Collaborative Intel</button>
-      <button class="tab-btn" type="button" role="tab" aria-selected="false" data-view="view-forum"><span>💬</span> Security Forum</button>
+      <div class="tab-slider-pill" aria-hidden="true"></div>
+      <button class="tab-btn active" type="button" role="tab" aria-selected="true" data-view="view-checker"><span class="tab-icon">🔍</span> <span class="tab-label">Check a Link</span></button>
+      <button class="tab-btn" type="button" role="tab" aria-selected="false" data-view="view-dashboard"><span class="tab-icon">📊</span> <span class="tab-label">Threat Dashboard</span> <span class="tab-badge pulse-badge"><span class="badge-dot" aria-hidden="true"></span>Live</span></button>
+      <button class="tab-btn" type="button" role="tab" aria-selected="false" data-view="view-history"><span class="tab-icon">🕒</span> <span class="tab-label">Scan History</span></button>
+      <button class="tab-btn" type="button" role="tab" aria-selected="false" data-view="view-ct"><span class="tab-icon">🔒</span> <span class="tab-label">Cert & CT Monitor</span></button>
+      <button class="tab-btn" type="button" role="tab" aria-selected="false" data-view="view-intel"><span class="tab-icon">🛡️</span> <span class="tab-label">Collaborative Intel</span> <span class="tab-badge feed-badge">Feed</span></button>
+      <button class="tab-btn" type="button" role="tab" aria-selected="false" data-view="view-forum"><span class="tab-icon">💬</span> <span class="tab-label">Security Forum</span> <span class="tab-badge forum-badge">Hot</span></button>
     </nav>
 
     <!-- VIEW 1: Link Checker (Main View) -->

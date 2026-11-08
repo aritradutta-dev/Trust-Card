@@ -113,10 +113,58 @@ function switchView(viewId) {
     if (target) link.classList.toggle('nav-active', target === viewId);
   });
 
+  updateTabSlider();
+
   if (viewId === 'view-dashboard') loadDashboardStats();
   if (viewId === 'view-history') loadScanHistory();
   if (viewId === 'view-intel') searchThreatIntel();
   if (viewId === 'view-forum') loadForumThreads();
+}
+
+function updateTabSlider(immediate = false) {
+  const nav = document.querySelector('.platform-tabs-nav');
+  const slider = document.querySelector('.tab-slider-pill');
+  const activeBtn = nav ? nav.querySelector('.tab-btn.active') : null;
+  if (!nav || !slider || !activeBtn) return;
+
+  const navRect = nav.getBoundingClientRect();
+  const btnRect = activeBtn.getBoundingClientRect();
+  const left = btnRect.left - navRect.left + nav.scrollLeft;
+  const width = btnRect.width;
+
+  if (immediate) {
+    slider.style.transition = 'none';
+  } else {
+    slider.style.transition = 'transform 0.38s cubic-bezier(0.34, 1.35, 0.64, 1), width 0.38s cubic-bezier(0.34, 1.35, 0.64, 1), opacity 0.2s ease';
+  }
+
+  slider.style.transform = `translateX(${left}px)`;
+  slider.style.width = `${width}px`;
+  slider.style.opacity = '1';
+  nav.classList.add('slider-ready');
+
+  if (immediate) {
+    requestAnimationFrame(() => {
+      slider.style.transition = '';
+    });
+  }
+}
+
+function initTabSlider() {
+  const nav = document.querySelector('.platform-tabs-nav');
+  if (!nav) return;
+
+  nav.addEventListener('mousemove', (e) => {
+    const rect = nav.getBoundingClientRect();
+    nav.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
+    nav.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
+  });
+
+  nav.addEventListener('scroll', () => updateTabSlider(true), { passive: true });
+  window.addEventListener('resize', () => updateTabSlider(true));
+
+  setTimeout(() => updateTabSlider(true), 40);
+  setTimeout(() => updateTabSlider(false), 220);
 }
 
 document.querySelectorAll('.tab-btn').forEach((btn) => {
@@ -125,6 +173,8 @@ document.querySelectorAll('.tab-btn').forEach((btn) => {
     if (view) switchView(view);
   });
 });
+
+initTabSlider();
 
 document.querySelectorAll('.top-nav a[data-tab-target]').forEach((link) => {
   link.addEventListener('click', (e) => {
