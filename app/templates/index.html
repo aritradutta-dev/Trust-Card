@@ -62,13 +62,13 @@
 
   <main class="shell">
     <!-- Platform Navigation Tabs -->
-    <nav class="platform-tabs-nav" aria-label="Platform Views">
-      <button class="tab-btn active" type="button" data-view="view-checker"><span>🔍</span> Check a Link</button>
-      <button class="tab-btn" type="button" data-view="view-dashboard"><span>📊</span> Threat Dashboard</button>
-      <button class="tab-btn" type="button" data-view="view-history"><span>🕒</span> Scan History</button>
-      <button class="tab-btn" type="button" data-view="view-ct"><span>🔒</span> Cert & CT Monitor</button>
-      <button class="tab-btn" type="button" data-view="view-intel"><span>🛡️</span> Collaborative Intel</button>
-      <button class="tab-btn" type="button" data-view="view-forum"><span>💬</span> Security Forum</button>
+    <nav class="platform-tabs-nav" aria-label="Platform Views" role="tablist">
+      <button class="tab-btn active" type="button" role="tab" aria-selected="true" data-view="view-checker"><span>🔍</span> Check a Link</button>
+      <button class="tab-btn" type="button" role="tab" aria-selected="false" data-view="view-dashboard"><span>📊</span> Threat Dashboard</button>
+      <button class="tab-btn" type="button" role="tab" aria-selected="false" data-view="view-history"><span>🕒</span> Scan History</button>
+      <button class="tab-btn" type="button" role="tab" aria-selected="false" data-view="view-ct"><span>🔒</span> Cert & CT Monitor</button>
+      <button class="tab-btn" type="button" role="tab" aria-selected="false" data-view="view-intel"><span>🛡️</span> Collaborative Intel</button>
+      <button class="tab-btn" type="button" role="tab" aria-selected="false" data-view="view-forum"><span>💬</span> Security Forum</button>
     </nav>
 
     <!-- VIEW 1: Link Checker (Main View) -->

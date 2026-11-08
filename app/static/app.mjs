@@ -104,7 +104,9 @@ function switchView(viewId) {
     v.hidden = v.id !== viewId;
   });
   document.querySelectorAll('.tab-btn').forEach((btn) => {
-    btn.classList.toggle('active', btn.getAttribute('data-view') === viewId);
+    const isActive = btn.getAttribute('data-view') === viewId;
+    btn.classList.toggle('active', isActive);
+    btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
   });
   document.querySelectorAll('.top-nav a').forEach((link) => {
     const target = link.getAttribute('data-tab-target');
