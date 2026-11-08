@@ -289,12 +289,92 @@ function renderResult(data) {
     makeMetric('Coverage', coverageShortLabel(data.coverage), coverageDetail(data)),
     makeMetric('Threat data', data.feed_stale ? 'Stale or missing' : 'Current', freshest ? `Latest snapshot: ${formatDate(freshest)}` : 'No feed snapshots available'),
   );
+  if (data.scoring) {
+    metrics.append(
+      makeMetric('Risk indicators', `${data.scoring.score}/100`, `${data.scoring.checked_count} of 7 checks run`),
+    );
+  }
   card.append(metrics);
 
   const coverage = document.createElement('p');
   coverage.className = 'coverage-note';
   coverage.textContent = coverageExplanation(data);
   card.append(coverage);
+
+  if (data.scoring && data.scoring.pillars) {
+    const pillarsPanel = document.createElement('section');
+    pillarsPanel.className = 'pillars-panel';
+    pillarsPanel.setAttribute('aria-labelledby', 'pillars-heading');
+
+    const pillarsHeader = document.createElement('div');
+    pillarsHeader.className = 'pillars-header';
+    const pillarsTitle = document.createElement('h3');
+    pillarsTitle.id = 'pillars-heading';
+    pillarsTitle.className = 'pillars-title';
+    pillarsTitle.textContent = 'Security Pillars Assessment';
+    const pillarsSummary = document.createElement('span');
+    pillarsSummary.className = 'pillars-summary-pill';
+    pillarsSummary.textContent = data.scoring.summary;
+    pillarsHeader.append(pillarsTitle, pillarsSummary);
+    pillarsPanel.append(pillarsHeader);
+
+    const pillarList = document.createElement('div');
+    pillarList.className = 'pillar-list';
+
+    for (const [, pillar] of Object.entries(data.scoring.pillars)) {
+      const row = document.createElement('div');
+      row.className = 'pillar-row';
+
+      const badge = document.createElement('span');
+      badge.className = 'pillar-badge';
+      badge.dataset.status = pillar.status;
+      badge.textContent = pillar.status === 'not_checked' ? 'Not checked' : pillar.status;
+
+      const content = document.createElement('div');
+      content.className = 'pillar-content';
+
+      const nameLine = document.createElement('div');
+      nameLine.className = 'pillar-name-line';
+      const name = document.createElement('strong');
+      name.className = 'pillar-name';
+      name.textContent = pillar.name;
+      nameLine.append(name);
+      if (pillar.status !== 'not_checked') {
+        const scoreSpan = document.createElement('span');
+        scoreSpan.className = 'pillar-score';
+        scoreSpan.textContent = `(Risk: ${pillar.score}/100)`;
+        nameLine.append(scoreSpan);
+      }
+
+      const why = document.createElement('p');
+      why.className = 'pillar-why';
+      why.textContent = pillar.why;
+
+      content.append(nameLine, why);
+
+      if (Array.isArray(pillar.findings) && pillar.findings.length > 0) {
+        const fToggle = document.createElement('details');
+        fToggle.className = 'pillar-findings-toggle';
+        const fSummary = document.createElement('summary');
+        fSummary.textContent = `${pillar.findings.length} signal${pillar.findings.length === 1 ? '' : 's'} observed`;
+        const fList = document.createElement('ul');
+        fList.className = 'pillar-findings-list';
+        for (const f of pillar.findings) {
+          const item = document.createElement('li');
+          item.textContent = f.summary || f.explanation || f.id;
+          fList.append(item);
+        }
+        fToggle.append(fSummary, fList);
+        content.append(fToggle);
+      }
+
+      row.append(badge, content);
+      pillarList.append(row);
+    }
+
+    pillarsPanel.append(pillarList);
+    card.append(pillarsPanel);
+  }
 
   const details = document.createElement('div');
   details.className = 'result-detail-grid';

@@ -24,6 +24,7 @@ from app.storage import create_report, find_reports, get_feed_status, init_db, l
 from app.urls import canonicalize_url, host_from_url, indicator_fingerprint, url_hash
 from app.url_analysis import analyze_url
 from app.verdict import decide_verdict
+from app.scoring import calculate_risk_scoring
 
 BASE_DIR = Path(__file__).parent
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
@@ -173,9 +174,16 @@ def _local_result(db_path: Path, request: AnalyzeRequest) -> dict:
     decision = decide_verdict(findings, scan_complete=True, feed_stale=stale, coverage="local_only")
     for finding in findings:
         finding.setdefault("explanation", finding.get("summary", ""))
+    scoring = calculate_risk_scoring(
+        findings,
+        live_scan_done=False,
+        has_message_context=bool(request.context_flags),
+        feed_available=not stale,
+    )
     return {
         "scan_id": uuid.uuid4().hex,
         **decision,
+        "scoring": scoring,
         "coverage": "local_only",
         "checked_at": datetime.now(timezone.utc).isoformat(),
         "findings": findings,
@@ -316,9 +324,16 @@ def create_app(
             live_scan_done=True,
             coverage=coverage,
         )
+        scoring = calculate_risk_scoring(
+            findings,
+            live_scan_done=bool(scan.get("complete")),
+            has_message_context=bool(payload.context_flags),
+            feed_available=not local["feed_stale"],
+        )
         result = {
             **local,
             **decision,
+            "scoring": scoring,
             "coverage": coverage,
             "scan_coverage": scan_coverage,
             "live_scan_complete": bool(scan.get("complete")),
