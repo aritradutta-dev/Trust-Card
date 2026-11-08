@@ -9,16 +9,101 @@
   <meta property="og:title" content="Trust Card · Intelligent Web Security Platform">
   <meta property="og:description" content="Inspect suspicious links with client-side privacy, deep certificate inspection, CT monitoring, and collaborative threat intelligence.">
   <meta property="og:type" content="website">
+  <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="64x64" href="/static/favicon-64x64.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
   <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
   <link rel="stylesheet" href="/static/styles.css">
   <script type="module" src="/static/app.mjs"></script>
 </head>
 <body>
+  <!-- Trust Card Cybernetic OS Boot Sequence Overlay -->
+  <div id="system-boot-overlay" class="boot-overlay" role="dialog" aria-modal="true" aria-label="Trust Card OS Boot Initialization">
+    <div class="boot-grid-bg" aria-hidden="true"></div>
+    <div class="boot-scanlines" aria-hidden="true"></div>
+    <div class="boot-radial-vignette" aria-hidden="true"></div>
+
+    <div class="boot-hud-top">
+      <div class="boot-hud-badge">
+        <span class="boot-pulse-dot" aria-hidden="true"></span>
+        <span class="boot-hud-title">TRUST CARD SECURE OS // KERNEL v2.4</span>
+      </div>
+      <div class="boot-hud-controls">
+        <button id="boot-sound-toggle" class="boot-ctrl-btn" type="button" aria-label="Toggle Boot Telemetry Audio">
+          <span id="boot-sound-label">🔈 Audio: Off</span>
+        </button>
+        <button id="boot-skip-btn" class="boot-skip-btn" type="button" aria-label="Skip Boot Animation">
+          <span>Skip Boot</span> <kbd>ESC</kbd>
+        </button>
+      </div>
+    </div>
+
+    <div class="boot-center-stage">
+      <div class="boot-shield-frame">
+        <div class="hud-corner hud-tl" aria-hidden="true"></div>
+        <div class="hud-corner hud-tr" aria-hidden="true"></div>
+        <div class="hud-corner hud-bl" aria-hidden="true"></div>
+        <div class="hud-corner hud-br" aria-hidden="true"></div>
+
+        <div class="boot-radar-sweep" aria-hidden="true"></div>
+        <div class="boot-halo-glow" aria-hidden="true"></div>
+
+        <div class="boot-image-container">
+          <img src="/static/boot-animation.png" alt="Trust Card Boot Sequence" class="boot-graphic" id="boot-graphic">
+          <div class="boot-laser-scanner" aria-hidden="true"></div>
+        </div>
+
+        <div class="boot-pillars-indicator" aria-hidden="true" title="7 Security Pillars">
+          <span class="pillar-led" data-pillar="1" title="Threat Intelligence"></span>
+          <span class="pillar-led" data-pillar="2" title="URL & Impersonation"></span>
+          <span class="pillar-led" data-pillar="3" title="Page Content"></span>
+          <span class="pillar-led" data-pillar="4" title="Certificate & Trust"></span>
+          <span class="pillar-led" data-pillar="5" title="Web Security"></span>
+          <span class="pillar-led" data-pillar="6" title="Community Intel"></span>
+          <span class="pillar-led" data-pillar="7" title="Message Context"></span>
+        </div>
+      </div>
+
+      <div class="boot-terminal-card">
+        <div class="boot-terminal-header">
+          <span class="terminal-dot red" aria-hidden="true"></span>
+          <span class="terminal-dot yellow" aria-hidden="true"></span>
+          <span class="terminal-dot green" aria-hidden="true"></span>
+          <span class="terminal-title">tty0/boot-diagnostics</span>
+          <span class="terminal-mem" id="boot-mem-counter">ALLOC: 0.0 MB</span>
+        </div>
+        <div class="boot-log-stream" id="boot-log-stream" aria-live="polite">
+          <!-- Populated dynamically by boot loader -->
+        </div>
+      </div>
+
+      <div class="boot-progress-wrap">
+        <div class="boot-progress-meta">
+          <span id="boot-status-label" class="boot-status-label">INITIALIZING HARDWARE ENCLAVE...</span>
+          <span id="boot-percent-label" class="boot-percent-label">0%</span>
+        </div>
+        <div class="boot-progress-track" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+          <div id="boot-progress-bar" class="boot-progress-fill" style="width: 0%;">
+            <span class="boot-progress-glint" aria-hidden="true"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="boot-hud-bottom">
+      <span>PRIVACY: LOCAL-FIRST · ZERO DATA EGRESS</span>
+      <span class="boot-version-hash">BUILD SHA-256: 7772DF1865E2</span>
+      <span>STANDALONE CYBERSECURITY ENGINE</span>
+    </div>
+  </div>
+
   <noscript><p class="noscript-note">Enable JavaScript to extract links and message cues in this browser. Your message is not sent to the app.</p></noscript>
 
   <header class="topbar">
-    <a class="brand" href="/" aria-label="Trust Card Home">
-      <span class="brand-mark" aria-hidden="true">🛡️</span>
+    <a class="brand" href="/" aria-label="Trust Card Home" title="Trust Card - Click to Replay Boot Sequence">
+      <span class="brand-mark" aria-hidden="true">
+        <img class="brand-logo-img" src="/static/logo-icon.png" alt="Trust Card Emblem" width="32" height="32">
+      </span>
       <span class="brand-name">Trust Card</span>
       <span class="brand-privacy"><span class="status-dot" aria-hidden="true"></span> Local-first privacy</span>
     </a>
@@ -33,7 +118,9 @@
       <div id="auth-user-container">
         <button id="auth-trigger-btn" class="auth-trigger-btn" type="button">Sign In / Register</button>
       </div>
-      <span class="system-status"><span class="status-dot" aria-hidden="true"></span> Local checks ready</span>
+      <button id="reboot-system-btn" class="system-reboot-btn" type="button" title="Replay Cyber Boot Initialization">
+        <span class="status-dot" aria-hidden="true"></span> Reboot OS ⟳
+      </button>
       <button id="mobile-menu-btn" class="mobile-menu-btn" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="mobile-nav">
         <span class="menu-icon" aria-hidden="true">☰</span>
       </button>

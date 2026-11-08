@@ -389,7 +389,7 @@ def create_app(
 
     @app.get("/favicon.ico", include_in_schema=False)
     async def favicon():
-        return Response(status_code=302, headers={"Location": "/static/favicon.svg"})
+        return Response(status_code=302, headers={"Location": "/static/favicon.ico"})
 
     @app.get("/api", response_class=HTMLResponse)
     async def api_docs(request: Request):
