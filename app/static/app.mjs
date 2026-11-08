@@ -57,7 +57,7 @@ function showToast(message, type = 'info') {
   toast.dataset.type = type;
   const icon = document.createElement('span');
   icon.setAttribute('aria-hidden', 'true');
-  icon.textContent = type === 'success' ? '✓' : type === 'error' ? '⚠' : '🍉';
+  icon.textContent = type === 'success' ? '✓' : type === 'error' ? '⚠' : '🛡️';
   const text = document.createElement('span');
   text.textContent = message;
   toast.append(icon, text);
@@ -976,7 +976,7 @@ async function loadDashboardStats() {
       const fill = document.createElement('div');
       fill.style.height = '100%';
       fill.style.width = `${(count / maxCat) * 100}%`;
-      fill.style.backgroundColor = '#ff385c';
+      fill.style.backgroundColor = '#415A77';
       fill.style.borderRadius = '99px';
       track.append(fill);
       const val = document.createElement('span');
@@ -991,7 +991,7 @@ async function loadDashboardStats() {
     sevContainer.replaceChildren();
     const severities = Object.entries(stats.severity_distribution || {});
     const maxSev = Math.max(...severities.map(([, v]) => v), 1);
-    const sevColors = { malicious: '#dc2626', high: '#e11d48', suspicious: '#d97706', safe: '#059669', unknown: '#6b7280' };
+    const sevColors = { malicious: '#A83232', high: '#C2410C', suspicious: '#8F6632', safe: '#778D7A', unknown: '#415A77' };
     for (const [sev, count] of severities) {
       const row = document.createElement('div');
       row.className = 'chart-bar-row';
@@ -1003,7 +1003,7 @@ async function loadDashboardStats() {
       const fill = document.createElement('div');
       fill.style.height = '100%';
       fill.style.width = `${(count / maxSev) * 100}%`;
-      fill.style.backgroundColor = sevColors[sev] || '#4b5563';
+      fill.style.backgroundColor = sevColors[sev] || '#415A77';
       fill.style.borderRadius = '99px';
       track.append(fill);
       const val = document.createElement('span');
@@ -1022,7 +1022,7 @@ async function loadDashboardStats() {
         tr.innerHTML = `
           <td><code style="font-size:11px;">${s.url}</code></td>
           <td><strong>${s.host}</strong></td>
-          <td><span style="font-weight:800;color:${s.score >= 50 ? '#e11d48' : '#059669'}">${s.score}/100</span></td>
+          <td><span style="font-weight:800;color:${s.score >= 50 ? '#A83232' : '#778D7A'}">${s.score}/100</span></td>
           <td><span class="risk-badge badge-${s.risk_class}">${s.risk_class}</span></td>
           <td>${formatDate(s.checked_at)}</td>
           <td><a href="/scans/${s.id}/report" target="_blank" class="btn-sm btn-secondary">Report</a></td>
@@ -1088,7 +1088,7 @@ async function loadScanHistory() {
       tdRisk.innerHTML = `<span class="risk-badge badge-${scan.risk_class}">${scan.risk_class}</span>`;
 
       const tdScore = document.createElement('td');
-      tdScore.innerHTML = `<strong style="color:${scan.score >= 50 ? '#e11d48' : '#059669'};">${scan.score} / 100</strong>`;
+      tdScore.innerHTML = `<strong style="color:${scan.score >= 50 ? '#A83232' : '#778D7A'};">${scan.score} / 100</strong>`;
 
       const tdMode = document.createElement('td');
       tdMode.textContent = scan.mode;
@@ -1105,7 +1105,7 @@ async function loadScanHistory() {
 
       const delBtn = document.createElement('button');
       delBtn.className = 'btn-sm btn-secondary';
-      delBtn.style.color = '#dc2626';
+      delBtn.style.color = '#A83232';
       delBtn.textContent = 'Delete';
       delBtn.addEventListener('click', async () => {
         if (confirm(`Delete scan record for ${scan.url}?`)) {
@@ -1125,7 +1125,7 @@ async function loadScanHistory() {
       tbody.append(tr);
     }
   } catch (err) {
-    tbody.innerHTML = `<tr><td colspan="7" style="color:#dc2626;text-align:center;padding:20px;">Failed to load history: ${err.message}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" style="color:#A83232;text-align:center;padding:20px;">Failed to load history: ${err.message}</td></tr>`;
   }
 }
 
@@ -1147,20 +1147,20 @@ document.querySelector('#compare-selected-btn')?.addEventListener('click', async
 
     content.innerHTML = `
       <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
-        <div style="background:#fff5f7; border:1px solid #ffd0d8; border-radius:10px; padding:14px;">
+        <div style="background:#EDE8D4; border:1px solid #D4C4A8; border-radius:10px; padding:14px;">
           <small>SCAN A (${formatDate(data.scan_a.checked_at)})</small>
           <p><code style="font-size:11px;">${data.scan_a.url}</code></p>
           <p>Score: <strong>${data.scan_a.score}/100</strong> · Verdict: <strong>${data.scan_a.verdict}</strong></p>
         </div>
-        <div style="background:#fff5f7; border:1px solid #ffd0d8; border-radius:10px; padding:14px;">
+        <div style="background:#EDE8D4; border:1px solid #D4C4A8; border-radius:10px; padding:14px;">
           <small>SCAN B (${formatDate(data.scan_b.checked_at)})</small>
           <p><code style="font-size:11px;">${data.scan_b.url}</code></p>
           <p>Score: <strong>${data.scan_b.score}/100</strong> · Verdict: <strong>${data.scan_b.verdict}</strong></p>
         </div>
       </div>
-      <div style="padding:12px; background:#fff; border:1px solid #d1d5db; border-radius:8px; margin-bottom:16px;">
+      <div style="padding:12px; background:var(--paper,#FAF8EE); border:1px solid rgba(212,196,168,0.6); border-radius:8px; margin-bottom:16px;">
         <strong>Score Delta:</strong>
-        <span style="font-size:16px; font-weight:800; color:${data.score_diff > 0 ? '#e11d48' : data.score_diff < 0 ? '#059669' : '#374151'}">
+        <span style="font-size:16px; font-weight:800; color:${data.score_diff > 0 ? '#A83232' : data.score_diff < 0 ? '#778D7A' : '#1B263B'}">
           ${data.score_diff > 0 ? '+' : ''}${data.score_diff}
         </span> (${data.score_diff > 0 ? 'Risk Increased' : data.score_diff < 0 ? 'Risk Decreased' : 'No Score Change'})
       </div>
@@ -1170,7 +1170,7 @@ document.querySelector('#compare-selected-btn')?.addEventListener('click', async
       <ul>${data.resolved_findings.map((f) => `<li>[${f.severity}] ${f.summary || f.id}</li>`).join('') || '<li>None</li>'}</ul>
     `;
   } catch (err) {
-    content.innerHTML = `<p style="color:#dc2626;">Error comparing scans: ${err.message}</p>`;
+    content.innerHTML = `<p style="color:#A83232;">Error comparing scans: ${err.message}</p>`;
   }
 });
 
@@ -1283,14 +1283,14 @@ async function searchThreatIntel() {
         <td><span class="btn-sm btn-secondary">${item.indicator_type}</span></td>
         <td><strong>${titleCase(item.category)}</strong></td>
         <td><span class="risk-badge badge-${item.severity}">${item.severity}</span></td>
-        <td><span style="font-weight:700;color:${item.status === 'verified' ? '#059669' : '#b45309'}">${item.status}</span></td>
+        <td><span style="font-weight:700;color:${item.status === 'verified' ? '#778D7A' : '#8F6632'}">${item.status}</span></td>
         <td><strong>${item.report_count}</strong></td>
-        <td style="max-width:280px;font-size:11px;color:#4b5563;">${item.evidence || item.source}</td>
+        <td style="max-width:280px;font-size:11px;color:var(--muted,#415A77);">${item.evidence || item.source}</td>
       `;
       tbody.append(tr);
     }
   } catch (err) {
-    tbody.innerHTML = `<tr><td colspan="7" style="color:#dc2626;text-align:center;padding:20px;">Failed to load threat intel: ${err.message}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" style="color:#A83232;text-align:center;padding:20px;">Failed to load threat intel: ${err.message}</td></tr>`;
   }
 }
 

@@ -1,28 +1,27 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
   <defs>
-    <linearGradient id="rind" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#059669"/>
-      <stop offset="100%" stop-color="#10b981"/>
+    <linearGradient id="holst-outer" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0D1B2A"/>
+      <stop offset="100%" stop-color="#1B263B"/>
     </linearGradient>
-    <linearGradient id="flesh" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#ff3b5c"/>
-      <stop offset="100%" stop-color="#ff6b85"/>
+    <linearGradient id="holst-inner" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#415A77"/>
+      <stop offset="100%" stop-color="#778D7A"/>
     </linearGradient>
     <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
-      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.15"/>
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0D1B2A" flood-opacity="0.3"/>
     </filter>
   </defs>
-  <!-- Outer Rind Shield -->
-  <path d="M32 4 L56 14 C56 36 32 58 32 58 C32 58 8 36 8 14 Z" fill="url(#rind)" filter="url(#shadow)"/>
-  <!-- Inner White / Light Green Layer -->
-  <path d="M32 8 L52 17 C52 34 32 52 32 52 C32 52 12 34 12 17 Z" fill="#ecfdf5"/>
-  <!-- Juicy Watermelon Flesh -->
-  <path d="M32 11 L49 19 C49 33 32 48 32 48 C32 48 15 33 15 19 Z" fill="url(#flesh)"/>
-  <!-- Seeds forming 'T' Shield Mark -->
-  <ellipse cx="26" cy="23" rx="1.8" ry="2.8" transform="rotate(-15 26 23)" fill="#1e293b"/>
-  <ellipse cx="32" cy="23" rx="1.8" ry="2.8" fill="#1e293b"/>
-  <ellipse cx="38" cy="23" rx="1.8" ry="2.8" transform="rotate(15 38 23)" fill="#1e293b"/>
-  <ellipse cx="32" cy="30" rx="1.8" ry="2.8" fill="#1e293b"/>
-  <ellipse cx="32" cy="37" rx="1.8" ry="2.8" fill="#1e293b"/>
+  <!-- Outer Holst Shield -->
+  <path d="M32 4 L56 14 C56 36 32 58 32 58 C32 58 8 36 8 14 Z" fill="url(#holst-outer)" filter="url(#shadow)"/>
+  <!-- Middle Warm Sand / Tan Accent Layer -->
+  <path d="M32 8 L52 17 C52 34 32 52 32 52 C32 52 12 34 12 17 Z" fill="#D4C4A8"/>
+  <!-- Inner Core Slate-to-Sage Shield -->
+  <path d="M32 11 L49 19 C49 33 32 48 32 48 C32 48 15 33 15 19 Z" fill="url(#holst-inner)"/>
+  <!-- Holst Cream Key Emblems -->
+  <ellipse cx="26" cy="23" rx="1.8" ry="2.8" transform="rotate(-15 26 23)" fill="#F4F1DE"/>
+  <ellipse cx="32" cy="23" rx="1.8" ry="2.8" fill="#F4F1DE"/>
+  <ellipse cx="38" cy="23" rx="1.8" ry="2.8" transform="rotate(15 38 23)" fill="#F4F1DE"/>
+  <ellipse cx="32" cy="30" rx="1.8" ry="2.8" fill="#F4F1DE"/>
+  <ellipse cx="32" cy="37" rx="1.8" ry="2.8" fill="#F4F1DE"/>
 </svg>
-

@@ -6,14 +6,22 @@
   <title>Security Assessment Report · {{ scan.url }} · Trust Card</title>
   <style>
     :root {
-      --melon-red: #ff385c;
-      --melon-dark: #e0284b;
-      --rind-green: #059669;
-      --seed-dark: #111827;
-      --muted: #4b5563;
-      --border: #ffd0d8;
-      --card-bg: #ffffff;
-      --page-bg: #fff9fa;
+      /* Holst Palette Core */
+      --holst-dark: #0D1B2A;
+      --holst-navy: #1B263B;
+      --holst-slate: #415A77;
+      --holst-sage: #778D7A;
+      --holst-sand: #D4C4A8;
+      --holst-cream: #F4F1DE;
+
+      --brand-primary: #1B263B;
+      --brand-dark: #0D1B2A;
+      --brand-accent: #778D7A;
+      --seed-dark: #0D1B2A;
+      --muted: #415A77;
+      --border: rgba(212, 196, 168, 0.7);
+      --card-bg: #FAF8EE;
+      --page-bg: #F4F1DE;
     }
     * { box-sizing: border-box; }
     body {
@@ -27,24 +35,24 @@
     .report-container {
       max-width: 900px;
       margin: 0 auto;
-      background: #ffffff;
+      background: var(--card-bg);
       border: 1px solid var(--border);
       border-radius: 16px;
       padding: 40px;
-      box-shadow: 0 10px 30px rgba(255, 56, 92, 0.08);
+      box-shadow: 0 10px 30px rgba(13, 27, 42, 0.08);
     }
     .report-header {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      border-bottom: 2px solid #ffe4e9;
+      border-bottom: 2px solid rgba(212, 196, 168, 0.6);
       padding-bottom: 24px;
       margin-bottom: 32px;
     }
     .brand-title {
       font-size: 24px;
       font-weight: 800;
-      color: var(--melon-red);
+      color: var(--brand-primary);
       display: flex;
       align-items: center;
       gap: 8px;
@@ -69,24 +77,31 @@
       display: inline-flex;
       align-items: center;
       gap: 6px;
+      transition: all .16s ease;
     }
     .btn-primary {
-      background: var(--melon-red);
-      color: #fff;
-      border: 1px solid var(--melon-dark);
+      background: linear-gradient(135deg, #1B263B 0%, #0D1B2A 100%);
+      color: #F4F1DE;
+      border: 1px solid #0D1B2A;
+    }
+    .btn-primary:hover {
+      background: #415A77;
     }
     .btn-secondary {
-      background: #fff;
+      background: #EDE8D4;
       color: var(--seed-dark);
-      border: 1px solid #d1d5db;
+      border: 1px solid #D4C4A8;
+    }
+    .btn-secondary:hover {
+      background: #E2DBC2;
     }
     .section-title {
       font-size: 16px;
       font-weight: 800;
       text-transform: uppercase;
       letter-spacing: .05em;
-      color: var(--melon-dark);
-      border-bottom: 1px solid #fee2e2;
+      color: var(--brand-dark);
+      border-bottom: 1px solid rgba(212, 196, 168, 0.6);
       padding-bottom: 6px;
       margin-top: 32px;
       margin-bottom: 16px;
@@ -95,7 +110,7 @@
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: 16px;
-      background: #fff9fa;
+      background: #EDE8D4;
       border: 1px solid var(--border);
       border-radius: 12px;
       padding: 20px;
@@ -112,26 +127,29 @@
       font-weight: 800;
       text-transform: uppercase;
     }
-    .badge-malicious { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
-    .badge-high { background: #fff1f2; color: #e11d48; border: 1px solid #fda4af; }
-    .badge-suspicious { background: #fffbeb; color: #d97706; border: 1px solid #fde68a; }
-    .badge-safe { background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
-    .badge-unknown { background: #f3f4f6; color: #4b5563; border: 1px solid #e5e7eb; }
+    .badge-malicious { background: #F7EBEB; color: #A83232; border: 1px solid #E8B8B8; }
+    .badge-high { background: #F7EBEB; color: #C2410C; border: 1px solid #FED7AA; }
+    .badge-suspicious { background: #FBF6EC; color: #8F6632; border: 1px solid #D4C4A8; }
+    .badge-safe { background: #EDF2EE; color: #2B4530; border: 1px solid #778D7A; }
+    .badge-unknown { background: #EDE8D4; color: #415A77; border: 1px solid #D4C4A8; }
     
     .callout-box {
-      background: #fff0f3;
-      border-left: 4px solid var(--melon-red);
+      background: #FBF6EC;
+      border-left: 4px solid var(--brand-primary);
       padding: 16px 20px;
       border-radius: 0 8px 8px 0;
       margin-bottom: 24px;
+      border-top: 1px solid rgba(212, 196, 168, 0.4);
+      border-right: 1px solid rgba(212, 196, 168, 0.4);
+      border-bottom: 1px solid rgba(212, 196, 168, 0.4);
     }
-    .callout-title { font-weight: 800; font-size: 14px; margin-bottom: 4px; }
-    .callout-body { font-size: 13px; color: #374151; margin: 0; }
+    .callout-title { font-weight: 800; font-size: 14px; margin-bottom: 4px; color: var(--brand-dark); }
+    .callout-body { font-size: 13px; color: #1B263B; margin: 0; }
 
     table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 13px; }
-    th { background: #fef2f2; text-align: left; padding: 10px 12px; border-bottom: 2px solid #fecaca; font-weight: 700; }
-    td { padding: 10px 12px; border-bottom: 1px solid #f3f4f6; vertical-align: top; }
-    .code-text { font-family: ui-monospace, monospace; font-size: 12px; background: #f9fafb; padding: 2px 6px; border-radius: 4px; }
+    th { background: #EDE8D4; text-align: left; padding: 10px 12px; border-bottom: 2px solid #D4C4A8; font-weight: 700; color: #0D1B2A; }
+    td { padding: 10px 12px; border-bottom: 1px solid rgba(212, 196, 168, 0.5); vertical-align: top; color: #1B263B; }
+    .code-text { font-family: ui-monospace, monospace; font-size: 12px; background: #EDE8D4; color: #0D1B2A; padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(212, 196, 168, 0.6); }
 
     ul.remediation-list { padding-left: 20px; margin: 8px 0; }
     ul.remediation-list li { margin-bottom: 6px; font-size: 13px; }
@@ -156,7 +174,7 @@
   <div class="report-container">
     <header class="report-header">
       <div>
-        <div class="brand-title">🍉 Trust Card · Security Assessment Report</div>
+        <div class="brand-title">🛡️ Trust Card · Security Assessment Report</div>
         <div class="report-id">Scan Reference ID: {{ scan.id }} · Verified Independent Inspection</div>
       </div>
       <div class="action-buttons">
@@ -177,7 +195,7 @@
       </div>
       <div class="meta-item">
         <span class="meta-label">3. Overall Threat Score</span>
-        <span class="meta-val" style="font-size: 20px; color: var(--melon-red);">{{ scan.score }} / 100</span>
+        <span class="meta-val" style="font-size: 20px; color: var(--brand-primary);">{{ scan.score }} / 100</span>
       </div>
       <div class="meta-item">
         <span class="meta-label">4. Risk Classification</span>

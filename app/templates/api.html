@@ -12,22 +12,22 @@
     .api-hero { text-align: center; margin-bottom: 36px; }
     .api-hero h1 { font-size: clamp(28px, 5vw, 42px); color: var(--ink); margin: 8px 0; }
     .api-hero p { font-size: 14px; color: var(--muted); max-width: 620px; margin: 0 auto; }
-    .api-card { background: #fff; border: 1px solid #ffd0d8; border-radius: 14px; padding: 24px; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(255, 59, 92, 0.05); }
-    .api-card h2 { font-size: 18px; color: #16202e; margin-top: 0; display: flex; align-items: center; gap: 10px; }
+    .api-card { background: var(--paper, #FAF8EE); border: 1px solid rgba(212, 196, 168, 0.6); border-radius: 14px; padding: 24px; margin-bottom: 24px; box-shadow: var(--nm-raised, 0 4px 20px rgba(13, 27, 42, 0.05)); }
+    .api-card h2 { font-size: 18px; color: var(--ink, #0D1B2A); margin-top: 0; display: flex; align-items: center; gap: 10px; }
     .api-method { font-size: 11px; font-weight: 800; padding: 4px 8px; border-radius: 6px; text-transform: uppercase; }
-    .method-post { background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
-    .method-get { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
-    .api-endpoint { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; color: #334155; }
-    .api-code-block { background: #182234; color: #f8fafc; border-radius: 10px; padding: 16px; overflow-x: auto; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; line-height: 1.5; margin: 12px 0; }
+    .method-post { background: #EDF2EE; color: #2B4530; border: 1px solid #778D7A; }
+    .method-get { background: #EDE8D4; color: #1B263B; border: 1px solid #D4C4A8; }
+    .api-endpoint { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; color: #1B263B; }
+    .api-code-block { background: #0D1B2A; color: #F4F1DE; border-radius: 10px; padding: 16px; overflow-x: auto; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; line-height: 1.5; margin: 12px 0; border: 1px solid rgba(212, 196, 168, 0.4); }
     .api-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 12px; }
-    .api-table th { text-align: left; padding: 8px 12px; background: #fff5f7; color: #475569; font-weight: 700; border-bottom: 1px solid #fecdd3; }
-    .api-table td { padding: 9px 12px; border-bottom: 1px solid #f1f5f9; color: #334155; }
+    .api-table th { text-align: left; padding: 8px 12px; background: #EDE8D4; color: #0D1B2A; font-weight: 700; border-bottom: 1px solid #D4C4A8; }
+    .api-table td { padding: 9px 12px; border-bottom: 1px solid rgba(212, 196, 168, 0.4); color: #1B263B; }
   </style>
 </head>
 <body>
   <header class="topbar">
     <a class="brand" href="/" aria-label="Trust Card Home">
-      <span class="brand-mark">🍉</span>
+      <span class="brand-mark">🛡️</span>
       <span class="brand-name">Trust Card</span>
     </a>
     <nav class="top-nav">

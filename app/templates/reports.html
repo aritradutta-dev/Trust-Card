@@ -16,25 +16,25 @@
     }
     .filter-tab {
       padding: 7px 15px;
-      border: 1px solid #ffd0d8;
+      border: 1px solid rgba(212, 196, 168, 0.6);
       border-radius: 8px;
-      background: #fff;
-      color: #4b556f;
+      background: var(--paper, #FAF8EE);
+      color: var(--muted, #1B263B);
       font-size: 11px;
       font-weight: 700;
       text-decoration: none;
       transition: all .15s;
     }
     .filter-tab:hover {
-      background: #fff0f3;
-      border-color: #ff385c;
-      color: #ff385c;
+      background: #EDE8D4;
+      border-color: #D4C4A8;
+      color: #0D1B2A;
     }
     .filter-tab.active {
-      background: var(--melon-red, #ff385c);
-      border-color: var(--melon-red, #ff385c);
-      color: #fff;
-      box-shadow: 0 4px 12px rgba(255, 56, 92, 0.25);
+      background: linear-gradient(135deg, #1B263B 0%, #0D1B2A 100%);
+      border-color: #0D1B2A;
+      color: #F4F1DE;
+      box-shadow: 0 4px 12px rgba(13, 27, 42, 0.25);
     }
     .report-meta-badges {
       display: flex;
@@ -46,11 +46,11 @@
     .badge-count {
       padding: 3px 8px;
       border-radius: 99px;
-      background: #fff0f3;
-      color: #e0284b;
+      background: #EDE8D4;
+      color: #0D1B2A;
       font-size: 9px;
       font-weight: 700;
-      border: 1px solid #fecdd3;
+      border: 1px solid #D4C4A8;
     }
     .badge-state {
       padding: 3px 8px;
@@ -60,15 +60,15 @@
       text-transform: uppercase;
       letter-spacing: .04em;
     }
-    .badge-state[data-state="approved"] { background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
-    .badge-state[data-state="unverified"] { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
-    .badge-state[data-state="rejected"] { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+    .badge-state[data-state="approved"] { background: #EDF2EE; color: #2B4530; border: 1px solid #778D7A; }
+    .badge-state[data-state="unverified"] { background: #FBF6EC; color: #8F6632; border: 1px solid #D4C4A8; }
+    .badge-state[data-state="rejected"] { background: #F7EBEB; color: #A83232; border: 1px solid #E8B8B8; }
   </style>
 </head>
 <body>
   <header class="topbar">
     <a class="brand" href="/" aria-label="Trust Card Home">
-      <span class="brand-mark">🍉</span>
+      <span class="brand-mark">🛡️</span>
       <span class="brand-name">Trust Card</span>
     </a>
     <nav class="top-nav">
@@ -120,7 +120,7 @@
       {% endfor %}
       {% else %}
       <div class="empty-state">
-        <span aria-hidden="true">🍉</span>
+        <span aria-hidden="true">🛡️</span>
         <h2>No reports found</h2>
         <p>No community threat reports match the "{{ current_state }}" filter.</p>
       </div>
