@@ -4,14 +4,16 @@ from __future__ import annotations
 
 import uuid
 import base64
+import hashlib
 import hmac
+import json
 import os
 import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Literal
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
@@ -20,7 +22,17 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.feeds import refresh_feed
 from app.scanner_client import configured_feed_fetcher, configured_scanner
-from app.storage import create_report, find_reports, get_feed_status, init_db, list_reports, lookup_feed_matches, review_report
+from app.storage import (
+    create_report,
+    find_reports,
+    get_feed_status,
+    get_host_approved_report_count,
+    import_reports,
+    init_db,
+    list_reports,
+    lookup_feed_matches,
+    review_report,
+)
 from app.urls import canonicalize_url, host_from_url, indicator_fingerprint, url_hash
 from app.url_analysis import analyze_url
 from app.verdict import decide_verdict
@@ -140,7 +152,7 @@ def _local_result(db_path: Path, request: AnalyzeRequest) -> dict:
     feed_status = get_feed_status(db_path)
     stale, annotated_status = _feed_staleness(feed_status)
     matches = lookup_feed_matches(db_path, url_hash(request.url))
-    reports = find_reports(db_path, indicator_fingerprint(request.url), host)
+    reports = find_reports(db_path, indicator_fingerprint(request.url), host, include_unverified=True)
     findings = _context_findings(request.context_flags)
     findings.extend(analyze_url(request.url))
 
@@ -161,15 +173,45 @@ def _local_result(db_path: Path, request: AnalyzeRequest) -> dict:
             "confirmed": True,
         })
     for report in reports:
+        is_approved = report["state"] == "approved"
+        rep_count = report.get("report_count", 1)
+        source_display = report.get("source", "Local community report")
+        if source_display == "local":
+            source_display = "Local community report"
+        if is_approved:
+            findings.append({
+                "id": f"report-{report['id']}",
+                "category": "community_report",
+                "severity": "high",
+                "summary": "A local reviewer confirmed a report for this link.",
+                "source": source_display,
+                "observed_at": report["created_at"],
+                "group": "community_report",
+                "confirmed": True,
+            })
+        else:
+            findings.append({
+                "id": f"report-{report['id']}",
+                "category": "unverified_report",
+                "severity": "low",
+                "summary": f"Reported {rep_count} times locally, awaiting review",
+                "source": source_display,
+                "observed_at": report["created_at"],
+                "group": "community_report",
+                "confirmed": False,
+            })
+
+    host_approved_count = get_host_approved_report_count(db_path, host)
+    if host_approved_count >= 2 and not any(r["state"] == "approved" for r in reports):
         findings.append({
-            "id": f"report-{report['id']}",
+            "id": f"host-reputation-{host}",
             "category": "community_report",
-            "severity": "high" if report["state"] == "approved" else "low",
-            "summary": "A local reviewer confirmed a report for this link." if report["state"] == "approved" else "This link has an unverified local report.",
-            "source": "Local community report",
-            "observed_at": report["created_at"],
+            "severity": "medium",
+            "summary": "Multiple verified reports on this host",
+            "source": "Local community intelligence",
+            "observed_at": datetime.now(timezone.utc).isoformat(),
             "group": "community_report",
-            "confirmed": report["state"] == "approved",
+            "confirmed": False,
         })
     decision = decide_verdict(findings, scan_complete=True, feed_stale=stale, coverage="local_only")
     for finding in findings:
@@ -270,14 +312,27 @@ def create_app(
         session = app.state.scan_sessions.pop(payload.scan_id, None)
         if session is None or time.time() - session["created_at"] > 3600:
             raise HTTPException(status_code=410, detail="scan_expired")
+        threshold_val = os.environ.get("REPORT_AUTO_APPROVE_THRESHOLD")
+        auto_threshold = int(threshold_val) if threshold_val and threshold_val.isdigit() else None
         report = await run_in_threadpool(
             create_report,
             data_path,
             session["indicator_hash"],
             session["host"],
             payload.category,
+            source="local",
+            auto_approve_threshold=auto_threshold,
         )
-        return {"state": report["state"], "message": "Thanks. This report is unverified until a local administrator reviews it."}
+        message = (
+            "This report was automatically approved based on repeated independent reports."
+            if report["state"] == "approved"
+            else "Thanks. This report is unverified until a local administrator reviews it."
+        )
+        return {
+            "state": report["state"],
+            "message": message,
+            "report_count": report.get("report_count", 1),
+        }
 
     @app.post("/api/v1/analyze")
     async def analyze(payload: AnalyzeRequest):
@@ -361,15 +416,19 @@ def create_app(
             raise HTTPException(status_code=401, detail="admin_auth_required", headers={"WWW-Authenticate": 'Basic realm="Trust Card reports"'})
 
     @app.get("/admin/reports", response_class=HTMLResponse)
-    async def admin_reports(request: Request):
+    async def admin_reports(request: Request, state: str = "unverified"):
         require_admin(request)
-        reports = await run_in_threadpool(list_reports, data_path, "unverified")
-        return templates.TemplateResponse(request=request, name="reports.html", context={"request": request, "reports": reports})
+        reports = await run_in_threadpool(list_reports, data_path, state)
+        return templates.TemplateResponse(
+            request=request,
+            name="reports.html",
+            context={"request": request, "reports": reports, "current_state": state},
+        )
 
     @app.get("/api/v1/admin/reports")
-    async def admin_report_list(request: Request):
+    async def admin_report_list(request: Request, state: str = "unverified"):
         require_admin(request)
-        return {"reports": await run_in_threadpool(list_reports, data_path, "unverified")}
+        return {"reports": await run_in_threadpool(list_reports, data_path, state)}
 
     @app.post("/api/v1/admin/reports/{report_id}/review")
     async def review_local_report(report_id: str, payload: ReviewRequest, request: Request):
@@ -379,6 +438,90 @@ def create_app(
         except KeyError:
             raise HTTPException(status_code=404, detail="report_not_found")
         return {"id": report["id"], "state": report["state"], "reviewed_at": report["reviewed_at"]}
+
+    @app.get("/api/v1/admin/export")
+    async def export_reports(request: Request):
+        require_admin(request)
+        sharing_key = os.environ.get("SHARING_KEY", "")
+        if not sharing_key:
+            raise HTTPException(status_code=503, detail="sharing_not_configured")
+        approved_reports = await run_in_threadpool(list_reports, data_path, "approved")
+        export_data = [
+            {
+                "indicator_fingerprint": r["indicator_hash"],
+                "host": r["host"],
+                "category": r["category"],
+                "created_at": r["created_at"],
+                "report_count": r.get("report_count", 1),
+            }
+            for r in approved_reports
+        ]
+        instance_name = os.environ.get("INSTANCE_NAME", "trustcard-node")
+        envelope = {
+            "instance": instance_name,
+            "exported_at": datetime.now(timezone.utc).isoformat(),
+            "reports": export_data,
+        }
+        body_bytes = json.dumps(envelope, sort_keys=True).encode("utf-8")
+        sig = hmac.new(sharing_key.encode("utf-8"), body_bytes, hashlib.sha256).hexdigest()
+        return Response(
+            content=body_bytes,
+            media_type="application/json",
+            headers={"X-Signature": sig},
+        )
+
+    @app.post("/api/v1/admin/import")
+    async def import_reports_endpoint(request: Request):
+        require_admin(request)
+        sharing_key = os.environ.get("SHARING_KEY", "")
+        if not sharing_key:
+            raise HTTPException(status_code=503, detail="sharing_not_configured")
+
+        content_length = request.headers.get("content-length")
+        if content_length and int(content_length) > 1048576:
+            raise HTTPException(status_code=413, detail="payload_too_large")
+
+        body_bytes = await request.body()
+        if len(body_bytes) > 1048576:
+            raise HTTPException(status_code=413, detail="payload_too_large")
+
+        try:
+            data = json.loads(body_bytes)
+        except Exception:
+            raise HTTPException(status_code=400, detail="invalid_json")
+
+        sig_header = request.headers.get("X-Signature")
+        sig = sig_header or data.get("signature")
+        if not sig:
+            raise HTTPException(status_code=400, detail="missing_signature")
+
+        if "data" in data and "signature" in data:
+            reports_data = data["data"].get("reports", [])
+            peer_name = data["data"].get("instance", "unknown-peer")
+            canonical_bytes = json.dumps(data["data"], sort_keys=True).encode("utf-8")
+        else:
+            reports_data = data.get("reports", [])
+            peer_name = data.get("instance", "unknown-peer")
+            canonical_bytes = body_bytes
+
+        expected_sig = hmac.new(sharing_key.encode("utf-8"), canonical_bytes, hashlib.sha256).hexdigest()
+        if not hmac.compare_digest(sig, expected_sig):
+            # Check raw body_bytes as alternative
+            alt_sig = hmac.new(sharing_key.encode("utf-8"), body_bytes, hashlib.sha256).hexdigest()
+            if not hmac.compare_digest(sig, alt_sig):
+                raise HTTPException(status_code=400, detail="invalid_signature")
+
+        imported_count = await run_in_threadpool(
+            import_reports,
+            data_path,
+            reports_data,
+            source=f"Peer: {peer_name}",
+        )
+        return {
+            "imported": imported_count,
+            "source": f"Peer: {peer_name}",
+            "message": f"Successfully imported {imported_count} unverified reports.",
+        }
 
     return app
 

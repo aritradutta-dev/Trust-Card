@@ -5,21 +5,110 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Local report review · Trust Card</title>
   <link rel="stylesheet" href="/static/styles.css">
+  <style>
+    .admin-filters {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    .filter-tab {
+      padding: 6px 14px;
+      border: 1px solid #dce0ed;
+      border-radius: 8px;
+      background: #fbfbfe;
+      color: #4b556f;
+      font-size: 11px;
+      font-weight: 700;
+      text-decoration: none;
+      transition: all .15s;
+    }
+    .filter-tab:hover {
+      background: #f0f3ff;
+      border-color: #7996e9;
+      color: #174fc7;
+    }
+    .filter-tab.active {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: #fff;
+    }
+    .report-meta-badges {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 4px;
+    }
+    .badge-count {
+      padding: 2px 7px;
+      border-radius: 99px;
+      background: #eef1f9;
+      color: #3b4661;
+      font-size: 9px;
+      font-weight: 700;
+    }
+    .badge-state {
+      padding: 2px 7px;
+      border-radius: 99px;
+      font-size: 9px;
+      font-weight: 750;
+      text-transform: uppercase;
+    }
+    .badge-state[data-state="approved"] { background: #e6f6f3; color: #0b6957; }
+    .badge-state[data-state="unverified"] { background: #fef4e2; color: #8c520a; }
+    .badge-state[data-state="rejected"] { background: #fde8e8; color: #b01a1a; }
+  </style>
 </head>
 <body>
-  <header class="topbar"><a class="brand" href="/"><span class="brand-mark">T</span><span>Trust Card</span></a><a class="quiet-link" href="/">Back to checker</a></header>
+  <header class="topbar">
+    <a class="brand" href="/"><span class="brand-mark">T</span><span>Trust Card</span></a>
+    <a class="quiet-link" href="/">Back to checker</a>
+  </header>
   <main class="shell admin-shell">
-    <section class="hero admin-hero"><div class="eyebrow"><span class="eyebrow-dot"></span> Local administrator</div><h1>Review community reports.</h1><p>Reports remain unverified until you make a decision. Approved reports affect future checks on this installation.</p></section>
-    <section class="report-list" aria-label="Unverified reports">
+    <section class="hero admin-hero">
+      <div class="eyebrow"><span class="eyebrow-dot"></span> Local administrator</div>
+      <h1>Review community reports.</h1>
+      <p>Reports remain unverified until you make a decision. Approved reports affect future checks on this installation.</p>
+    </section>
+
+    <div class="admin-filters">
+      <a class="filter-tab {% if current_state == 'unverified' %}active{% endif %}" href="/admin/reports?state=unverified">Unverified</a>
+      <a class="filter-tab {% if current_state == 'approved' %}active{% endif %}" href="/admin/reports?state=approved">Approved</a>
+      <a class="filter-tab {% if current_state == 'rejected' %}active{% endif %}" href="/admin/reports?state=rejected">Rejected</a>
+      <a class="filter-tab {% if current_state == 'all' %}active{% endif %}" href="/admin/reports?state=all">All Reports</a>
+    </div>
+
+    <section class="report-list" aria-label="Community reports">
       {% if reports %}
       {% for report in reports %}
       <article class="report-row" data-report-id="{{ report.id }}">
-        <div><span class="report-category">{{ report.category|title }}</span><h2>{{ report.host }}</h2><p>Reported {{ report.created_at }} · Indicator fingerprint {{ report.indicator_hash[:12] }}…</p></div>
-        <div class="report-actions"><button class="button button-secondary" type="button" data-decision="reject">Reject</button><button class="button button-primary" type="button" data-decision="approve">Approve</button></div>
+        <div>
+          <div class="report-meta-badges">
+            <span class="report-category">{{ report.category|title }}</span>
+            <span class="badge-count">{{ report.report_count }} report{% if report.report_count != 1 %}s{% endif %}</span>
+            <span class="badge-state" data-state="{{ report.state }}">{{ report.state }}</span>
+            {% if report.source and report.source != 'local' %}
+            <span class="badge-count">{{ report.source }}</span>
+            {% endif %}
+          </div>
+          <h2>{{ report.host }}</h2>
+          <p>Reported {{ report.created_at }} · Indicator fingerprint {{ report.indicator_hash[:12] }}…</p>
+        </div>
+        <div class="report-actions">
+          {% if report.state != 'rejected' %}
+          <button class="button button-secondary" type="button" data-decision="reject">Reject</button>
+          {% endif %}
+          {% if report.state != 'approved' %}
+          <button class="button button-primary" type="button" data-decision="approve">Approve</button>
+          {% endif %}
+        </div>
       </article>
       {% endfor %}
       {% else %}
-      <div class="empty-state"><span aria-hidden="true">✓</span><h2>No reports need review</h2><p>New reports from this installation will appear here.</p></div>
+      <div class="empty-state">
+        <span aria-hidden="true">✓</span>
+        <h2>No reports found</h2>
+        <p>No community reports match the "{{ current_state }}" filter.</p>
+      </div>
       {% endif %}
     </section>
   </main>

@@ -36,6 +36,7 @@ def decide_verdict(
             "young_domain",
             "domain_age",
             "credential_form",
+            "community_report",
         }
     }
     if high_signal or len(medium_groups) >= 2:

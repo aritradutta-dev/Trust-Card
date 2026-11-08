@@ -56,6 +56,12 @@ def init_db(db_path: str | Path) -> None:
                 UNIQUE (indicator_hash, category)
             );
             CREATE INDEX IF NOT EXISTS reports_host_idx ON reports(host);
+            CREATE TABLE IF NOT EXISTS report_metadata (
+                report_id TEXT PRIMARY KEY,
+                report_count INTEGER NOT NULL DEFAULT 1,
+                source TEXT NOT NULL DEFAULT 'local',
+                FOREIGN KEY (report_id) REFERENCES reports(id) ON DELETE CASCADE
+            );
             """
         )
 
@@ -119,19 +125,48 @@ def get_feed_status(db_path: str | Path) -> list[dict]:
 
 
 def create_report(
-    db_path: str | Path, indicator_hash: str, host: str, category: str
+    db_path: str | Path,
+    indicator_hash: str,
+    host: str,
+    category: str,
+    source: str = "local",
+    auto_approve_threshold: int | None = None,
 ) -> dict:
     report_id = hash_indicator(f"{indicator_hash}\0{category}")[:24]
     timestamp = datetime.now(timezone.utc).isoformat()
     with _connection(db_path) as db:
         db.execute(
-            """INSERT OR IGNORE INTO reports
+            """INSERT INTO reports
                (id, indicator_hash, host, category, state, created_at)
-               VALUES (?, ?, ?, ?, 'unverified', ?)""",
+               VALUES (?, ?, ?, ?, 'unverified', ?)
+               ON CONFLICT(indicator_hash, category) DO NOTHING
+            """,
             (report_id, indicator_hash, host, category, timestamp),
         )
+        db.execute(
+            """INSERT INTO report_metadata
+               (report_id, report_count, source)
+               VALUES (?, 1, ?)
+               ON CONFLICT(report_id) DO UPDATE SET
+                 report_count = report_metadata.report_count + 1
+            """,
+            (report_id, source),
+        )
+        if auto_approve_threshold is not None and auto_approve_threshold > 0:
+            db.execute(
+                """UPDATE reports SET state = 'approved', reviewed_at = ?
+                   WHERE id = ? AND state = 'unverified'
+                     AND (SELECT report_count FROM report_metadata WHERE report_id = ?) >= ?""",
+                (timestamp, report_id, report_id, auto_approve_threshold),
+            )
         row = db.execute(
-            "SELECT id, indicator_hash, host, category, state, created_at, reviewed_at FROM reports WHERE id = ?",
+            """SELECT reports.id, reports.indicator_hash, reports.host, reports.category, reports.state,
+                      COALESCE(report_metadata.report_count, 1) as report_count,
+                      COALESCE(report_metadata.source, 'local') as source,
+                      reports.created_at, reports.reviewed_at
+               FROM reports
+               LEFT JOIN report_metadata ON reports.id = report_metadata.report_id
+               WHERE reports.id = ?""",
             (report_id,),
         ).fetchone()
     return dict(row)
@@ -148,7 +183,13 @@ def review_report(db_path: str | Path, report_id: str, decision: str) -> dict:
             (state, reviewed_at, report_id),
         )
         row = db.execute(
-            "SELECT id, indicator_hash, host, category, state, created_at, reviewed_at FROM reports WHERE id = ?",
+            """SELECT reports.id, reports.indicator_hash, reports.host, reports.category, reports.state,
+                      COALESCE(report_metadata.report_count, 1) as report_count,
+                      COALESCE(report_metadata.source, 'local') as source,
+                      reports.created_at, reports.reviewed_at
+               FROM reports
+               LEFT JOIN report_metadata ON reports.id = report_metadata.report_id
+               WHERE reports.id = ?""",
             (report_id,),
         ).fetchone()
     if row is None:
@@ -156,22 +197,104 @@ def review_report(db_path: str | Path, report_id: str, decision: str) -> dict:
     return dict(row)
 
 
-def find_reports(db_path: str | Path, indicator_hash: str, host: str) -> list[dict]:
+def find_reports(db_path: str | Path, indicator_hash: str, host: str, include_unverified: bool = False) -> list[dict]:
     with _connection(db_path) as db:
-        rows = db.execute(
-            """SELECT id, category, state, created_at FROM reports
-               WHERE indicator_hash = ? AND state = 'approved'
-               ORDER BY created_at DESC""",
-            (indicator_hash,),
-        ).fetchall()
+        if include_unverified:
+            rows = db.execute(
+                """SELECT reports.id, reports.indicator_hash, reports.host, reports.category, reports.state,
+                          COALESCE(report_metadata.report_count, 1) as report_count,
+                          COALESCE(report_metadata.source, 'local') as source,
+                          reports.created_at, reports.reviewed_at
+                   FROM reports
+                   LEFT JOIN report_metadata ON reports.id = report_metadata.report_id
+                   WHERE reports.indicator_hash = ? AND reports.state IN ('approved', 'unverified')
+                   ORDER BY reports.created_at DESC""",
+                (indicator_hash,),
+            ).fetchall()
+        else:
+            rows = db.execute(
+                """SELECT reports.id, reports.indicator_hash, reports.host, reports.category, reports.state,
+                          COALESCE(report_metadata.report_count, 1) as report_count,
+                          COALESCE(report_metadata.source, 'local') as source,
+                          reports.created_at, reports.reviewed_at
+                   FROM reports
+                   LEFT JOIN report_metadata ON reports.id = report_metadata.report_id
+                   WHERE reports.indicator_hash = ? AND reports.state = 'approved'
+                   ORDER BY reports.created_at DESC""",
+                (indicator_hash,),
+            ).fetchall()
     return [dict(row) for row in rows]
+
+
+def get_host_approved_report_count(db_path: str | Path, host: str) -> int:
+    with _connection(db_path) as db:
+        row = db.execute(
+            "SELECT COUNT(DISTINCT indicator_hash) as cnt FROM reports WHERE host = ? AND state = 'approved'",
+            (host,),
+        ).fetchone()
+    return row["cnt"] if row else 0
 
 
 def list_reports(db_path: str | Path, state: str = "unverified") -> list[dict]:
     with _connection(db_path) as db:
-        rows = db.execute(
-            """SELECT id, indicator_hash, host, category, state, created_at, reviewed_at
-               FROM reports WHERE state = ? ORDER BY created_at DESC""",
-            (state,),
-        ).fetchall()
+        if state == "all":
+            rows = db.execute(
+                """SELECT reports.id, reports.indicator_hash, reports.host, reports.category, reports.state,
+                          COALESCE(report_metadata.report_count, 1) as report_count,
+                          COALESCE(report_metadata.source, 'local') as source,
+                          reports.created_at, reports.reviewed_at
+                   FROM reports
+                   LEFT JOIN report_metadata ON reports.id = report_metadata.report_id
+                   ORDER BY reports.created_at DESC"""
+            ).fetchall()
+        else:
+            rows = db.execute(
+                """SELECT reports.id, reports.indicator_hash, reports.host, reports.category, reports.state,
+                          COALESCE(report_metadata.report_count, 1) as report_count,
+                          COALESCE(report_metadata.source, 'local') as source,
+                          reports.created_at, reports.reviewed_at
+                   FROM reports
+                   LEFT JOIN report_metadata ON reports.id = report_metadata.report_id
+                   WHERE reports.state = ?
+                   ORDER BY reports.created_at DESC""",
+                (state,),
+            ).fetchall()
     return [dict(row) for row in rows]
+
+
+def import_reports(
+    db_path: str | Path,
+    reports: list[dict],
+    source: str = "peer",
+) -> int:
+    count = 0
+    timestamp = datetime.now(timezone.utc).isoformat()
+    with _connection(db_path) as db:
+        for r in reports:
+            ind_hash = r.get("indicator_fingerprint") or r.get("indicator_hash")
+            host = r.get("host")
+            category = r.get("category", "phishing")
+            rep_count = int(r.get("report_count", 1))
+            if not ind_hash or not host:
+                continue
+            report_id = hash_indicator(f"{ind_hash}\0{category}")[:24]
+            db.execute(
+                """INSERT INTO reports
+                   (id, indicator_hash, host, category, state, created_at)
+                   VALUES (?, ?, ?, ?, 'unverified', ?)
+                   ON CONFLICT(indicator_hash, category) DO NOTHING
+                """,
+                (report_id, ind_hash, host, category, timestamp),
+            )
+            db.execute(
+                """INSERT INTO report_metadata
+                   (report_id, report_count, source)
+                   VALUES (?, ?, ?)
+                   ON CONFLICT(report_id) DO UPDATE SET
+                     report_count = report_metadata.report_count + excluded.report_count,
+                     source = excluded.source
+                """,
+                (report_id, rep_count, source),
+            )
+            count += 1
+    return count
