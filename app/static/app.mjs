@@ -134,6 +134,23 @@ document.querySelectorAll('.top-nav a[data-tab-target]').forEach((link) => {
   });
 });
 
+document.querySelectorAll('a[href="#how-it-works"]').forEach((link) => {
+  link.addEventListener('click', (e) => {
+    e.preventDefault();
+    switchView('view-checker');
+    const el = document.getElementById('how-it-works');
+    if (el) el.scrollIntoView({ behavior: 'smooth' });
+  });
+});
+
+document.querySelectorAll('a[href="#contact"]').forEach((link) => {
+  link.addEventListener('click', (e) => {
+    e.preventDefault();
+    const el = document.getElementById('contact');
+    if (el) el.scrollIntoView({ behavior: 'smooth' });
+  });
+});
+
 // Clear & Sample buttons
 if (clearButton) {
   clearButton.addEventListener('click', () => {

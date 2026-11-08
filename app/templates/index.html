@@ -24,18 +24,16 @@
     </a>
     <nav class="top-nav" aria-label="Main navigation">
       <a class="nav-active" href="#view-checker" data-tab-target="view-checker">Check link</a>
-      <a href="#view-dashboard" data-tab-target="view-dashboard">Threat Dashboard</a>
-      <a href="#view-history" data-tab-target="view-history">Scan History</a>
-      <a href="#view-ct" data-tab-target="view-ct">Cert & CT Monitor</a>
-      <a href="#view-intel" data-tab-target="view-intel">Threat Search</a>
-      <a href="#view-forum" data-tab-target="view-forum">Community Forum</a>
+      <a href="#how-it-works">How it works</a>
       <a href="/api">API Reference</a>
       <a href="/admin/reports">Admin Review</a>
+      <a href="#contact">Contact</a>
     </nav>
     <div class="topbar-right">
       <div id="auth-user-container">
         <button id="auth-trigger-btn" class="auth-trigger-btn" type="button">Sign In / Register</button>
       </div>
+      <span class="system-status"><span class="status-dot" aria-hidden="true"></span> Local checks ready</span>
       <button id="mobile-menu-btn" class="mobile-menu-btn" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="mobile-nav">
         <span class="menu-icon" aria-hidden="true">☰</span>
       </button>
@@ -45,6 +43,7 @@
   <nav id="mobile-nav" class="mobile-nav" hidden aria-label="Mobile Navigation">
     <div class="mobile-nav-inner">
       <a class="mobile-nav-link" href="#view-checker" data-tab-target="view-checker">Check a Link</a>
+      <a class="mobile-nav-link" href="#how-it-works">How It Works</a>
       <a class="mobile-nav-link" href="#view-dashboard" data-tab-target="view-dashboard">Threat Dashboard</a>
       <a class="mobile-nav-link" href="#view-history" data-tab-target="view-history">Scan History</a>
       <a class="mobile-nav-link" href="#view-ct" data-tab-target="view-ct">Certificate & CT Monitor</a>
@@ -74,7 +73,7 @@
     <!-- VIEW 1: Link Checker (Main View) -->
     <section id="view-checker" class="view-section">
       <section class="hero">
-        <div class="eyebrow"><span class="eyebrow-dot" aria-hidden="true"></span> Threat Intelligence · Web Security · Deep TLS Validation</div>
+        <div class="eyebrow"><span class="eyebrow-dot" aria-hidden="true"></span> MESSAGE CONTEXT · LINK EVIDENCE · THREAT AUDIT</div>
         <h1>Check a link before you click.</h1>
         <p>Paste a link or the message it came with. Trust Card explains the signals it finds and a safer next step.</p>
       </section>
