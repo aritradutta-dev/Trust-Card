@@ -1744,9 +1744,9 @@ document.querySelector('#thread-reply-submit-btn')?.addEventListener('click', as
 });
 
 // =========================================================================
-// Interactive Dynamic Cursor System (Multi-Mode Presets & Switcher)
+// Threat Network Mesh Dynamic Cursor System (Holst Palette)
 // =========================================================================
-function initInteractiveCursorSystem() {
+function initThreatMeshCursor() {
   // Respect touch devices and reduced-motion preferences
   if (!window.matchMedia('(pointer: fine)').matches || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     return;
@@ -1782,154 +1782,19 @@ function initInteractiveCursorSystem() {
   resizeCanvas();
   window.addEventListener('resize', resizeCanvas);
 
-  // Holst & Thematic Color Palettes
-  const HOLST_COLORS = [
-    { r: 27, g: 38, b: 59 },    // #1B263B Oxford Blue
-    { r: 13, g: 27, b: 42 },    // #0D1B2A Midnight Dark
-    { r: 65, g: 90, b: 119 },   // #415A77 Muted Slate
-    { r: 119, g: 141, b: 122 }, // #778D7A Earthy Sage
-    { r: 212, g: 196, b: 168 }  // #D4C4A8 Warm Sand
+  // Holst Threat Intelligence Colors: Slate, Sage Green, Oxford Blue, Warm Sand
+  const MESH_COLORS = [
+    { r: 65, g: 90, b: 119 },   // #415A77 Muted Slate (Network Lines & Nodes)
+    { r: 119, g: 141, b: 122 }, // #778D7A Earthy Sage (Verified Intelligence Nodes)
+    { r: 27, g: 38, b: 59 },    // #1B263B Oxford Blue (Core Anchor Nodes)
+    { r: 212, g: 196, b: 168 }  // #D4C4A8 Warm Sand (Telemetry Sparks)
   ];
 
-  const NEBULA_COLORS = [
-    { r: 121, g: 40, b: 202 },  // Astral Violet #7928CA
-    { r: 255, g: 0, b: 127 },   // Cyber Magenta #FF007F
-    { r: 251, g: 191, b: 36 },  // Radiant Gold #FBBF24
-    { r: 56, g: 189, b: 248 },  // Electric Cyan #38BDF8
-    { r: 245, g: 158, b: 11 }   // Stardust Amber #F59E0B
-  ];
-
-  const MAGMA_COLORS = [
-    { r: 220, g: 38, b: 38 },   // Inferno Red #DC2626
-    { r: 234, g: 88, b: 12 },   // Lava Orange #EA580C
-    { r: 250, g: 204, b: 21 },  // Molten Gold #FACC15
-    { r: 254, g: 240, b: 138 }, // Thermal Yellow #FEF08A
-    { r: 185, g: 28, b: 28 }    // Deep Magma #B91C1C
-  ];
-
-  const NEON_COLORS = [
-    { r: 0, g: 240, b: 255 },   // Electric Neon Cyan #00F0FF
-    { r: 255, g: 0, b: 127 },   // Hot Neon Pink #FF007F
-    { r: 139, g: 92, b: 246 },  // Deep Neon Violet #8B5CF6
-    { r: 255, g: 255, b: 255 }  // Laser Core White
-  ];
-
-  const MATRIX_COLORS = [
-    { r: 34, g: 197, b: 94 },   // Phosphor Green #22C55E
-    { r: 132, g: 204, b: 22 },  // Cyber Lime #84CC16
-    { r: 16, g: 185, b: 129 },  // Terminal Emerald #10B981
-    { r: 167, g: 243, b: 208 }  // Phosphor Mint #A7F3D0
-  ];
-
-  const PRISM_COLORS = [
-    { r: 6, g: 182, b: 212 },   // Spectral Cyan #06B6D4
-    { r: 236, g: 72, b: 153 },  // Spectral Magenta #EC4899
-    { r: 132, g: 204, b: 22 },  // Spectral Lime #84CC16
-    { r: 168, g: 85, b: 247 },  // Spectral Violet #A855F7
-    { r: 245, g: 158, b: 11 }   // Spectral Amber #F59E0B
-  ];
-
-  const PRESET_LABELS = {
-    fluid: 'Fluid Splash',
-    nebula: 'Cosmic Nebula',
-    magma: 'Volcanic Magma',
-    neon: 'Neon Synthwave',
-    matrix: 'Matrix Terminal',
-    prism: 'Prism Rainbow',
-    radar: 'Cyber Radar',
-    mesh: 'Threat Network Mesh',
-    mercury: 'Liquid Mercury',
-    classic: 'Minimal Pointer'
-  };
-
-  let currentMode = localStorage.getItem('trustcard_cursor_effect') || 'fluid';
-  if (!PRESET_LABELS[currentMode]) currentMode = 'fluid';
-
-  function applyModeBlend(mode) {
-    if (mode === 'fluid' || mode === 'mercury') {
-      canvas.style.mixBlendMode = 'multiply';
-    } else {
-      canvas.style.mixBlendMode = 'normal';
-    }
-  }
-  applyModeBlend(currentMode);
-
-  // UI Switcher Elements
-  const switcherToggle = document.querySelector('#cursor-switcher-toggle');
-  const switcherMenu = document.querySelector('#cursor-switcher-menu');
-  const activeLabel = document.querySelector('#cursor-active-label');
-  const optBtns = document.querySelectorAll('.cursor-opt-btn');
-
-  function updateSwitcherUI(mode) {
-    if (activeLabel) activeLabel.textContent = PRESET_LABELS[mode] || 'Dynamic';
-    optBtns.forEach((btn) => {
-      btn.classList.toggle('active', btn.dataset.cursorMode === mode);
-    });
-    applyModeBlend(mode);
-  }
-  updateSwitcherUI(currentMode);
-
-  if (switcherToggle && switcherMenu) {
-    switcherToggle.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const isExpanded = switcherToggle.getAttribute('aria-expanded') === 'true';
-      switcherToggle.setAttribute('aria-expanded', !isExpanded);
-      switcherMenu.hidden = isExpanded;
-    });
-
-    document.addEventListener('click', (e) => {
-      if (!e.target.closest('.cursor-switcher-widget')) {
-        switcherToggle.setAttribute('aria-expanded', 'false');
-        switcherMenu.hidden = true;
-      }
-    });
-
-    optBtns.forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const selected = btn.dataset.cursorMode;
-        if (selected && PRESET_LABELS[selected]) {
-          currentMode = selected;
-          localStorage.setItem('trustcard_cursor_effect', selected);
-          updateSwitcherUI(selected);
-          switcherToggle.setAttribute('aria-expanded', 'false');
-          switcherMenu.hidden = true;
-          showToast(`Cursor effect switched to: ${PRESET_LABELS[selected]}`, 'info');
-          // Reset states & trigger loop
-          particles.forEach((p) => (p.active = false));
-          ripples.forEach((r) => (r.active = false));
-          ensureAnimationRunning();
-        }
-      });
-    });
-  }
-
-  // Shared pointer variables
-  let mouseX = -100;
-  let mouseY = -100;
-  let prevMouseX = -100;
-  let prevMouseY = -100;
-  let mouseSpeed = 0;
-  let isHoveringInteractive = false;
-  let isRunning = false;
-  let lastMoveTime = 0;
-  let radarAngle = 0;
-
-  // History buffer for smooth arcs / mesh
-  const historyPoints = [];
-  const MAX_HISTORY = 14;
-
-  // Mercury Chained Springs
-  const mercuryJoints = [];
-  const NUM_MERCURY_JOINTS = 6;
-  for (let i = 0; i < NUM_MERCURY_JOINTS; i++) {
-    mercuryJoints.push({ x: -100, y: -100, vx: 0, vy: 0, radius: Math.max(3, 10 - i * 1.3) });
-  }
-
-  // Particle & Ripple Object Pools
-  const particles = [];
-  const MAX_PARTICLES = 220;
-  for (let i = 0; i < MAX_PARTICLES; i++) {
-    particles.push({
+  // Node & Ripple Object Pools
+  const nodes = [];
+  const MAX_NODES = 52;
+  for (let i = 0; i < MAX_NODES; i++) {
+    nodes.push({
       active: false,
       x: 0,
       y: 0,
@@ -1938,16 +1803,14 @@ function initInteractiveCursorSystem() {
       radius: 0,
       maxRadius: 0,
       alpha: 1,
-      decay: 0.03,
-      color: HOLST_COLORS[0],
-      isSplash: false,
-      swirl: 0,
-      extra: 0
+      decay: 0.02,
+      color: MESH_COLORS[0],
+      swirl: 0
     });
   }
 
   const ripples = [];
-  const MAX_RIPPLES = 16;
+  const MAX_RIPPLES = 8;
   for (let i = 0; i < MAX_RIPPLES; i++) {
     ripples.push({
       active: false,
@@ -1956,31 +1819,28 @@ function initInteractiveCursorSystem() {
       radius: 0,
       maxRadius: 0,
       alpha: 1,
-      decay: 0.04,
-      color: HOLST_COLORS[0],
-      style: 'solid'
+      decay: 0.03,
+      color: MESH_COLORS[1]
     });
   }
 
-  function spawnParticle(x, y, vx, vy, radius, color, decay, isSplash = false, swirl = 0, extra = 0) {
-    const p = particles.find((pt) => !pt.active);
-    if (!p) return;
-    p.active = true;
-    p.x = x;
-    p.y = y;
-    p.vx = vx;
-    p.vy = vy;
-    p.radius = radius;
-    p.maxRadius = radius;
-    p.alpha = 1;
-    p.decay = decay;
-    p.color = color;
-    p.isSplash = isSplash;
-    p.swirl = swirl;
-    p.extra = extra;
+  function spawnNode(x, y, vx, vy, radius, color, decay, swirl = 0) {
+    const n = nodes.find((pt) => !pt.active);
+    if (!n) return;
+    n.active = true;
+    n.x = x;
+    n.y = y;
+    n.vx = vx;
+    n.vy = vy;
+    n.radius = radius;
+    n.maxRadius = radius;
+    n.alpha = 1;
+    n.decay = decay;
+    n.color = color;
+    n.swirl = swirl;
   }
 
-  function spawnRipple(x, y, maxRadius, color, style = 'solid') {
+  function spawnPulse(x, y, maxRadius, color) {
     const r = ripples.find((rp) => !rp.active);
     if (!r) return;
     r.active = true;
@@ -1988,37 +1848,33 @@ function initInteractiveCursorSystem() {
     r.y = y;
     r.radius = 4;
     r.maxRadius = maxRadius;
-    r.alpha = 0.7;
-    r.decay = 0.03;
+    r.alpha = 0.75;
+    r.decay = 0.028;
     r.color = color;
-    r.style = style;
   }
 
-  let colorIdx = 0;
-  function getNextColor() {
-    const col = HOLST_COLORS[colorIdx];
-    colorIdx = (colorIdx + 1) % HOLST_COLORS.length;
-    return col;
-  }
+  // Pointer position tracking
+  let mouseX = -100;
+  let mouseY = -100;
+  let prevMouseX = -100;
+  let prevMouseY = -100;
+  let isHoveringInteractive = false;
+  let isRunning = false;
+  let lastMoveTime = 0;
 
   function ensureAnimationRunning() {
     if (!isRunning) {
       isRunning = true;
-      requestAnimationFrame(renderLoop);
+      requestAnimationFrame(renderThreatMesh);
     }
   }
 
-  // Pointer Event Listeners
   document.addEventListener('mousemove', (e) => {
     lastMoveTime = performance.now();
 
     if (prevMouseX < 0) {
       prevMouseX = e.clientX;
       prevMouseY = e.clientY;
-      for (const j of mercuryJoints) {
-        j.x = e.clientX;
-        j.y = e.clientY;
-      }
     }
 
     mouseX = e.clientX;
@@ -2027,80 +1883,25 @@ function initInteractiveCursorSystem() {
     const dx = mouseX - prevMouseX;
     const dy = mouseY - prevMouseY;
     const dist = Math.hypot(dx, dy);
-    mouseSpeed = Math.min(dist, 45);
 
-    // Maintain history trail
-    historyPoints.unshift({ x: mouseX, y: mouseY, time: performance.now() });
-    if (historyPoints.length > MAX_HISTORY) historyPoints.pop();
+    // Spawn network nodes along motion path
+    if (dist > 6 || Math.random() < 0.35) {
+      const col = MESH_COLORS[Math.random() < 0.65 ? 0 : 1]; // Slate or Sage
+      const angle = Math.random() * Math.PI * 2;
+      const spd = 0.4 + Math.random() * 1.5;
+      const swirl = isHoveringInteractive ? (Math.random() - 0.5) * 0.12 : (Math.random() - 0.5) * 0.04;
+      const radius = isHoveringInteractive ? 3.5 + Math.random() * 2 : 2.5 + Math.random() * 2;
 
-    // Mode-specific mouse-move particle injection
-    if (currentMode === 'fluid') {
-      const step = Math.max(4, 18 - mouseSpeed * 0.3);
-      const count = Math.min(Math.floor(dist / step) + 1, 6);
-      for (let i = 0; i < count; i++) {
-        const t = count === 1 ? 1 : i / count;
-        const px = prevMouseX + dx * t;
-        const py = prevMouseY + dy * t;
-        const col = getNextColor();
-        const baseRadius = isHoveringInteractive ? 8 + Math.random() * 8 : 6 + Math.min(mouseSpeed * 0.35, 12) + (Math.random() - 0.5) * 4;
-        const pvx = dx * 0.15 + (Math.random() - 0.5) * 1.8;
-        const pvy = dy * 0.15 + (Math.random() - 0.5) * 1.8;
-        spawnParticle(px, py, pvx, pvy, Math.max(3, baseRadius), col, 0.026 + Math.random() * 0.018, false, (Math.random() - 0.5) * 0.08);
-      }
-    } else if (currentMode === 'nebula') {
-      // Cosmic Nebula: Stardust & astral galaxy particles
-      const count = Math.min(Math.floor(dist / 6) + 1, 4);
-      for (let i = 0; i < count; i++) {
-        const t = i / count;
-        const px = prevMouseX + dx * t + (Math.random() - 0.5) * 10;
-        const py = prevMouseY + dy * t + (Math.random() - 0.5) * 10;
-        const col = NEBULA_COLORS[Math.floor(Math.random() * NEBULA_COLORS.length)];
-        const pvx = (Math.random() - 0.5) * 1.4;
-        const pvy = (Math.random() - 0.5) * 1.4;
-        spawnParticle(px, py, pvx, pvy, 2.5 + Math.random() * 4.5, col, 0.022 + Math.random() * 0.015, false, (Math.random() - 0.5) * 0.06, 1);
-      }
-    } else if (currentMode === 'magma') {
-      // Volcanic Magma: Rising heat embers with upward thermal buoyancy
-      const count = Math.min(Math.floor(dist / 8) + 1, 3);
-      for (let i = 0; i < count; i++) {
-        const px = mouseX + (Math.random() - 0.5) * 12;
-        const py = mouseY + (Math.random() - 0.5) * 12;
-        const col = MAGMA_COLORS[Math.floor(Math.random() * MAGMA_COLORS.length)];
-        const pvx = (Math.random() - 0.5) * 1.6;
-        const pvy = -0.8 - Math.random() * 1.5; // Upward thermal drift
-        spawnParticle(px, py, pvx, pvy, 3 + Math.random() * 4, col, 0.025 + Math.random() * 0.02, false, 0, 2);
-      }
-    } else if (currentMode === 'neon') {
-      // Neon Synthwave: Braided cyan and pink laser trails
-      const perpX = dist > 0 ? -dy / dist : 0;
-      const perpY = dist > 0 ? dx / dist : 0;
-      const wave = Math.sin(performance.now() * 0.015) * 8;
-
-      spawnParticle(mouseX + perpX * wave, mouseY + perpY * wave, dx * 0.08, dy * 0.08, 4.5, NEON_COLORS[0], 0.035, false, 0, 3);
-      spawnParticle(mouseX - perpX * wave, mouseY - perpY * wave, dx * 0.08, dy * 0.08, 4.5, NEON_COLORS[1], 0.035, false, 0, 3);
-    } else if (currentMode === 'matrix') {
-      // Matrix Terminal: Phosphor green falling code rain
-      if (Math.random() < 0.65) {
-        const px = mouseX + (Math.random() - 0.5) * 16;
-        const py = mouseY + (Math.random() - 0.5) * 8;
-        const col = MATRIX_COLORS[Math.floor(Math.random() * MATRIX_COLORS.length)];
-        spawnParticle(px, py, (Math.random() - 0.5) * 0.6, 1.2 + Math.random() * 1.8, 4, col, 0.028, false, 0, 4);
-      }
-    } else if (currentMode === 'prism') {
-      // Prism Rainbow: Chromatic aberration spectral dispersion
-      const perpX = dist > 0 ? -dy / dist : 0;
-      const perpY = dist > 0 ? dx / dist : 0;
-      const offset = 7;
-      spawnParticle(mouseX + perpX * offset, mouseY + perpY * offset, dx * 0.1, dy * 0.1, 4, PRISM_COLORS[0], 0.035, false, 0, 5); // Cyan
-      spawnParticle(mouseX, mouseY, dx * 0.1, dy * 0.1, 4, PRISM_COLORS[2], 0.035, false, 0, 5); // Lime
-      spawnParticle(mouseX - perpX * offset, mouseY - perpY * offset, dx * 0.1, dy * 0.1, 4, PRISM_COLORS[1], 0.035, false, 0, 5); // Magenta
-    } else if (currentMode === 'mesh') {
-      if (dist > 8 || Math.random() < 0.35) {
-        const col = HOLST_COLORS[Math.random() < 0.6 ? 2 : 3];
-        const angle = Math.random() * Math.PI * 2;
-        const spd = 0.4 + Math.random() * 1.2;
-        spawnParticle(mouseX + (Math.random() - 0.5) * 14, mouseY + (Math.random() - 0.5) * 14, Math.cos(angle) * spd, Math.sin(angle) * spd, 3 + Math.random() * 2, col, 0.016 + Math.random() * 0.012);
-      }
+      spawnNode(
+        mouseX + (Math.random() - 0.5) * 16,
+        mouseY + (Math.random() - 0.5) * 16,
+        Math.cos(angle) * spd + dx * 0.08,
+        Math.sin(angle) * spd + dy * 0.08,
+        radius,
+        col,
+        0.016 + Math.random() * 0.014,
+        swirl
+      );
     }
 
     prevMouseX = mouseX;
@@ -2115,103 +1916,28 @@ function initInteractiveCursorSystem() {
     prevMouseY = -100;
   });
 
-  // MOUSE CLICK / SPLASH BURST HANDLER
+  // MOUSE CLICK: Neural Data Pulse & Radial Node Burst
   document.addEventListener('mousedown', (e) => {
     const cx = e.clientX;
     const cy = e.clientY;
 
-    if (currentMode === 'fluid') {
-      // Fluid Splash: 32 droplets radiating outward + dual shockwave ripples
-      spawnRipple(cx, cy, 48, HOLST_COLORS[0]);
-      spawnRipple(cx, cy, 80, HOLST_COLORS[2]);
-      for (let i = 0; i < 32; i++) {
-        const angle = (i / 32) * (Math.PI * 2) + (Math.random() - 0.5) * 0.45;
-        const vel = 2.2 + Math.random() * 8.5;
-        const col = HOLST_COLORS[Math.floor(Math.random() * HOLST_COLORS.length)];
-        spawnParticle(cx, cy, Math.cos(angle) * vel, Math.sin(angle) * vel, 3 + Math.random() * 8.5, col, 0.02 + Math.random() * 0.022, true, (Math.random() - 0.5) * 0.05);
-      }
-      spawnParticle(cx, cy, 0, 0, 16, HOLST_COLORS[0], 0.035, false, 0);
-    } else if (currentMode === 'nebula') {
-      // Cosmic Supernova: Starburst in Astral Violet & Gold
-      spawnRipple(cx, cy, 65, NEBULA_COLORS[1]); // Magenta ripple
-      spawnRipple(cx, cy, 95, NEBULA_COLORS[2]); // Gold ripple
-      for (let i = 0; i < 36; i++) {
-        const angle = (i / 36) * Math.PI * 2 + (Math.random() - 0.5) * 0.3;
-        const vel = 2.5 + Math.random() * 9.5;
-        const col = NEBULA_COLORS[Math.floor(Math.random() * NEBULA_COLORS.length)];
-        spawnParticle(cx, cy, Math.cos(angle) * vel, Math.sin(angle) * vel, 3 + Math.random() * 7, col, 0.018 + Math.random() * 0.018, true, 0, 1);
-      }
-    } else if (currentMode === 'magma') {
-      // Volcanic Magma Eruption: Molten lava droplets & thermal blast
-      spawnRipple(cx, cy, 55, MAGMA_COLORS[0]);
-      spawnRipple(cx, cy, 85, MAGMA_COLORS[2], 'dashed');
-      for (let i = 0; i < 36; i++) {
-        const angle = (i / 36) * Math.PI * 2 + (Math.random() - 0.5) * 0.4;
-        const vel = 3 + Math.random() * 9;
-        const col = MAGMA_COLORS[Math.floor(Math.random() * MAGMA_COLORS.length)];
-        spawnParticle(cx, cy, Math.cos(angle) * vel, Math.sin(angle) * vel, 4 + Math.random() * 7, col, 0.022 + Math.random() * 0.02, true, 0, 2);
-      }
-    } else if (currentMode === 'neon') {
-      // Neon Synthwave Nova: Dual cyan & hot pink laser burst
-      spawnRipple(cx, cy, 60, NEON_COLORS[0]);
-      spawnRipple(cx, cy, 90, NEON_COLORS[1]);
-      for (let i = 0; i < 32; i++) {
-        const angle = (i / 32) * Math.PI * 2;
-        const vel = 3.5 + Math.random() * 8.5;
-        const col = NEON_COLORS[i % 2 === 0 ? 0 : 1];
-        spawnParticle(cx, cy, Math.cos(angle) * vel, Math.sin(angle) * vel, 3 + Math.random() * 5, col, 0.03, false, 0, 3);
-      }
-    } else if (currentMode === 'matrix') {
-      // Matrix Terminal Glitch EMP: Square grid shockwave & bit sparks
-      spawnRipple(cx, cy, 75, MATRIX_COLORS[0], 'dashed');
-      for (let i = 0; i < 28; i++) {
-        const angle = (i / 28) * Math.PI * 2;
-        const vel = 3 + Math.random() * 7.5;
-        const col = MATRIX_COLORS[Math.floor(Math.random() * MATRIX_COLORS.length)];
-        spawnParticle(cx, cy, Math.cos(angle) * vel, Math.sin(angle) * vel, 3.5, col, 0.026, false, 0, 4);
-      }
-    } else if (currentMode === 'prism') {
-      // Prism Rainbow Shatter: Chromatic spectral dispersion
-      spawnRipple(cx, cy, 50, PRISM_COLORS[0]);
-      spawnRipple(cx, cy, 80, PRISM_COLORS[1]);
-      spawnRipple(cx, cy, 110, PRISM_COLORS[2], 'dashed');
-      for (let i = 0; i < 36; i++) {
-        const angle = (i / 36) * Math.PI * 2;
-        const vel = 3 + Math.random() * 9;
-        const col = PRISM_COLORS[i % PRISM_COLORS.length];
-        spawnParticle(cx, cy, Math.cos(angle) * vel, Math.sin(angle) * vel, 3 + Math.random() * 5, col, 0.024, true, 0, 5);
-      }
-    } else if (currentMode === 'radar') {
-      // Cyber Radar EMP Burst: Expanding tactical dashed sonar waves + 8 directional ticks
-      spawnRipple(cx, cy, 70, HOLST_COLORS[0], 'sonar');
-      spawnRipple(cx, cy, 110, HOLST_COLORS[2], 'dashed');
-      for (let i = 0; i < 8; i++) {
-        const angle = (i / 8) * Math.PI * 2;
-        spawnParticle(cx, cy, Math.cos(angle) * 7, Math.sin(angle) * 7, 3, HOLST_COLORS[3], 0.038, false, 0);
-      }
-    } else if (currentMode === 'mesh') {
-      // Neural Data Shockwave
-      spawnRipple(cx, cy, 90, HOLST_COLORS[3], 'mesh-pulse');
-      for (let i = 0; i < 18; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        const spd = 3 + Math.random() * 7;
-        spawnParticle(cx, cy, Math.cos(angle) * spd, Math.sin(angle) * spd, 3.5, HOLST_COLORS[Math.random() < 0.5 ? 0 : 2], 0.024);
-      }
-    } else if (currentMode === 'mercury') {
-      // Liquid Mercury Shatter & Snap
-      spawnRipple(cx, cy, 55, HOLST_COLORS[0]);
-      for (let i = 0; i < 22; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        const vel = 3 + Math.random() * 8;
-        spawnParticle(cx, cy, Math.cos(angle) * vel, Math.sin(angle) * vel, 4 + Math.random() * 5, HOLST_COLORS[0], 0.032, true);
-      }
+    // Concentric encrypted data shockwaves
+    spawnPulse(cx, cy, 65, MESH_COLORS[1]); // Sage pulse
+    spawnPulse(cx, cy, 105, MESH_COLORS[0]); // Slate pulse
+
+    // High-speed data packet sparks scattering into the mesh
+    for (let i = 0; i < 20; i++) {
+      const angle = (i / 20) * Math.PI * 2 + (Math.random() - 0.5) * 0.3;
+      const spd = 3 + Math.random() * 7.5;
+      const col = MESH_COLORS[Math.floor(Math.random() * MESH_COLORS.length)];
+      spawnNode(cx, cy, Math.cos(angle) * spd, Math.sin(angle) * spd, 3 + Math.random() * 2.5, col, 0.02 + Math.random() * 0.018);
     }
 
     ensureAnimationRunning();
   });
 
-  // Interactive Hover Watcher
-  const interactiveSelectors = 'a, button, input, textarea, select, [role="button"], .tab-btn, .example-chip, .cat-chip, .forum-cat-pill, .forum-thread-card, .cursor-switcher-btn';
+  // Interactive Hover Watcher (Perimeter orbit & brighter graph lines)
+  const interactiveSelectors = 'a, button, input, textarea, select, [role="button"], .tab-btn, .example-chip, .cat-chip, .forum-cat-pill, .forum-thread-card';
   document.addEventListener('mouseover', (e) => {
     if (e.target.closest(interactiveSelectors)) isHoveringInteractive = true;
   });
@@ -2219,19 +1945,18 @@ function initInteractiveCursorSystem() {
     if (e.target.closest(interactiveSelectors)) isHoveringInteractive = false;
   });
 
-  // =========================================================================
-  // Master 60fps Multi-Mode Render Loop
-  // =========================================================================
-  function renderLoop() {
+  // 60fps Threat Mesh Render Loop
+  function renderThreatMesh() {
     ctx.clearRect(0, 0, width, height);
 
     let activeCount = 0;
 
-    // 1. Render Expanding Ripples
+    // 1. Render Expanding Data Pulse Ripples
     for (let i = 0; i < MAX_RIPPLES; i++) {
       const r = ripples[i];
       if (!r.active) continue;
       activeCount++;
+
       r.radius += (r.maxRadius - r.radius) * 0.12 + 1.2;
       r.alpha -= r.decay;
 
@@ -2242,288 +1967,116 @@ function initInteractiveCursorSystem() {
 
       ctx.beginPath();
       ctx.arc(r.x, r.y, r.radius, 0, Math.PI * 2);
-      ctx.strokeStyle = `rgba(${r.color.r}, ${r.color.g}, ${r.color.b}, ${Math.max(0, r.alpha)})`;
-      ctx.lineWidth = Math.max(0.6, 2.5 * (r.alpha / 0.7));
-
-      if (r.style === 'dashed') {
-        ctx.setLineDash([4, 6]);
-      } else if (r.style === 'sonar') {
-        ctx.setLineDash([2, 4]);
-      } else {
-        ctx.setLineDash([]);
-      }
+      ctx.strokeStyle = `rgba(${r.color.r}, ${r.color.g}, ${r.color.b}, ${Math.max(0, r.alpha * 0.85)})`;
+      ctx.lineWidth = Math.max(0.7, 2.4 * (r.alpha / 0.75));
       ctx.stroke();
-      ctx.setLineDash([]);
     }
 
-    // 2. Mode-Specific Render Branches
-    if (currentMode === 'fluid') {
-      // Fluid Streams & Viscous Bridge
-      const streamParticles = particles.filter((p) => p.active && !p.isSplash);
-      for (let i = 0; i < streamParticles.length - 1; i++) {
-        const p1 = streamParticles[i];
-        const p2 = streamParticles[i + 1];
-        const dist = Math.hypot(p2.x - p1.x, p2.y - p1.y);
-        if (dist < 32 && dist > 1) {
+    // 2. Draw Dynamic Connective Mesh Topology Lines between Nodes
+    const activeNodes = nodes.filter((n) => n.active);
+    const lineThreshold = isHoveringInteractive ? 82 : 72;
+
+    for (let i = 0; i < activeNodes.length; i++) {
+      const n1 = activeNodes[i];
+      for (let j = i + 1; j < activeNodes.length; j++) {
+        const n2 = activeNodes[j];
+        const dist = Math.hypot(n2.x - n1.x, n2.y - n1.y);
+
+        if (dist < lineThreshold) {
+          const lineAlpha = (1 - dist / lineThreshold) * Math.min(n1.alpha, n2.alpha) * (isHoveringInteractive ? 0.75 : 0.55);
           ctx.beginPath();
-          ctx.moveTo(p1.x, p1.y);
-          ctx.lineTo(p2.x, p2.y);
-          ctx.strokeStyle = `rgba(${p1.color.r}, ${p1.color.g}, ${p1.color.b}, ${(p1.alpha + p2.alpha) * 0.28})`;
-          ctx.lineWidth = (p1.radius + p2.radius) * 0.6;
-          ctx.lineCap = 'round';
+          ctx.moveTo(n1.x, n1.y);
+          ctx.lineTo(n2.x, n2.y);
+          ctx.strokeStyle = `rgba(${n1.color.r}, ${n1.color.g}, ${n1.color.b}, ${lineAlpha})`;
+          ctx.lineWidth = isHoveringInteractive ? 1.2 : 0.9;
           ctx.stroke();
         }
       }
-    } else if (currentMode === 'radar') {
-      // Cyber Radar & Tactical Reticle
-      if (mouseX > 0 && mouseY > 0) {
-        radarAngle += 0.045;
-        const radarR = isHoveringInteractive ? 52 : 38;
+    }
 
-        // Concentric range circles
-        for (const ringR of [16, 28, radarR]) {
+    // Connect nearest nodes to current pointer tip
+    if (mouseX > 0 && mouseY > 0) {
+      for (let i = 0; i < activeNodes.length; i++) {
+        const n = activeNodes[i];
+        const distToPointer = Math.hypot(mouseX - n.x, mouseY - n.y);
+        if (distToPointer < 68) {
+          const tipAlpha = (1 - distToPointer / 68) * n.alpha * 0.6;
           ctx.beginPath();
-          ctx.arc(mouseX, mouseY, ringR, 0, Math.PI * 2);
-          ctx.strokeStyle = 'rgba(65, 90, 119, 0.22)';
+          ctx.moveTo(mouseX, mouseY);
+          ctx.lineTo(n.x, n.y);
+          ctx.strokeStyle = `rgba(65, 90, 119, ${tipAlpha})`;
           ctx.lineWidth = 1;
           ctx.stroke();
         }
-
-        // Radar Sweep Beam
-        ctx.save();
-        ctx.beginPath();
-        ctx.moveTo(mouseX, mouseY);
-        ctx.arc(mouseX, mouseY, radarR, radarAngle - 0.4, radarAngle);
-        ctx.closePath();
-        const sweepGrad = ctx.createRadialGradient(mouseX, mouseY, 0, mouseX, mouseY, radarR);
-        sweepGrad.addColorStop(0, 'rgba(65, 90, 119, 0.35)');
-        sweepGrad.addColorStop(1, 'rgba(27, 38, 59, 0.05)');
-        ctx.fillStyle = sweepGrad;
-        ctx.fill();
-        ctx.restore();
-
-        // Target Reticle on Interactive Hover: [ + ]
-        if (isHoveringInteractive) {
-          const b = 18;
-          const arm = 6;
-          ctx.strokeStyle = 'rgba(27, 38, 59, 0.85)';
-          ctx.lineWidth = 1.8;
-
-          // Top-left
-          ctx.beginPath();
-          ctx.moveTo(mouseX - b, mouseY - b + arm);
-          ctx.lineTo(mouseX - b, mouseY - b);
-          ctx.lineTo(mouseX - b + arm, mouseY - b);
-          ctx.stroke();
-
-          // Top-right
-          ctx.beginPath();
-          ctx.moveTo(mouseX + b - arm, mouseY - b);
-          ctx.lineTo(mouseX + b, mouseY - b);
-          ctx.lineTo(mouseX + b, mouseY - b + arm);
-          ctx.stroke();
-
-          // Bottom-left
-          ctx.beginPath();
-          ctx.moveTo(mouseX - b, mouseY + b - arm);
-          ctx.lineTo(mouseX - b, mouseY + b);
-          ctx.lineTo(mouseX - b + arm, mouseY + b);
-          ctx.stroke();
-
-          // Bottom-right
-          ctx.beginPath();
-          ctx.moveTo(mouseX + b - arm, mouseY + b);
-          ctx.lineTo(mouseX + b, mouseY + b);
-          ctx.lineTo(mouseX + b, mouseY + b - arm);
-          ctx.stroke();
-        }
-      }
-    } else if (currentMode === 'mesh') {
-      // Threat Network Mesh: dynamic connective lines
-      const activeNodes = particles.filter((p) => p.active);
-      for (let i = 0; i < activeNodes.length; i++) {
-        for (let j = i + 1; j < activeNodes.length; j++) {
-          const n1 = activeNodes[i];
-          const n2 = activeNodes[j];
-          const dist = Math.hypot(n2.x - n1.x, n2.y - n1.y);
-          if (dist < 65) {
-            const lineAlpha = (1 - dist / 65) * Math.min(n1.alpha, n2.alpha) * 0.5;
-            ctx.beginPath();
-            ctx.moveTo(n1.x, n1.y);
-            ctx.lineTo(n2.x, n2.y);
-            ctx.strokeStyle = `rgba(65, 90, 119, ${lineAlpha})`;
-            ctx.lineWidth = 1;
-            ctx.stroke();
-          }
-        }
-      }
-    } else if (currentMode === 'mercury') {
-      // Liquid Ferrofluid Springs
-      if (mouseX > 0 && mouseY > 0) {
-        mercuryJoints[0].x += (mouseX - mercuryJoints[0].x) * 0.45;
-        mercuryJoints[0].y += (mouseY - mercuryJoints[0].y) * 0.45;
-
-        for (let i = 1; i < NUM_MERCURY_JOINTS; i++) {
-          const prev = mercuryJoints[i - 1];
-          const cur = mercuryJoints[i];
-          cur.vx = (cur.vx + (prev.x - cur.x) * 0.32) * 0.72;
-          cur.vy = (cur.vy + (prev.y - cur.y) * 0.32) * 0.72;
-          cur.x += cur.vx;
-          cur.y += cur.vy;
-
-          // Connect consecutive joints with smooth viscous hull
-          ctx.beginPath();
-          ctx.moveTo(prev.x, prev.y);
-          ctx.lineTo(cur.x, cur.y);
-          ctx.strokeStyle = 'rgba(27, 38, 59, 0.75)';
-          ctx.lineWidth = (prev.radius + cur.radius) * 1.1;
-          ctx.lineCap = 'round';
-          ctx.stroke();
-        }
-
-        // Draw glossy metallic nodes
-        for (const j of mercuryJoints) {
-          const grad = ctx.createRadialGradient(j.x - j.radius * 0.3, j.y - j.radius * 0.3, 0, j.x, j.y, j.radius);
-          grad.addColorStop(0, '#415A77');
-          grad.addColorStop(0.7, '#1B263B');
-          grad.addColorStop(1, '#0D1B2A');
-          ctx.beginPath();
-          ctx.arc(j.x, j.y, j.radius, 0, Math.PI * 2);
-          ctx.fillStyle = grad;
-          ctx.fill();
-        }
-      }
-    } else if (currentMode === 'arc') {
-      // Electric Plasma Lightning Arcs
-      if (historyPoints.length >= 2) {
-        ctx.beginPath();
-        ctx.moveTo(historyPoints[0].x, historyPoints[0].y);
-        for (let i = 1; i < historyPoints.length; i++) {
-          const p = historyPoints[i];
-          const jitterX = (Math.random() - 0.5) * 8;
-          const jitterY = (Math.random() - 0.5) * 8;
-          ctx.lineTo(p.x + jitterX, p.y + jitterY);
-        }
-        ctx.strokeStyle = 'rgba(119, 141, 122, 0.65)'; // Sage plasma
-        ctx.lineWidth = 1.6;
-        ctx.stroke();
-
-        ctx.strokeStyle = 'rgba(27, 38, 59, 0.4)';
-        ctx.lineWidth = 3.5;
-        ctx.stroke();
       }
     }
 
-    // 3. Update & Render Active Particles (All Modes)
-    for (let i = 0; i < MAX_PARTICLES; i++) {
-      const p = particles[i];
-      if (!p.active) continue;
+    // 3. Update & Render Active Threat Intelligence Nodes
+    for (let i = 0; i < MAX_NODES; i++) {
+      const n = nodes[i];
+      if (!n.active) continue;
       activeCount++;
 
-      p.x += p.vx;
-      p.y += p.vy;
-      p.vx *= 0.94;
-      p.vy *= 0.94;
+      // Viscous damping
+      n.x += n.vx;
+      n.y += n.vy;
+      n.vx *= 0.94;
+      n.vy *= 0.94;
 
-      if (p.swirl !== 0) {
-        p.x += -p.vy * p.swirl;
-        p.y += p.vx * p.swirl;
-      }
-      if (p.isSplash) {
-        p.vy += 0.08;
-      } else if (p.extra === 2) {
-        // Magma upward thermal draft
-        p.vy -= 0.06;
+      // Swirling vorticity
+      if (n.swirl !== 0) {
+        n.x += -n.vy * n.swirl;
+        n.y += n.vx * n.swirl;
       }
 
-      p.alpha -= p.decay;
-      p.radius = p.maxRadius * (p.alpha > 0 ? Math.pow(p.alpha, 0.65) : 0);
+      n.alpha -= n.decay;
+      n.radius = n.maxRadius * (n.alpha > 0 ? Math.pow(n.alpha, 0.65) : 0);
 
-      if (p.alpha <= 0.01 || p.radius <= 0.6) {
-        p.active = false;
+      if (n.alpha <= 0.01 || n.radius <= 0.5) {
+        n.active = false;
         continue;
       }
 
-      // Mode-specific rendering enhancements
-      if (p.extra === 4 && p.alpha > 0.3) {
-        // Matrix: render digital code glyphs
-        ctx.font = '10px ui-monospace, Menlo, monospace';
-        ctx.fillStyle = `rgba(${p.color.r}, ${p.color.g}, ${p.color.b}, ${p.alpha * 0.9})`;
-        const glyph = (i % 5 === 0) ? '1' : (i % 5 === 1) ? '0' : (i % 5 === 2) ? 'A' : (i % 5 === 3) ? 'F' : '#';
-        ctx.fillText(glyph, p.x - 3, p.y + 3);
-      } else {
-        const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, Math.max(1, p.radius));
-        grad.addColorStop(0, `rgba(${p.color.r}, ${p.color.g}, ${p.color.b}, ${p.alpha * 0.9})`);
-        grad.addColorStop(0.65, `rgba(${p.color.r}, ${p.color.g}, ${p.color.b}, ${p.alpha * 0.5})`);
-        grad.addColorStop(1, `rgba(${p.color.r}, ${p.color.g}, ${p.color.b}, 0)`);
+      // Render glowing node bead
+      const grad = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, Math.max(1, n.radius));
+      grad.addColorStop(0, `rgba(${n.color.r}, ${n.color.g}, ${n.color.b}, ${n.alpha * 0.95})`);
+      grad.addColorStop(0.6, `rgba(${n.color.r}, ${n.color.g}, ${n.color.b}, ${n.alpha * 0.45})`);
+      grad.addColorStop(1, `rgba(${n.color.r}, ${n.color.g}, ${n.color.b}, 0)`);
 
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, Math.max(0.5, p.radius), 0, Math.PI * 2);
-        ctx.fillStyle = grad;
-        ctx.fill();
-
-        // Nebula 4-point twinkle flare
-        if (p.extra === 1 && p.alpha > 0.45 && i % 3 === 0) {
-          const flare = p.radius * 1.6;
-          ctx.beginPath();
-          ctx.moveTo(p.x - flare, p.y);
-          ctx.lineTo(p.x + flare, p.y);
-          ctx.moveTo(p.x, p.y - flare);
-          ctx.lineTo(p.x, p.y + flare);
-          ctx.strokeStyle = `rgba(251, 191, 36, ${p.alpha * 0.8})`;
-          ctx.lineWidth = 1;
-          ctx.stroke();
-        }
-      }
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, Math.max(0.5, n.radius), 0, Math.PI * 2);
+      ctx.fillStyle = grad;
+      ctx.fill();
     }
 
     // 4. Central Precision Tip Pointer
-    if (mouseX > 0 && mouseY > 0 && currentMode !== 'mercury') {
-      const pointerRadius = isHoveringInteractive ? 5.5 : 3.5;
+    if (mouseX > 0 && mouseY > 0) {
+      const pointerRadius = isHoveringInteractive ? 5 : 3.5;
 
-      let coreColor = 'rgba(27, 38, 59, 0.9)';
-      let auraColor = 'rgba(65, 90, 119, 0.4)';
-
-      if (currentMode === 'nebula') {
-        coreColor = 'rgba(121, 40, 202, 0.95)';
-        auraColor = 'rgba(251, 191, 36, 0.55)';
-      } else if (currentMode === 'magma') {
-        coreColor = 'rgba(220, 38, 38, 0.95)';
-        auraColor = 'rgba(250, 204, 21, 0.6)';
-      } else if (currentMode === 'neon') {
-        coreColor = 'rgba(0, 240, 255, 0.95)';
-        auraColor = 'rgba(255, 0, 127, 0.6)';
-      } else if (currentMode === 'matrix') {
-        coreColor = 'rgba(34, 197, 94, 0.95)';
-        auraColor = 'rgba(132, 204, 22, 0.6)';
-      } else if (currentMode === 'prism') {
-        coreColor = 'rgba(6, 182, 212, 0.95)';
-        auraColor = 'rgba(236, 72, 153, 0.6)';
-      }
-
+      // Precision core dot in Oxford Blue (#1B263B)
       ctx.beginPath();
       ctx.arc(mouseX, mouseY, pointerRadius, 0, Math.PI * 2);
-      ctx.fillStyle = coreColor;
+      ctx.fillStyle = 'rgba(27, 38, 59, 0.95)';
       ctx.fill();
 
+      // Soft Sage/Slate outer radar aura
       ctx.beginPath();
-      ctx.arc(mouseX, mouseY, pointerRadius + 3, 0, Math.PI * 2);
-      ctx.strokeStyle = auraColor;
-      ctx.lineWidth = 1.4;
+      ctx.arc(mouseX, mouseY, pointerRadius + 3.5, 0, Math.PI * 2);
+      ctx.strokeStyle = isHoveringInteractive ? 'rgba(119, 141, 122, 0.75)' : 'rgba(65, 90, 119, 0.4)';
+      ctx.lineWidth = 1.3;
       ctx.stroke();
     }
 
     // 5. Throttling for 0% Idle CPU
-    const needsContinuousFrame = currentMode === 'radar' || currentMode === 'mercury' || currentMode === 'arc';
-    if (activeCount === 0 && !needsContinuousFrame && performance.now() - lastMoveTime > 120) {
+    if (activeCount === 0 && performance.now() - lastMoveTime > 120) {
       isRunning = false;
       return;
     }
 
-    requestAnimationFrame(renderLoop);
+    requestAnimationFrame(renderThreatMesh);
   }
 
   ensureAnimationRunning();
 }
 
-initInteractiveCursorSystem();
+initThreatMeshCursor();

@@ -1650,7 +1650,7 @@ textarea:focus { border-color: rgba(65, 90, 119, 0.5); box-shadow: var(--nm-inse
 }
 
 /* ==========================================================================
-   Fluid Simulation & Mouse Splash Cursor Canvas
+   Threat Network Mesh Dynamic Cursor Canvas
    ========================================================================== */
 .fluid-cursor-canvas {
   position: fixed;
@@ -1660,127 +1660,11 @@ textarea:focus { border-color: rgba(65, 90, 119, 0.5); box-shadow: var(--nm-inse
   height: 100vh;
   pointer-events: none !important;
   z-index: 99999;
-  mix-blend-mode: multiply;
   opacity: 1;
 }
 
-/* Floating Cursor Switcher Widget */
-.cursor-switcher-widget {
-  position: fixed;
-  bottom: 22px;
-  right: 22px;
-  z-index: 10001;
-}
-.cursor-switcher-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  border-radius: 999px;
-  background: var(--paper);
-  border: 1px solid rgba(212, 196, 168, 0.7);
-  box-shadow: var(--nm-raised);
-  color: var(--ink);
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all .2s cubic-bezier(0.16, 1, 0.3, 1);
-  backdrop-filter: blur(8px);
-}
-.cursor-switcher-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--nm-raised-hover);
-  border-color: #415A77;
-}
-.cursor-switcher-icon {
-  font-size: 14px;
-}
-.cursor-switcher-chevron {
-  font-size: 11px;
-  opacity: 0.6;
-  transition: transform .2s ease;
-}
-.cursor-switcher-btn[aria-expanded="true"] .cursor-switcher-chevron {
-  transform: rotate(180deg);
-}
-.cursor-switcher-menu {
-  position: absolute;
-  bottom: 48px;
-  right: 0;
-  width: 290px;
-  max-height: 480px;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  scrollbar-width: thin;
-  padding: 8px;
-  border-radius: 16px;
-  background: var(--paper);
-  border: 1px solid rgba(212, 196, 168, 0.75);
-  box-shadow: var(--nm-raised-hover);
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  animation: cursorMenuIn .18s cubic-bezier(0.16, 1, 0.3, 1);
-}
-@keyframes cursorMenuIn {
-  from { opacity: 0; transform: translateY(8px) scale(0.96); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
-}
-.cursor-menu-title {
-  padding: 6px 10px;
-  font-size: 10px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: .06em;
-  color: var(--quiet);
-  border-bottom: 1px solid rgba(212, 196, 168, 0.5);
-  margin-bottom: 4px;
-}
-.cursor-opt-btn {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 10px;
-  border-radius: 10px;
-  border: 1px solid transparent;
-  background: transparent;
-  color: var(--ink);
-  text-align: left;
-  cursor: pointer;
-  transition: all .14s ease;
-}
-.cursor-opt-btn:hover {
-  background: #EDE8D4;
-  border-color: rgba(212, 196, 168, 0.6);
-}
-.cursor-opt-btn.active {
-  background: linear-gradient(135deg, #1B263B 0%, #0D1B2A 100%);
-  color: #F4F1DE;
-  box-shadow: var(--nm-raised-sm);
-  border-color: #0D1B2A;
-}
-.cursor-opt-btn.active small {
-  color: #D4C4A8;
-}
-.cursor-opt-emoji {
-  font-size: 18px;
-}
-.cursor-opt-info {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.25;
-}
-.cursor-opt-info strong {
-  font-size: 12px;
-}
-.cursor-opt-info small {
-  font-size: 10px;
-  color: var(--quiet);
-  margin-top: 2px;
-}
-
 @media (pointer: coarse), (prefers-reduced-motion: reduce) {
-  .fluid-cursor-canvas, .cursor-switcher-widget {
+  .fluid-cursor-canvas {
     display: none !important;
   }
 }
