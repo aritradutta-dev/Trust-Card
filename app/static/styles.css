@@ -2655,7 +2655,7 @@ textarea:focus { border-color: rgba(65, 90, 119, 0.5); box-shadow: var(--nm-inse
   inset: 0;
   z-index: 100000;
   /* Frosted translucent backdrop that blends seamlessly into the webpage without any solid off-white box */
-  background: rgba(244, 241, 222, 0.88);
+  background: rgba(244, 241, 222, 0.90);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   display: flex;
@@ -2664,7 +2664,11 @@ textarea:focus { border-color: rgba(65, 90, 119, 0.5); box-shadow: var(--nm-inse
   user-select: none;
   opacity: 1;
   visibility: visible;
-  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.6s ease;
+  transition: opacity 0.55s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.55s ease;
+}
+
+.minimal-boot-overlay[hidden] {
+  display: none !important;
 }
 
 .minimal-boot-overlay.boot-completed {

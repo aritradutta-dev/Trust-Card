@@ -2315,25 +2315,5 @@ function initBootSequence() {
   startBoot(false);
 }
 
-  // Any click or keypress dismisses immediately
-  overlay.addEventListener('click', dismissBoot);
-  window.addEventListener('keydown', (e) => {
-    if (isBooting && (e.key === 'Escape' || e.key === ' ' || e.key === 'Enter')) {
-      e.preventDefault();
-      dismissBoot();
-    }
-  });
-
-  rebootBtn?.addEventListener('click', () => startBoot(true));
-  brandEmblem?.addEventListener('click', (e) => {
-    if (e.altKey) {
-      e.preventDefault();
-      startBoot(true);
-    }
-  });
-
-  startBoot(false);
-}
-
 initBootSequence();
 
