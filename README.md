@@ -6,12 +6,6 @@ Its core differentiator is the **Context-Aware Trust Card**: it combines client-
 
 ---
 
-> [!CAUTION]
-> **Maintainer Security Notice: Rotate All Credentials Immediately**  
-> A pre-seeded `.env` file was present in the initial hackathon archive. Even though `.env` is ignored by `.gitignore` and `.dockerignore` and has not been committed, **every secret inside it must be rotated immediately before production or public use**, including `ADMIN_PASSWORD`, `SCANNER_TOKEN`, `PHISHTANK_API_KEY`, and `SHARING_KEY`.
-
----
-
 ## Quick Start
 
 ### Option A: Local Development with `uv`
