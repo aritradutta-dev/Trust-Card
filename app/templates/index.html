@@ -1,24 +1,36 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0D1B2A">
   <title>Trust Card · Intelligent Link Trust & Web Security Platform</title>
-  <meta name="description" content="Trust Card is a privacy-first web security and phishing detection platform combining message cues, local threat intelligence, brand lookalike detection, and consent-gated TLS assessment.">
+  <meta name="description"
+    content="Trust Card is a privacy-first web security and phishing detection platform combining message cues, local threat intelligence, brand lookalike detection, and consent-gated TLS assessment.">
   <meta property="og:title" content="Trust Card · Intelligent Web Security Platform">
-  <meta property="og:description" content="Inspect suspicious links with client-side privacy, deep certificate inspection, CT monitoring, and collaborative threat intelligence.">
+  <meta property="og:description"
+    content="Inspect suspicious links with client-side privacy, deep certificate inspection, CT monitoring, and collaborative threat intelligence.">
   <meta property="og:type" content="website">
   <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="64x64" href="/static/favicon-64x64.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
   <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
   <link rel="stylesheet" href="/static/styles.css">
+  <script>
+    try {
+      if (sessionStorage.getItem('tc_boot_completed') === 'true' && !window.location.search.includes('boot')) {
+        document.documentElement.classList.add('tc-skip-boot');
+      }
+    } catch (e) {}
+  </script>
   <script type="module" src="/static/app.mjs"></script>
 </head>
+
 <body>
   <!-- Trust Card Minimal Luxury Boot Screen -->
   <div id="system-boot-overlay" class="luxury-boot-overlay" role="status" aria-label="Trust Card Security Enclave">
+    <button type="button" id="boot-skip-btn" class="boot-skip-btn" aria-label="Skip initialization">Skip ✕</button>
     <div class="boot-ambient-glow" aria-hidden="true"></div>
     <div class="boot-ripple-ring r1" aria-hidden="true"></div>
     <div class="boot-ripple-ring r2" aria-hidden="true"></div>
@@ -38,7 +50,10 @@
     </div>
   </div>
 
-  <noscript><p class="noscript-note">Enable JavaScript to extract links and message cues in this browser. Your message is not sent to the app.</p></noscript>
+  <noscript>
+    <p class="noscript-note">Enable JavaScript to extract links and message cues in this browser. Your message is not
+      sent to the app.</p>
+  </noscript>
 
   <header class="topbar">
     <a class="brand" href="/" aria-label="Trust Card Home" title="Trust Card - Click to Replay Boot Sequence">
@@ -57,7 +72,8 @@
       <div id="auth-user-container">
         <button id="auth-trigger-btn" class="auth-trigger-btn" type="button">Sign In / Register</button>
       </div>
-      <button id="mobile-menu-btn" class="mobile-menu-btn" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="mobile-nav">
+      <button id="mobile-menu-btn" class="mobile-menu-btn" aria-label="Toggle navigation menu" aria-expanded="false"
+        aria-controls="mobile-nav">
         <span class="menu-icon" aria-hidden="true">☰</span>
       </button>
     </div>
@@ -84,32 +100,49 @@
     <!-- Platform Navigation Tabs -->
     <nav class="platform-tabs-nav" aria-label="Platform Views" role="tablist">
       <div class="tab-slider-pill" aria-hidden="true"></div>
-      <button class="tab-btn active" type="button" role="tab" aria-selected="true" data-view="view-checker"><span class="tab-icon">🔍</span> <span class="tab-label">Check a Link</span></button>
-      <button class="tab-btn" type="button" role="tab" aria-selected="false" data-view="view-dashboard"><span class="tab-icon">📊</span> <span class="tab-label">Threat Dashboard</span> <span class="tab-badge pulse-badge"><span class="badge-dot" aria-hidden="true"></span>Live</span></button>
-      <button class="tab-btn" type="button" role="tab" aria-selected="false" data-view="view-history"><span class="tab-icon">🕒</span> <span class="tab-label">Scan History</span></button>
-      <button class="tab-btn" type="button" role="tab" aria-selected="false" data-view="view-ct"><span class="tab-icon">🔒</span> <span class="tab-label">Cert & CT Monitor</span></button>
-      <button class="tab-btn" type="button" role="tab" aria-selected="false" data-view="view-intel"><span class="tab-icon">🛡️</span> <span class="tab-label">Collaborative Intel</span> <span class="tab-badge feed-badge">Feed</span></button>
-      <button class="tab-btn" type="button" role="tab" aria-selected="false" data-view="view-forum"><span class="tab-icon">💬</span> <span class="tab-label">Security Forum</span> <span class="tab-badge forum-badge">Hot</span></button>
+      <button class="tab-btn active" type="button" role="tab" aria-selected="true" data-view="view-checker"><span
+          class="tab-icon">🔍</span> <span class="tab-label">Check a Link</span></button>
+      <button class="tab-btn" type="button" role="tab" aria-selected="false" data-view="view-dashboard"><span
+          class="tab-icon">📊</span> <span class="tab-label">Threat Dashboard</span> <span
+          class="tab-badge pulse-badge"><span class="badge-dot" aria-hidden="true"></span>Live</span></button>
+      <button class="tab-btn" type="button" role="tab" aria-selected="false" data-view="view-history"><span
+          class="tab-icon">🕒</span> <span class="tab-label">Scan History</span></button>
+      <button class="tab-btn" type="button" role="tab" aria-selected="false" data-view="view-ct"><span
+          class="tab-icon">🔒</span> <span class="tab-label">Cert & CT Monitor</span></button>
+      <button class="tab-btn" type="button" role="tab" aria-selected="false" data-view="view-intel"><span
+          class="tab-icon">🛡️</span> <span class="tab-label">Collaborative Intel</span> <span
+          class="tab-badge feed-badge">Feed</span></button>
+      <button class="tab-btn" type="button" role="tab" aria-selected="false" data-view="view-forum"><span
+          class="tab-icon">💬</span> <span class="tab-label">Security Forum</span> <span
+          class="tab-badge forum-badge">Hot</span></button>
     </nav>
 
     <!-- VIEW 1: Link Checker (Main View) -->
     <section id="view-checker" class="view-section">
       <section class="hero">
-        <div class="eyebrow"><span class="eyebrow-dot" aria-hidden="true"></span> MESSAGE CONTEXT · LINK EVIDENCE · THREAT AUDIT</div>
+        <div class="eyebrow"><span class="eyebrow-dot" aria-hidden="true"></span> MESSAGE CONTEXT · LINK EVIDENCE ·
+          THREAT AUDIT</div>
         <h1>Check a link before you click.</h1>
         <p>Paste a link or the message it came with. Trust Card explains the signals it finds and a safer next step.</p>
         <div class="hero-actions-strip">
-          <button id="hero-how-btn" class="hero-guide-pill" type="button"><span aria-hidden="true">💡</span> How Trust Card Works</button>
-          <button id="hero-feed-trigger" class="hero-feed-pill" type="button" title="View & update threat feeds in Collaborative Intel"><span class="status-dot green" aria-hidden="true"></span> <span>Threat Feeds Active</span> <span class="pill-arrow" aria-hidden="true">→</span></button>
+          <button id="hero-how-btn" class="hero-guide-pill" type="button"><span aria-hidden="true">💡</span> How Trust
+            Card Works</button>
+          <button id="hero-feed-trigger" class="hero-feed-pill" type="button"
+            title="View & update threat feeds in Collaborative Intel"><span class="status-dot green"
+              aria-hidden="true"></span> <span>Threat Feeds Active</span> <span class="pill-arrow"
+              aria-hidden="true">→</span></button>
         </div>
       </section>
 
       <!-- Scan Progress Indicator -->
       <div id="scan-progress" class="scan-progress" hidden aria-label="Analysis Stages">
         <div class="progress-step" data-step="1"><span class="step-circle">1</span><span>URL & Structure</span></div>
-        <div class="progress-step" data-step="2"><span class="step-circle">2</span><span>Threat Intelligence</span></div>
-        <div class="progress-step" data-step="3"><span class="step-circle">3</span><span>TLS & Key Generation</span></div>
-        <div class="progress-step" data-step="4"><span class="step-circle">4</span><span>Web Security & Forms</span></div>
+        <div class="progress-step" data-step="2"><span class="step-circle">2</span><span>Threat Intelligence</span>
+        </div>
+        <div class="progress-step" data-step="3"><span class="step-circle">3</span><span>TLS & Key Generation</span>
+        </div>
+        <div class="progress-step" data-step="4"><span class="step-circle">4</span><span>Web Security & Forms</span>
+        </div>
         <div class="progress-step" data-step="5"><span class="step-circle">5</span><span>AI Synthesis</span></div>
       </div>
 
@@ -123,18 +156,25 @@
         </div>
 
         <label class="field-label" for="message-input">Paste a link or the message it came with</label>
-        <textarea id="message-input" rows="5" maxlength="12000" aria-label="Paste a link or the message it came with" placeholder="e.g. Urgent: Your account has been suspended. Please verify your payment details immediately at https://sbi-login.account-verify.in/kyc"></textarea>
-        <div class="input-meta"><span>Your message stays in this browser. Up to five links can be checked.</span><span id="char-count">0 / 12,000</span></div>
+        <textarea id="message-input" rows="5" maxlength="12000" aria-label="Paste a link or the message it came with"
+          placeholder="e.g. Urgent: Your account has been suspended. Please verify your payment details immediately at https://sbi-login.account-verify.in/kyc"></textarea>
+        <div class="input-meta"><span>Your message stays in this browser. Up to five links can be checked.</span><span
+            id="char-count">0 / 12,000</span></div>
 
         <div id="context-preview" class="context-preview" hidden aria-live="polite">
-          <div class="preview-line"><span class="preview-label">Detected links</span><span id="detected-count" class="preview-value"></span></div>
-          <div class="preview-line"><span class="preview-label">Message cues</span><span id="detected-cues" class="cue-list"></span></div>
+          <div class="preview-line"><span class="preview-label">Detected links</span><span id="detected-count"
+              class="preview-value"></span></div>
+          <div class="preview-line"><span class="preview-label">Message cues</span><span id="detected-cues"
+              class="cue-list"></span></div>
         </div>
         <p id="input-error" class="inline-error" role="alert" hidden></p>
 
         <div id="link-picker" class="link-picker" hidden>
           <div class="picker-heading">
-            <div><p class="step-label">STEP 1 · LINK SELECTION</p><h3 class="picker-title">Choose a link to check</h3></div>
+            <div>
+              <p class="step-label">STEP 1 · LINK SELECTION</p>
+              <h3 class="picker-title">Choose a link to check</h3>
+            </div>
             <span id="picker-count" class="count-chip"></span>
           </div>
           <div class="selection-layout">
@@ -142,34 +182,44 @@
             <aside class="selection-context">
               <span class="mini-icon" aria-hidden="true">i</span>
               <h4>Message context</h4>
-              <p id="context-summary">Detected cues are shown as evidence. They do not determine the verdict by themselves.</p>
+              <p id="context-summary">Detected cues are shown as evidence. They do not determine the verdict by
+                themselves.</p>
               <div id="selection-cues" class="cue-list"></div>
             </aside>
           </div>
-          <button id="check-local" class="button button-primary" type="button">Check selected link locally <span aria-hidden="true">→</span></button>
+          <button id="check-local" class="button button-primary" type="button">Check selected link locally <span
+              aria-hidden="true">→</span></button>
         </div>
 
         <div class="example-links-row">
           <span class="example-label">Try an example:</span>
           <div class="example-chips">
-            <button type="button" class="example-chip" data-example-url="https://expired.badssl.com/">expired.badssl.com</button>
-            <button type="button" class="example-chip" data-example-url="https://self-signed.badssl.com/">self-signed.badssl.com</button>
-            <button type="button" class="example-chip" data-example-url="https://wrong.host.badssl.com/">wrong.host.badssl.com</button>
-            <button type="button" class="example-chip" data-example-url="https://untrusted-root.badssl.com/">untrusted-root.badssl.com</button>
+            <button type="button" class="example-chip"
+              data-example-url="https://expired.badssl.com/">expired.badssl.com</button>
+            <button type="button" class="example-chip"
+              data-example-url="https://self-signed.badssl.com/">self-signed.badssl.com</button>
+            <button type="button" class="example-chip"
+              data-example-url="https://wrong.host.badssl.com/">wrong.host.badssl.com</button>
+            <button type="button" class="example-chip"
+              data-example-url="https://untrusted-root.badssl.com/">untrusted-root.badssl.com</button>
             <button type="button" class="example-chip" data-example-url="https://example.com/">example.com</button>
-            <button type="button" class="example-chip demo-threat-chip" data-example-url="http://demo-phish.trustcard.test/login">demo-phish (Demo threat)</button>
+            <button type="button" class="example-chip demo-threat-chip"
+              data-example-url="http://demo-phish.trustcard.test/login">demo-phish (Demo threat)</button>
           </div>
         </div>
 
         <div class="input-actions">
           <button id="clear-input" class="button button-quiet" type="button">Clear</button>
           <button id="try-sample" class="button button-quiet sample-button" type="button">Try a sample message</button>
-          <button id="find-links" class="button button-primary" type="button">Check this link <span aria-hidden="true">→</span></button>
+          <button id="find-links" class="button button-primary" type="button">Check this link <span
+              aria-hidden="true">→</span></button>
         </div>
 
         <div class="privacy-strip">
           <span class="privacy-icon" aria-hidden="true">✓</span>
-          <div><strong>Message text stays in this browser</strong><p>Only the selected link and detected cue names go to this local app.</p></div>
+          <div><strong>Message text stays in this browser</strong>
+            <p>Only the selected link and detected cue names go to this local app.</p>
+          </div>
           <span class="privacy-caption"><span class="status-dot" aria-hidden="true"></span> No message upload</span>
         </div>
       </section>
@@ -180,18 +230,44 @@
     <!-- VIEW 2: Threat Intelligence Dashboard -->
     <section id="view-dashboard" class="view-section" hidden>
       <section class="hero">
-        <div class="eyebrow"><span class="eyebrow-dot" aria-hidden="true"></span> Threat Analytics & Live Monitoring</div>
+        <div class="eyebrow"><span class="eyebrow-dot" aria-hidden="true"></span> Threat Analytics & Live Monitoring
+        </div>
         <h1>Threat Intelligence Dashboard</h1>
-        <p>Live metrics and distribution across scanned websites, community threat reports, and certificate incidents.</p>
+        <p>Live metrics and distribution across scanned websites, community threat reports, and certificate incidents.
+        </p>
       </section>
 
       <div class="dashboard-grid">
-        <div class="kpi-card"><div class="kpi-icon">🌐</div><div id="kpi-total-scans" class="kpi-num">0</div><div class="kpi-label">Websites Analyzed</div></div>
-        <div class="kpi-card"><div class="kpi-icon">🚨</div><div id="kpi-total-malicious" class="kpi-num" style="color:#dc2626;">0</div><div class="kpi-label">Malicious Detected</div></div>
-        <div class="kpi-card"><div class="kpi-icon">🎣</div><div id="kpi-total-phishing" class="kpi-num" style="color:#e11d48;">0</div><div class="kpi-label">Phishing URLs</div></div>
-        <div class="kpi-card"><div class="kpi-icon">👥</div><div id="kpi-total-reports" class="kpi-num">0</div><div class="kpi-label">Community Reports</div></div>
-        <div class="kpi-card"><div class="kpi-icon">🛡️</div><div id="kpi-verified-threats" class="kpi-num" style="color:#059669;">0</div><div class="kpi-label">Verified Threats</div></div>
-        <div class="kpi-card"><div class="kpi-icon">⚡</div><div id="kpi-threats-24h" class="kpi-num" style="color:#d97706;">0</div><div class="kpi-label">Threats in 24h</div></div>
+        <div class="kpi-card">
+          <div class="kpi-icon">🌐</div>
+          <div id="kpi-total-scans" class="kpi-num">0</div>
+          <div class="kpi-label">Websites Analyzed</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon">🚨</div>
+          <div id="kpi-total-malicious" class="kpi-num" style="color:#dc2626;">0</div>
+          <div class="kpi-label">Malicious Detected</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon">🎣</div>
+          <div id="kpi-total-phishing" class="kpi-num" style="color:#e11d48;">0</div>
+          <div class="kpi-label">Phishing URLs</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon">👥</div>
+          <div id="kpi-total-reports" class="kpi-num">0</div>
+          <div class="kpi-label">Community Reports</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon">🛡️</div>
+          <div id="kpi-verified-threats" class="kpi-num" style="color:#059669;">0</div>
+          <div class="kpi-label">Verified Threats</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon">⚡</div>
+          <div id="kpi-threats-24h" class="kpi-num" style="color:#d97706;">0</div>
+          <div class="kpi-label">Threats in 24h</div>
+        </div>
       </div>
 
       <div class="charts-row">
@@ -208,10 +284,20 @@
       <div class="table-container">
         <table class="custom-table">
           <thead>
-            <tr><th>Recent Scans</th><th>Destination Host</th><th>Threat Score</th><th>Verdict</th><th>Timestamp</th><th>Action</th></tr>
+            <tr>
+              <th>Recent Scans</th>
+              <th>Destination Host</th>
+              <th>Threat Score</th>
+              <th>Verdict</th>
+              <th>Timestamp</th>
+              <th>Action</th>
+            </tr>
           </thead>
           <tbody id="dashboard-recent-scans-tbody">
-            <tr><td colspan="6" style="text-align:center;color:#6b7280;padding:24px;">No scans recorded yet. Check a link to populate analytics.</td></tr>
+            <tr>
+              <td colspan="6" style="text-align:center;color:#6b7280;padding:24px;">No scans recorded yet. Check a link
+                to populate analytics.</td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -240,38 +326,65 @@
       <div class="table-container">
         <table class="custom-table">
           <thead>
-            <tr><th>Select</th><th>Target URL</th><th>Risk Level</th><th>Score</th><th>Mode</th><th>Date</th><th>Actions</th></tr>
+            <tr>
+              <th>Select</th>
+              <th>Target URL</th>
+              <th>Risk Level</th>
+              <th>Score</th>
+              <th>Mode</th>
+              <th>Date</th>
+              <th>Actions</th>
+            </tr>
           </thead>
           <tbody id="history-tbody">
-            <tr><td colspan="7" style="text-align:center;color:#6b7280;padding:24px;">Loading scan history…</td></tr>
+            <tr>
+              <td colspan="7" style="text-align:center;color:#6b7280;padding:24px;">Loading scan history…</td>
+            </tr>
           </tbody>
         </table>
       </div>
       <div style="display:flex; justify-content: flex-end; gap: 10px; margin-top: 12px;">
-        <button id="compare-selected-btn" class="button button-secondary" type="button" disabled>Compare Selected (Choose 2)</button>
+        <button id="compare-selected-btn" class="button button-secondary" type="button" disabled>Compare Selected
+          (Choose 2)</button>
       </div>
     </section>
 
     <!-- VIEW 4: Certificate & CT Monitoring -->
     <section id="view-ct" class="view-section" hidden>
       <section class="hero">
-        <div class="eyebrow"><span class="eyebrow-dot" aria-hidden="true"></span> Certificate Transparency & Trust Infrastructure</div>
+        <div class="eyebrow"><span class="eyebrow-dot" aria-hidden="true"></span> Certificate Transparency & Trust
+          Infrastructure</div>
         <h1>Certificate Transparency & DNS Monitor</h1>
-        <p>Search global Certificate Transparency logs (via crt.sh), uncover hidden subdomains, and verify DNS records.</p>
+        <p>Search global Certificate Transparency logs (via crt.sh), uncover hidden subdomains, and verify DNS records.
+        </p>
       </section>
 
       <div class="workspace" style="margin-bottom: 24px;">
         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-          <input type="text" id="ct-domain-input" class="search-input" style="flex: 1;" placeholder="Enter domain to search (e.g. badssl.com or example.com)…">
-          <button id="ct-search-btn" class="button button-primary" type="button">Inspect CT Logs <span aria-hidden="true">→</span></button>
+          <input type="text" id="ct-domain-input" class="search-input" style="flex: 1;"
+            placeholder="Enter domain to search (e.g. badssl.com or example.com)…">
+          <button id="ct-search-btn" class="button button-primary" type="button">Inspect CT Logs <span
+              aria-hidden="true">→</span></button>
         </div>
       </div>
 
       <div id="ct-results-panel" hidden>
         <div class="dashboard-grid">
-          <div class="kpi-card"><div class="kpi-icon">📜</div><div id="ct-total-certs" class="kpi-num">0</div><div class="kpi-label">Total Certs Logged</div></div>
-          <div class="kpi-card"><div class="kpi-icon">🌿</div><div id="ct-subdomains-count" class="kpi-num" style="color:#059669;">0</div><div class="kpi-label">Subdomains Discovered</div></div>
-          <div class="kpi-card"><div class="kpi-icon">⏱️</div><div id="ct-recent-30d" class="kpi-num" style="color:#e0284b;">0</div><div class="kpi-label">Issued in Last 30d</div></div>
+          <div class="kpi-card">
+            <div class="kpi-icon">📜</div>
+            <div id="ct-total-certs" class="kpi-num">0</div>
+            <div class="kpi-label">Total Certs Logged</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon">🌿</div>
+            <div id="ct-subdomains-count" class="kpi-num" style="color:#059669;">0</div>
+            <div class="kpi-label">Subdomains Discovered</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon">⏱️</div>
+            <div id="ct-recent-30d" class="kpi-num" style="color:#e0284b;">0</div>
+            <div class="kpi-label">Issued in Last 30d</div>
+          </div>
         </div>
 
         <div class="chart-card" style="margin-bottom: 20px;">
@@ -287,7 +400,13 @@
         <div class="table-container">
           <table class="custom-table">
             <thead>
-              <tr><th>Log ID</th><th>Common Name</th><th>Issuer CA</th><th>Logged At</th><th>Valid Until</th></tr>
+              <tr>
+                <th>Log ID</th>
+                <th>Common Name</th>
+                <th>Issuer CA</th>
+                <th>Logged At</th>
+                <th>Valid Until</th>
+              </tr>
             </thead>
             <tbody id="ct-history-tbody"></tbody>
           </table>
@@ -298,9 +417,11 @@
     <!-- VIEW 5: Collaborative Threat Intelligence Search -->
     <section id="view-intel" class="view-section" hidden>
       <section class="hero">
-        <div class="eyebrow"><span class="eyebrow-dot" aria-hidden="true"></span> Community Defense & Collaborative Intel</div>
+        <div class="eyebrow"><span class="eyebrow-dot" aria-hidden="true"></span> Community Defense & Collaborative
+          Intel</div>
         <h1>Collaborative Threat Database & Community Feeds</h1>
-        <p>Live threat intelligence feeds, verified phishing & malware indicators, and community intelligence contributions.</p>
+        <p>Live threat intelligence feeds, verified phishing & malware indicators, and community intelligence
+          contributions.</p>
       </section>
 
       <!-- Threat Intelligence Feeds Panel -->
@@ -308,19 +429,24 @@
         <div class="feed-copy">
           <p class="step-label">COMMUNITY THREAT FEEDS</p>
           <h2 id="intel-heading">Local Community Intelligence Feeds</h2>
-          <p id="feed-summary" class="feed-summary">{% if feed_stale %}No fresh feed data is available yet.{% else %}Threat feeds are up to date.{% endif %}</p>
+          <p id="feed-summary" class="feed-summary">{% if feed_stale %}No fresh feed data is available yet.{% else
+            %}Threat feeds are up to date.{% endif %}</p>
           <div id="feed-status" class="feed-status">
             {% for item in feed_status %}
-            <span class="feed-chip">{% if item.source == "Demo seed" %}Demo data, not real threat intelligence{% else %}{{ item.source }}{% endif %} · {% if not item.available %}not loaded{% elif item.stale %}stale{% else %}updated {{ item.updated_at }}{% endif %}</span>
+            <span class="feed-chip">{% if item.source == "Demo seed" %}Demo data, not real threat intelligence{% else
+              %}{{ item.source }}{% endif %} · {% if not item.available %}not loaded{% elif item.stale %}stale{% else
+              %}updated {{ item.updated_at }}{% endif %}</span>
             {% endfor %}
           </div>
         </div>
-        <button id="refresh-feeds" class="button button-secondary" type="button">Refresh feeds <span aria-hidden="true">↻</span></button>
+        <button id="refresh-feeds" class="button button-secondary" type="button">Refresh feeds <span
+            aria-hidden="true">↻</span></button>
       </section>
 
       <div class="workspace" style="margin-bottom: 24px;">
         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-          <input type="text" id="intel-query-input" class="search-input" style="flex: 1;" placeholder="Search by URL, domain, IP, or threat keyword…">
+          <input type="text" id="intel-query-input" class="search-input" style="flex: 1;"
+            placeholder="Search by URL, domain, IP, or threat keyword…">
           <select id="intel-category-select" class="search-input" style="width: auto;">
             <option value="all">All Categories</option>
             <option value="phishing">Phishing</option>
@@ -330,17 +456,29 @@
             <option value="fake_recruitment">Fake Recruitment</option>
             <option value="impersonation">Brand Impersonation</option>
           </select>
-          <button id="intel-search-btn" class="button button-primary" type="button">Search Threats <span aria-hidden="true">→</span></button>
+          <button id="intel-search-btn" class="button button-primary" type="button">Search Threats <span
+              aria-hidden="true">→</span></button>
         </div>
       </div>
 
       <div class="table-container">
         <table class="custom-table">
           <thead>
-            <tr><th>Threat Indicator</th><th>Type</th><th>Category</th><th>Severity</th><th>Status</th><th>Reports</th><th>Source & Evidence</th></tr>
+            <tr>
+              <th>Threat Indicator</th>
+              <th>Type</th>
+              <th>Category</th>
+              <th>Severity</th>
+              <th>Status</th>
+              <th>Reports</th>
+              <th>Source & Evidence</th>
+            </tr>
           </thead>
           <tbody id="intel-tbody">
-            <tr><td colspan="7" style="text-align:center;color:#6b7280;padding:24px;">No threat indicators loaded. Run a search to query the database.</td></tr>
+            <tr>
+              <td colspan="7" style="text-align:center;color:#6b7280;padding:24px;">No threat indicators loaded. Run a
+                search to query the database.</td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -355,7 +493,8 @@
           <span class="local-badge"><span class="status-dot" aria-hidden="true"></span> Collaborative Defense</span>
         </div>
         <p style="color:var(--muted); font-size:13px; margin-bottom:16px;">
-          Contribute newly discovered malicious domains, scam payment URLs, phishing hosts, or compromised CA certificates to protect other users.
+          Contribute newly discovered malicious domains, scam payment URLs, phishing hosts, or compromised CA
+          certificates to protect other users.
         </p>
         <div class="intel-submit-grid">
           <div class="form-field" style="grid-column: 1 / -1;">
@@ -392,7 +531,8 @@
           </div>
           <div class="form-field" style="grid-column: 1 / -1;">
             <label for="submit-intel-evidence">Evidence & Notes (How was it observed?)</label>
-            <input type="text" id="submit-intel-evidence" placeholder="e.g. SMS lure claiming PAN card suspension with urgent deadline">
+            <input type="text" id="submit-intel-evidence"
+              placeholder="e.g. SMS lure claiming PAN card suspension with urgent deadline">
           </div>
         </div>
         <div style="display:flex; justify-content:flex-end; margin-top:14px;">
@@ -406,9 +546,11 @@
     <!-- VIEW 6: Community Security Forum -->
     <section id="view-forum" class="view-section" hidden>
       <section class="hero">
-        <div class="eyebrow"><span class="eyebrow-dot" aria-hidden="true"></span> Collective Defense · Real-World Threat Debriefs</div>
+        <div class="eyebrow"><span class="eyebrow-dot" aria-hidden="true"></span> Collective Defense · Real-World Threat
+          Debriefs</div>
         <h1>Community Security Forum</h1>
-        <p>Ask questions, report novel scam tactics, analyze phishing incidents, and collaborate with security researchers.</p>
+        <p>Ask questions, report novel scam tactics, analyze phishing incidents, and collaborate with security
+          researchers.</p>
       </section>
 
       <!-- Forum Controls Bar -->
@@ -441,7 +583,8 @@
         <div class="support-text">
           <p class="step-label">SECURITY INCIDENTS & HOTLINE</p>
           <h2 id="contact-heading">Need help with a targeted phishing attempt?</h2>
-          <p>If you or your organization received a sophisticated spear-phishing attack or fraudulent payment link, report it to our security response desk.</p>
+          <p>If you or your organization received a sophisticated spear-phishing attack or fraudulent payment link,
+            report it to our security response desk.</p>
         </div>
         <div class="support-links">
           <a href="https://mail.google.com/mail/?view=cm&fs=1&to=akuma2293941586@gmail.com" target="_blank" rel="noopener noreferrer" class="contact-pill"><span class="pill-icon" aria-hidden="true">✉️</span> security@trustcard.local</a>
@@ -474,7 +617,8 @@
         <p class="step-label">SECURITY METHODOLOGY & AUDIT GUIDE</p>
         <h2 id="how-dialog-title">How Trust Card Works</h2>
       </div>
-      <button class="dialog-close" type="button" aria-label="Close dialog" data-close-dialog="how-it-works-dialog">×</button>
+      <button class="dialog-close" type="button" aria-label="Close dialog"
+        data-close-dialog="how-it-works-dialog">×</button>
     </div>
     <div class="how-dialog-body">
       <div class="how-section-intro">
@@ -484,28 +628,47 @@
       </div>
 
       <div class="how-grid">
-        <article class="how-card"><span class="how-icon" aria-hidden="true">01</span><h3>Message context</h3><p>Urgency, credential, payment, and personal-data cues are detected in your browser.</p></article>
-        <article class="how-card"><span class="how-icon" aria-hidden="true">02</span><h3>Local threat data</h3><p>Cached feed matches and reviewed reports can explain a known warning. Feed age stays visible.</p></article>
-        <article class="how-card"><span class="how-icon" aria-hidden="true">03</span><h3>Live scan by choice</h3><p>Review the site and redirect scope before the separate scanner connects to it.</p></article>
+        <article class="how-card"><span class="how-icon" aria-hidden="true">01</span>
+          <h3>Message context</h3>
+          <p>Urgency, credential, payment, and personal-data cues are detected in your browser.</p>
+        </article>
+        <article class="how-card"><span class="how-icon" aria-hidden="true">02</span>
+          <h3>Local threat data</h3>
+          <p>Cached feed matches and reviewed reports can explain a known warning. Feed age stays visible.</p>
+        </article>
+        <article class="how-card"><span class="how-icon" aria-hidden="true">03</span>
+          <h3>Live scan by choice</h3>
+          <p>Review the site and redirect scope before the separate scanner connects to it.</p>
+        </article>
       </div>
 
       <div class="how-to-read-container">
         <div class="read-block">
           <h4>1. Why "No warning found" is never "Safe"</h4>
-          <p>Attackers register new domains daily, use legitimate cloud hosting, and obtain valid certificates. A clean result means our automated checks detected no known threat signatures across the checked scope — it is never an endorsement or guarantee of safety. Always visit official services directly.</p>
+          <p>Attackers register new domains daily, use legitimate cloud hosting, and obtain valid certificates. A clean
+            result means our automated checks detected no known threat signatures across the checked scope — it is never
+            an endorsement or guarantee of safety. Always visit official services directly.</p>
         </div>
         <div class="read-block">
           <h4>2. The 7 Security Pillars</h4>
-          <p>Trust Card unifies 7 security dimensions: Threat Intelligence, URL & Impersonation, Page Content, Certificate & Trust, Web Security, Community Intelligence, and Message Context. Pillars clearly display status badges: <strong>Alert</strong>, <strong>Attention</strong>, <strong>Clear</strong>, or <strong>Not checked</strong>.</p>
+          <p>Trust Card unifies 7 security dimensions: Threat Intelligence, URL & Impersonation, Page Content,
+            Certificate & Trust, Web Security, Community Intelligence, and Message Context. Pillars clearly display
+            status badges: <strong>Alert</strong>, <strong>Attention</strong>, <strong>Clear</strong>, or <strong>Not
+              checked</strong>.</p>
         </div>
         <div class="read-block">
           <h4>3. Local vs. Full Scan Coverage</h4>
-          <p><strong>Local-only check:</strong> Zero outbound network connections. Evaluates cached threat intelligence, brand lookalikes, URL structure, and community reports.</p>
-          <p><strong>Full live scan:</strong> Consented connection with IP pinning. Performs deep TLS validation, checks for weak cryptographic key generation, detects credential-harvesting forms, and audits HTTP security headers.</p>
+          <p><strong>Local-only check:</strong> Zero outbound network connections. Evaluates cached threat intelligence,
+            brand lookalikes, URL structure, and community reports.</p>
+          <p><strong>Full live scan:</strong> Consented connection with IP pinning. Performs deep TLS validation, checks
+            for weak cryptographic key generation, detects credential-harvesting forms, and audits HTTP security
+            headers.</p>
         </div>
         <div class="read-block">
           <h4>4. Indicator Score vs. Authoritative Verdict</h4>
-          <p>The 0–100 indicator score provides transparent risk ranking across completed checks. However, deterministic verdict rules remain authoritative: technical findings like missing headers or certificate expiration will never turn a link into a "Known threat".</p>
+          <p>The 0–100 indicator score provides transparent risk ranking across completed checks. However, deterministic
+            verdict rules remain authoritative: technical findings like missing headers or certificate expiration will
+            never turn a link into a "Known threat".</p>
         </div>
       </div>
     </div>
@@ -518,7 +681,10 @@
   <dialog id="auth-dialog" class="dialog-card" aria-labelledby="auth-title">
     <div class="dialog-heading">
       <span class="dialog-icon" aria-hidden="true">👤</span>
-      <div><p class="step-label">PLATFORM ACCESS</p><h2 id="auth-title">Account Sign In & Registration</h2></div>
+      <div>
+        <p class="step-label">PLATFORM ACCESS</p>
+        <h2 id="auth-title">Account Sign In & Registration</h2>
+      </div>
       <button class="dialog-close" type="button" aria-label="Close dialog" data-close-dialog="auth-dialog">×</button>
     </div>
     <div class="auth-tabs">
@@ -534,7 +700,8 @@
         <label for="login-password">Password</label>
         <input type="password" id="login-password" autocomplete="current-password" placeholder="••••••••">
       </div>
-      <button id="login-submit-btn" class="button button-primary" style="width:100%;margin-top:8px;" type="button">Sign In</button>
+      <button id="login-submit-btn" class="button button-primary" style="width:100%;margin-top:8px;" type="button">Sign
+        In</button>
     </div>
     <div id="auth-register-form" class="auth-form" hidden>
       <div class="form-field">
@@ -549,7 +716,8 @@
         <label for="reg-password">Password (min 6 chars)</label>
         <input type="password" id="reg-password" autocomplete="new-password" placeholder="••••••••">
       </div>
-      <button id="reg-submit-btn" class="button button-primary" style="width:100%;margin-top:8px;" type="button">Create Account</button>
+      <button id="reg-submit-btn" class="button button-primary" style="width:100%;margin-top:8px;" type="button">Create
+        Account</button>
     </div>
   </dialog>
 
@@ -557,8 +725,12 @@
   <dialog id="compare-dialog" class="dialog-card" style="max-width: 760px;" aria-labelledby="compare-title">
     <div class="dialog-heading">
       <span class="dialog-icon" aria-hidden="true">⚖️</span>
-      <div><p class="step-label">DELTA ASSESSMENT</p><h2 id="compare-title">Compare Scan Results</h2></div>
-      <button class="dialog-close" type="button" aria-label="Close compare dialog" data-close-dialog="compare-dialog">×</button>
+      <div>
+        <p class="step-label">DELTA ASSESSMENT</p>
+        <h2 id="compare-title">Compare Scan Results</h2>
+      </div>
+      <button class="dialog-close" type="button" aria-label="Close compare dialog"
+        data-close-dialog="compare-dialog">×</button>
     </div>
     <div id="compare-content" style="font-size: 13px;">Loading comparison…</div>
   </dialog>
@@ -567,20 +739,40 @@
   <dialog id="scan-consent" class="dialog-card" aria-labelledby="consent-title">
     <div class="dialog-heading">
       <span class="dialog-icon" aria-hidden="true">↗</span>
-      <div><p class="step-label">ONE-TIME CONSENT · THIS LINK</p><h2 id="consent-title">Before we run a live check</h2></div>
-      <button class="dialog-close" type="button" aria-label="Close consent dialog" data-close-dialog="scan-consent">×</button>
+      <div>
+        <p class="step-label">ONE-TIME CONSENT · THIS LINK</p>
+        <h2 id="consent-title">Before we run a live check</h2>
+      </div>
+      <button class="dialog-close" type="button" aria-label="Close consent dialog"
+        data-close-dialog="scan-consent">×</button>
     </div>
     <div class="consent-site"><span>Submitted URL</span><strong id="consent-host"></strong></div>
     <div class="consent-columns">
-      <section class="consent-list will-list"><h3>What the scanner will do</h3><ul><li>Make one read-only GET request to the URL above using its HTTP or HTTPS scheme on port 80 or 443.</li><li>If it redirects, make up to five more GET requests to public destinations — six GET requests total.</li><li>Finish within 20 seconds. Read response headers and up to 2 MiB of HTML for static password-form checks.</li></ul></section>
-      <section class="consent-list wont-list"><h3>What it will not do</h3><ul><li>Try alternate schemes, <code>www</code>, or guessed URL variants.</li><li>Run page scripts, submit forms, or send the URL to reputation providers.</li></ul></section>
+      <section class="consent-list will-list">
+        <h3>What the scanner will do</h3>
+        <ul>
+          <li>Make one read-only GET request to the URL above using its HTTP or HTTPS scheme on port 80 or 443.</li>
+          <li>If it redirects, make up to five more GET requests to public destinations — six GET requests total.</li>
+          <li>Finish within 20 seconds. Read response headers and up to 2 MiB of HTML for static password-form checks.
+          </li>
+        </ul>
+      </section>
+      <section class="consent-list wont-list">
+        <h3>What it will not do</h3>
+        <ul>
+          <li>Try alternate schemes, <code>www</code>, or guessed URL variants.</li>
+          <li>Run page scripts, submit forms, or send the URL to reputation providers.</li>
+        </ul>
+      </section>
     </div>
     <div class="consent-optional-section">
       <label class="consent-checkbox-label">
         <input type="checkbox" id="consent-ct-rdap" name="consent-ct-rdap">
         <span>
           <strong>Include third-party Certificate Transparency and domain age lookups</strong>
-          <small>Optional: Queries <code>crt.sh</code> for certificate log history and <code>rdap.org</code> for domain registration age. Sends the <em>hostname only</em> (never the path or query parameters). Unchecked by default.</small>
+          <small>Optional: Queries <code>crt.sh</code> for certificate log history and <code>rdap.org</code> for domain
+            registration age. Sends the <em>hostname only</em> (never the path or query parameters). Unchecked by
+            default.</small>
         </span>
       </label>
     </div>
@@ -595,10 +787,15 @@
   <dialog id="feed-consent" class="dialog-card" aria-labelledby="feed-consent-title">
     <div class="dialog-heading">
       <span class="dialog-icon" aria-hidden="true">↻</span>
-      <div><p class="step-label">MANUAL UPDATE</p><h2 id="feed-consent-title">Refresh local threat feeds?</h2></div>
-      <button class="dialog-close" type="button" aria-label="Close feed dialog" data-close-dialog="feed-consent">×</button>
+      <div>
+        <p class="step-label">MANUAL UPDATE</p>
+        <h2 id="feed-consent-title">Refresh local threat feeds?</h2>
+      </div>
+      <button class="dialog-close" type="button" aria-label="Close feed dialog"
+        data-close-dialog="feed-consent">×</button>
     </div>
-    <p class="consent-copy">This requests feed files from the providers below. No link you checked or message text is included.</p>
+    <p class="consent-copy">This requests feed files from the providers below. No link you checked or message text is
+      included.</p>
     <ul class="provider-list">
       <li>PhishTank verified phishing data</li>
       <li>URLhaus malware URL data</li>
@@ -614,13 +811,18 @@
   <dialog id="new-thread-dialog" class="dialog-card" style="max-width: 680px;" aria-labelledby="new-thread-title">
     <div class="dialog-heading">
       <span class="dialog-icon" aria-hidden="true">💬</span>
-      <div><p class="step-label">COMMUNITY SECURITY FORUM</p><h2 id="new-thread-title">Start a Discussion</h2></div>
-      <button class="dialog-close" type="button" aria-label="Close dialog" data-close-dialog="new-thread-dialog">×</button>
+      <div>
+        <p class="step-label">COMMUNITY SECURITY FORUM</p>
+        <h2 id="new-thread-title">Start a Discussion</h2>
+      </div>
+      <button class="dialog-close" type="button" aria-label="Close dialog"
+        data-close-dialog="new-thread-dialog">×</button>
     </div>
     <div class="thread-form" style="display:flex; flex-direction:column; gap:14px; margin-top:8px;">
       <div class="form-field">
         <label for="new-thread-title-input">Topic Title</label>
-        <input type="text" id="new-thread-title-input" placeholder="e.g. New SMS lure impersonating Income Tax refund with APK download">
+        <input type="text" id="new-thread-title-input"
+          placeholder="e.g. New SMS lure impersonating Income Tax refund with APK download">
       </div>
       <div class="form-field">
         <label for="new-thread-category-select">Category</label>
@@ -638,7 +840,8 @@
       </div>
       <div class="form-field">
         <label for="new-thread-content-input">Details & Observations</label>
-        <textarea id="new-thread-content-input" rows="5" placeholder="Describe the threat, suspicious behavior, headers observed, indicators of compromise, or your question in detail..."></textarea>
+        <textarea id="new-thread-content-input" rows="5"
+          placeholder="Describe the threat, suspicious behavior, headers observed, indicators of compromise, or your question in detail..."></textarea>
       </div>
       <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:6px;">
         <button class="button button-secondary" type="button" data-close-dialog="new-thread-dialog">Cancel</button>
@@ -648,7 +851,8 @@
   </dialog>
 
   <!-- FORUM THREAD DETAIL & REPLIES MODAL -->
-  <dialog id="forum-thread-detail-dialog" class="dialog-card" style="max-width: 780px;" aria-labelledby="thread-detail-title">
+  <dialog id="forum-thread-detail-dialog" class="dialog-card" style="max-width: 780px;"
+    aria-labelledby="thread-detail-title">
     <div class="dialog-heading">
       <span class="dialog-icon" id="thread-detail-icon" aria-hidden="true">💬</span>
       <div style="flex:1;">
@@ -659,7 +863,8 @@
         </div>
         <h2 id="thread-detail-title" style="margin:0; font-size:19px;">Thread Title</h2>
       </div>
-      <button class="dialog-close" type="button" aria-label="Close thread dialog" data-close-dialog="forum-thread-detail-dialog">×</button>
+      <button class="dialog-close" type="button" aria-label="Close thread dialog"
+        data-close-dialog="forum-thread-detail-dialog">×</button>
     </div>
     <div class="thread-detail-body">
       <div id="thread-detail-content" class="thread-body-text"></div>
@@ -669,16 +874,21 @@
         </button>
       </div>
       <hr class="divider">
-      <h3 style="font-size:15px; font-weight:750; margin:16px 0 10px;">Discussion & Responses (<span id="thread-detail-reply-count">0</span>)</h3>
+      <h3 style="font-size:15px; font-weight:750; margin:16px 0 10px;">Discussion & Responses (<span
+          id="thread-detail-reply-count">0</span>)</h3>
       <div id="thread-replies-list" class="thread-replies-container">
         <!-- Dynamic replies rendered here -->
       </div>
       <div class="reply-composer-box">
-        <label for="thread-reply-input" style="font-size:12px; font-weight:700; color:var(--ink); margin-bottom:6px; display:block;">Add to the conversation</label>
+        <label for="thread-reply-input"
+          style="font-size:12px; font-weight:700; color:var(--ink); margin-bottom:6px; display:block;">Add to the
+          conversation</label>
         <div style="display:flex; gap:10px; margin-bottom:8px;">
-          <input type="text" id="thread-reply-author-input" placeholder="Your name or handle (optional)" style="flex:1;">
+          <input type="text" id="thread-reply-author-input" placeholder="Your name or handle (optional)"
+            style="flex:1;">
         </div>
-        <textarea id="thread-reply-input" rows="3" placeholder="Share findings, verification results, or suggestions..."></textarea>
+        <textarea id="thread-reply-input" rows="3"
+          placeholder="Share findings, verification results, or suggestions..."></textarea>
         <div style="display:flex; justify-content:flex-end; margin-top:8px;">
           <button id="thread-reply-submit-btn" class="button button-primary" type="button">Post Reply</button>
         </div>
@@ -688,5 +898,17 @@
 
   <!-- THREAT NETWORK MESH CURSOR CANVAS -->
   <canvas id="fluid-cursor-canvas" class="fluid-cursor-canvas" aria-hidden="true"></canvas>
+
+  <script>
+    // Fail-safe: Ensure boot screen NEVER traps user or freezes scrolling
+    setTimeout(function() {
+      var ov = document.getElementById('system-boot-overlay');
+      if (ov && !ov.classList.contains('boot-completed')) {
+        ov.classList.add('boot-completed');
+        setTimeout(function() { if (ov) ov.style.display = 'none'; document.body.style.overflow = ''; }, 350);
+      }
+    }, 2400);
+  </script>
 </body>
+
 </html>

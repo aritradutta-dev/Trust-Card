@@ -1,5 +1,5 @@
 // Security Assessment Report Interactive Printing & PDF Export
-document.addEventListener('DOMContentLoaded', () => {
+function initReport() {
   // Wire up print buttons
   const printBtns = document.querySelectorAll('.js-print-btn');
   printBtns.forEach((btn) => {
@@ -14,7 +14,8 @@ document.addEventListener('DOMContentLoaded', () => {
   closeBtns.forEach((btn) => {
     btn.addEventListener('click', (e) => {
       e.preventDefault();
-      window.close();
+      const banner = document.querySelector('.print-banner');
+      if (banner) banner.style.display = 'none';
     });
   });
 
@@ -29,9 +30,19 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Automatically launch the browser's native Save as PDF / Print dialog
-  setTimeout(() => {
-    window.print();
-  }, 400);
-});
+  // Automatically launch print dialog once styles and DOM are fully ready
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      try {
+        window.print();
+      } catch {}
+    }, 500);
+  });
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initReport);
+} else {
+  initReport();
+}
 

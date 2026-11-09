@@ -323,12 +323,28 @@ def _local_result(db_path: Path, request: AnalyzeRequest) -> dict:
     }
 
 
+def _resolve_data_dir() -> Path:
+    env_dir = os.environ.get("DATA_DIR")
+    candidates = [Path(env_dir)] if env_dir else []
+    candidates.extend([DATA_DIR, Path.cwd() / "data", Path("/tmp/trustcard_data")])
+    for candidate in candidates:
+        try:
+            candidate.mkdir(parents=True, exist_ok=True)
+            test_file = candidate / ".tc_write_test"
+            test_file.touch()
+            test_file.unlink(missing_ok=True)
+            return candidate
+        except Exception:
+            continue
+    return DATA_DIR
+
+
 def create_app(
     db_path: str | Path | None = None,
     scanner_call=None,
     feed_fetcher=None,
 ) -> FastAPI:
-    configured_data_dir = Path(os.environ.get("DATA_DIR", str(DATA_DIR)))
+    configured_data_dir = _resolve_data_dir()
     data_path = Path(db_path or configured_data_dir / "trust-card.sqlite3")
     init_db(data_path)
     admin_user = os.environ.get("ADMIN_USERNAME", "AD")
@@ -362,7 +378,16 @@ def create_app(
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["Referrer-Policy"] = "no-referrer"
         response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
-        response.headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'"
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline'; "
+            "style-src 'self' 'unsafe-inline'; "
+            "img-src 'self' data: https:; "
+            "connect-src 'self'; "
+            "base-uri 'none'; "
+            "frame-ancestors 'none'; "
+            "form-action 'self' https://mail.google.com"
+        )
         return response
 
     @app.exception_handler(StarletteHTTPException)
@@ -386,6 +411,17 @@ def create_app(
             status_code=exc.status_code,
             media_type="application/json",
             headers=headers,
+        )
+
+    @app.exception_handler(Exception)
+    async def custom_general_exception_handler(request: Request, exc: Exception):
+        import traceback
+        traceback.print_exc()
+        msg = str(exc) or "Internal server error occurred."
+        return Response(
+            content=json.dumps({"detail": msg}),
+            status_code=500,
+            media_type="application/json",
         )
 
     @app.get("/favicon.ico", include_in_schema=False)

@@ -32,6 +32,7 @@ let currentResult = null;
 let resultNotice = '';
 let currentUser = null;
 let selectedScansForCompare = [];
+let isAnalyzing = false;
 
 // Event listeners for main checker
 if (input) input.addEventListener('input', updateInputPreview);
@@ -55,6 +56,13 @@ function showToast(message, type = 'info') {
   }
   const container = document.querySelector('#toast-container');
   if (!container) return;
+
+  // Deduplicate identical toasts to prevent stacking duplicate errors
+  const existing = Array.from(container.querySelectorAll('.toast')).find(
+    (t) => t.textContent.includes(String(message))
+  );
+  if (existing) return;
+
   const toast = document.createElement('div');
   toast.className = 'toast';
   toast.dataset.type = type;
@@ -369,6 +377,7 @@ function updateInputPreview() {
 }
 
 function findLinks() {
+  if (isAnalyzing) return;
   const links = extractUrls(input.value);
   if (!links.length) {
     showInputError('We could not find an HTTP or HTTPS link. Paste a link or a message that contains one.');
@@ -452,6 +461,8 @@ function finishScanProgress() {
 }
 
 async function analyze(mode, consent, ctRdapConsent = false) {
+  if (isAnalyzing) return;
+  isAnalyzing = true;
   input.disabled = true;
   findButton.disabled = true;
   clearButton.disabled = true;
@@ -488,6 +499,7 @@ async function analyze(mode, consent, ctRdapConsent = false) {
     resultRegion.replaceChildren(makeStatus(error.message || 'The check could not be completed.'));
     showToast(error.message || 'The check could not be completed.', 'error');
   } finally {
+    isAnalyzing = false;
     input.disabled = false;
     findButton.disabled = false;
     clearButton.disabled = false;
@@ -2348,28 +2360,33 @@ function initBootSequence() {
   const whisperBar = document.querySelector('#boot-whisper-bar');
   const whisperText = document.querySelector('#boot-whisper-text');
   const brandEmblem = document.querySelector('.brand-mark');
+  const skipBtn = document.querySelector('#boot-skip-btn');
 
   let isBooting = false;
   let timerId = null;
 
   function dismissBoot() {
-    if (!isBooting) return;
     isBooting = false;
     clearTimeout(timerId);
 
     if (whisperBar) whisperBar.style.width = '100%';
     overlay.classList.add('boot-completed');
-    sessionStorage.setItem('tc_boot_completed', 'true');
+    try {
+      sessionStorage.setItem('tc_boot_completed', 'true');
+    } catch {}
     document.body.style.overflow = '';
 
     setTimeout(() => {
       overlay.hidden = true;
       input?.focus();
-    }, 650);
+    }, 450);
   }
 
   function startBoot(force = false) {
-    const hasSeenBoot = sessionStorage.getItem('tc_boot_completed') === 'true';
+    let hasSeenBoot = false;
+    try {
+      hasSeenBoot = sessionStorage.getItem('tc_boot_completed') === 'true';
+    } catch {}
     const urlParams = new URLSearchParams(window.location.search);
     const forceParam = urlParams.has('boot') || window.location.hash === '#boot';
 
@@ -2394,23 +2411,30 @@ function initBootSequence() {
       setTimeout(() => {
         if (whisperBar && isBooting) whisperBar.style.width = '45%';
         if (whisperText && isBooting) whisperText.textContent = 'MOUNTING CLIENT ENCLAVE';
-      }, 350);
+      }, 300);
       setTimeout(() => {
         if (whisperBar && isBooting) whisperBar.style.width = '82%';
         if (whisperText && isBooting) whisperText.textContent = 'CALIBRATING 7 DEFENSE PILLARS';
-      }, 1100);
+      }, 850);
       setTimeout(() => {
         if (whisperBar && isBooting) whisperBar.style.width = '100%';
         if (whisperText && isBooting) whisperText.textContent = 'SYSTEM ARMED · WELCOME';
-      }, 1900);
+      }, 1450);
     });
 
-    // Holds centered and plays the transparent animated GIF, then smoothly zooms out and disappears
-    timerId = setTimeout(dismissBoot, 2450);
+    // Snappy luxury hold then seamless dissolve
+    timerId = setTimeout(dismissBoot, 1850);
   }
 
-  // Any click or keypress dismisses immediately
+  // Skip button click
+  skipBtn?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    dismissBoot();
+  });
+
+  // Any click on overlay dismisses
   overlay.addEventListener('click', dismissBoot);
+
   window.addEventListener('keydown', (e) => {
     if (isBooting && (e.key === 'Escape' || e.key === ' ' || e.key === 'Enter')) {
       e.preventDefault();

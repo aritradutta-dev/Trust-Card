@@ -15,10 +15,18 @@ from typing import Any, Iterable, Iterator
 
 def _connect(db_path: str | Path) -> sqlite3.Connection:
     path = Path(db_path)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    connection = sqlite3.connect(path)
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+    except Exception:
+        pass
+    connection = sqlite3.connect(path, timeout=15.0)
     connection.row_factory = sqlite3.Row
     connection.execute("PRAGMA foreign_keys = ON")
+    try:
+        connection.execute("PRAGMA journal_mode = WAL")
+        connection.execute("PRAGMA busy_timeout = 5000")
+    except Exception:
+        pass
     return connection
 
 
