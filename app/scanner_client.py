@@ -34,7 +34,15 @@ def make_scanner_client(base_url: str, token: str):
 def configured_scanner():
     base_url = os.environ.get("SCANNER_URL", "").strip()
     token = os.environ.get("SCANNER_TOKEN", "")
-    return make_scanner_client(base_url, token) if base_url and token else None
+    if base_url and token:
+        return make_scanner_client(base_url, token)
+    # When no remote scanner microservice is configured (e.g. Vercel, single container),
+    # fallback to in-process scan_url so live scans (TLS cert, headers, page signals) WORK everywhere!
+    try:
+        from scanner.engine import scan_url
+        return scan_url
+    except Exception:
+        return None
 
 
 def make_feed_fetcher(base_url: str, token: str):
@@ -63,4 +71,10 @@ def make_feed_fetcher(base_url: str, token: str):
 def configured_feed_fetcher():
     base_url = os.environ.get("SCANNER_URL", "").strip()
     token = os.environ.get("SCANNER_TOKEN", "")
-    return make_feed_fetcher(base_url, token) if base_url and token else None
+    if base_url and token:
+        return make_feed_fetcher(base_url, token)
+    try:
+        from scanner.feed_fetch import provider_request
+        return provider_request
+    except Exception:
+        return None

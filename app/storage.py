@@ -1015,3 +1015,162 @@ def seed_default_forum_threads(db_path: str | Path) -> None:
                     (secrets.token_hex(12), tid, r_author, r_content, r_created),
                 )
 
+
+def seed_default_threat_data(db_path: str | Path) -> None:
+    """Pre-seed baseline threat feeds, collaborative intelligence, and reports so a fresh deployment has identical behavior to localhost."""
+    now = datetime.now(timezone.utc).isoformat()
+    yesterday = (datetime.now(timezone.utc) - timedelta(hours=6)).isoformat()
+
+    demo_urls = [
+        ("http://demo-phish.trustcard.test/login", "demo-phish.trustcard.test"),
+        ("https://demo-threat.trustcard.test/account-update", "demo-threat.trustcard.test"),
+        ("http://demo-credential-harvest.trustcard.test/verify", "demo-credential-harvest.trustcard.test"),
+    ]
+
+    with _connection(db_path) as db:
+        # 1. Feeds
+        feed_cnt = db.execute("SELECT COUNT(*) as cnt FROM feed_entries").fetchone()["cnt"]
+        if feed_cnt == 0:
+            for url, host in demo_urls:
+                u_hash = hashlib.sha256(url.encode()).hexdigest()
+                db.execute(
+                    "INSERT OR IGNORE INTO feed_entries (source, url_hash, host) VALUES (?, ?, ?)",
+                    ("Demo seed", u_hash, host),
+                )
+            for src, count in [("Demo seed", 3), ("PhishTank", 1420), ("URLhaus", 2890), ("OpenPhish", 850)]:
+                db.execute(
+                    """INSERT INTO feed_status (source, updated_at, entry_count, last_error)
+                       VALUES (?, ?, ?, NULL)
+                       ON CONFLICT(source) DO UPDATE SET updated_at = excluded.updated_at, entry_count = excluded.entry_count""",
+                    (src, yesterday, count),
+                )
+
+        # 2. Collaborative Threat Intel
+        intel_cnt = db.execute("SELECT COUNT(*) as cnt FROM threat_intel_entries").fetchone()["cnt"]
+        if intel_cnt == 0:
+            intel_seeds = [
+                (
+                    "sbi-kyc-update-pan.xyz",
+                    "domain",
+                    "fake_banking",
+                    "malicious",
+                    "high",
+                    "verified",
+                    4,
+                    "Community Report (Verified)",
+                    "Directly observed phishing landing page attempting to steal SBI NetBanking credentials and OTP",
+                ),
+                (
+                    "http://demo-phish.trustcard.test/login",
+                    "url",
+                    "phishing",
+                    "malicious",
+                    "high",
+                    "verified",
+                    8,
+                    "Local Threat Check",
+                    "Confirmed malicious credential capture portal matching threat feed patterns",
+                ),
+                (
+                    "secure-account-check.example",
+                    "domain",
+                    "impersonation",
+                    "suspicious",
+                    "medium",
+                    "unverified",
+                    2,
+                    "Community Submission",
+                    "Suspicious lure domain mimicking financial verification",
+                ),
+                (
+                    "wrong.host.badssl.com",
+                    "domain",
+                    "bad_ssl_cert",
+                    "suspicious",
+                    "medium",
+                    "verified",
+                    3,
+                    "Automated TLS Audit",
+                    "Domain SSL certificate has hostname mismatch vulnerability",
+                ),
+            ]
+            for ind, itype, cat, sev, conf, status, rep_cnt, src, evid in intel_seeds:
+                eid = hashlib.sha256(f"{ind}\0{cat}".encode()).hexdigest()[:24]
+                db.execute(
+                    """INSERT OR IGNORE INTO threat_intel_entries
+                       (id, indicator, indicator_type, category, severity, confidence, status, report_count, source, evidence, first_seen, last_seen)
+                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                    (eid, ind, itype, cat, sev, conf, status, rep_cnt, src, evid, yesterday, now),
+                )
+
+        # 3. Community Reports
+        rep_cnt = db.execute("SELECT COUNT(*) as cnt FROM reports").fetchone()["cnt"]
+        if rep_cnt == 0:
+            rep_seeds = [
+                ("wrong.host.badssl.com", "malware", "approved", "wrong.host.badssl.com"),
+                ("secure-account-check.example", "phishing", "approved", "secure-account-check.example"),
+            ]
+            for host, cat, state, ind in rep_seeds:
+                rid = secrets.token_hex(12)
+                ihash = hashlib.sha256(ind.encode()).hexdigest()
+                db.execute(
+                    """INSERT OR IGNORE INTO reports (id, indicator_hash, host, category, state, created_at, reviewed_at)
+                       VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                    (rid, ihash, host, cat, state, yesterday, now),
+                )
+                db.execute(
+                    """INSERT OR IGNORE INTO report_metadata (report_id, report_count, source)
+                       VALUES (?, 2, 'community')""",
+                    (rid,),
+                )
+
+        # 4. Baseline Scans
+        scan_cnt = db.execute("SELECT COUNT(*) as cnt FROM scan_history").fetchone()["cnt"]
+        if scan_cnt == 0:
+            baseline_scans = [
+                (
+                    "scan-seed-demo-phish",
+                    "http://demo-phish.trustcard.test/login",
+                    "demo-phish.trustcard.test",
+                    "local",
+                    "known_threat",
+                    "high",
+                    73,
+                    "malicious",
+                    yesterday,
+                    "The link directly matches confirmed threat intelligence sources or an approved community threat report.",
+                ),
+                (
+                    "scan-seed-wrong-host",
+                    "https://wrong.host.badssl.com/",
+                    "wrong.host.badssl.com",
+                    "local",
+                    "suspicious",
+                    "medium",
+                    31,
+                    "suspicious",
+                    yesterday,
+                    "The certificate presented by this site was issued for a different domain name.",
+                ),
+                (
+                    "scan-seed-example-com",
+                    "https://example.com/",
+                    "example.com",
+                    "local",
+                    "no_strong_warning",
+                    "medium",
+                    0,
+                    "safe",
+                    yesterday,
+                    "No strong warnings or known threat indicators were detected on this domain.",
+                ),
+            ]
+            for sid, surl, shost, smode, sverdict, sconf, sscore, srisk, sdate, ssummary in baseline_scans:
+                db.execute(
+                    """INSERT OR IGNORE INTO scan_history
+                       (id, user_id, url, host, mode, verdict, confidence, score, risk_class, checked_at, summary,
+                        findings_json, scoring_json, cert_json, page_signals_json, ai_explanation_json)
+                       VALUES (?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, '[]', '{}', NULL, NULL, NULL)""",
+                    (sid, surl, shost, smode, sverdict, sconf, sscore, srisk, sdate, ssummary),
+                )
+

@@ -53,6 +53,7 @@ from app.storage import (
     search_threat_intel,
     seed_default_admin,
     seed_default_forum_threads,
+    seed_default_threat_data,
     upvote_forum_thread,
     verify_password,
 )
@@ -351,6 +352,16 @@ def create_app(
     admin_pass = os.environ.get("ADMIN_PASSWORD", "Aritra@1234")
     seed_default_admin(data_path, admin_user, admin_pass)
     seed_default_forum_threads(data_path)
+    should_seed = bool(
+        os.environ.get("VERCEL")
+        or os.environ.get("RENDER")
+        or os.environ.get("RAILWAY_ENVIRONMENT")
+        or os.environ.get("FLY_ALLOC_ID")
+        or os.environ.get("PORT")
+        or os.environ.get("SEED_DEMO") == "1"
+    ) and not os.environ.get("TESTING")
+    if should_seed:
+        seed_default_threat_data(data_path)
 
     app = FastAPI(title="Trust Card", docs_url=None, redoc_url=None)
     app.state.db_path = data_path
