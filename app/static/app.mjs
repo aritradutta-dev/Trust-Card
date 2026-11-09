@@ -119,6 +119,15 @@ function switchView(viewId) {
   if (viewId === 'view-history') loadScanHistory();
   if (viewId === 'view-intel') searchThreatIntel();
   if (viewId === 'view-forum') loadForumThreads();
+  if (viewId === 'view-ct') {
+    const ctInput = document.querySelector('#ct-domain-input');
+    if (ctInput && !ctInput.value.trim() && selectedUrl) {
+      try {
+        const u = new URL(selectedUrl);
+        ctInput.value = u.hostname;
+      } catch {}
+    }
+  }
 }
 
 function updateTabSlider(immediate = false) {
@@ -187,9 +196,8 @@ document.querySelectorAll('.top-nav a[data-tab-target]').forEach((link) => {
 document.querySelectorAll('a[href="#how-it-works"]').forEach((link) => {
   link.addEventListener('click', (e) => {
     e.preventDefault();
-    switchView('view-checker');
-    const el = document.getElementById('how-it-works');
-    if (el) el.scrollIntoView({ behavior: 'smooth' });
+    const howDlg = document.querySelector('#how-it-works-dialog');
+    howDlg?.showModal();
   });
 });
 
@@ -587,7 +595,7 @@ function renderResult(data) {
     </div>
     <div class="vital-item">
       <span class="vital-label">SECURITY PILLARS</span>
-      <strong class="vital-value">${data.scoring ? data.scoring.checked_count : 3} of 5 Active</strong>
+      <strong class="vital-value">${data.scoring ? data.scoring.checked_count : 4} of ${data.scoring?.total_pillars || 7} Active</strong>
       <small class="vital-hint">Multi-pillar audit</small>
     </div>
   `;
@@ -618,7 +626,7 @@ function renderResult(data) {
 
   const tabDefs = [
     { id: 'tab-overview', icon: '📋', label: 'Overview & Safety Plan', active: true },
-    { id: 'tab-pillars', icon: '🛡️', label: '5 Security Pillars', badge: data.scoring ? `${data.scoring.score}/100` : null },
+    { id: 'tab-pillars', icon: '🛡️', label: `${data.scoring?.total_pillars || 7} Security Pillars`, badge: data.scoring ? `${data.scoring.score}/100` : null },
     { id: 'tab-findings', icon: '🔬', label: 'Technical Evidence', badge: `${findings.length} signal${findings.length === 1 ? '' : 's'}` },
   ];
   if (data.certificate) {
@@ -1183,7 +1191,7 @@ async function loadDashboardStats() {
     sevContainer.replaceChildren();
     const severities = Object.entries(stats.severity_distribution || {});
     const maxSev = Math.max(...severities.map(([, v]) => v), 1);
-    const sevColors = { malicious: '#A83232', high: '#C2410C', suspicious: '#8F6632', safe: '#778D7A', unknown: '#415A77' };
+    const sevColors = { critical: '#A83232', malicious: '#A83232', high: '#C2410C', high_risk: '#C2410C', suspicious: '#8F6632', low: '#778D7A', safe: '#778D7A', unknown: '#415A77' };
     for (const [sev, count] of severities) {
       const row = document.createElement('div');
       row.className = 'chart-bar-row';
@@ -1212,7 +1220,7 @@ async function loadDashboardStats() {
       for (const s of stats.recent_scans) {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td><code style="font-size:11px;">${s.url}</code></td>
+          <td><code style="font-size:11px;word-break:break-all;">${s.url}</code></td>
           <td><strong>${s.host}</strong></td>
           <td><span style="font-weight:800;color:${s.score >= 50 ? '#A83232' : '#778D7A'}">${s.score}/100</span></td>
           <td><span class="risk-badge badge-${s.risk_class}">${s.risk_class}</span></td>
@@ -1305,6 +1313,8 @@ async function loadScanHistory() {
           if (delRes.ok) {
             showToast('Scan deleted.', 'info');
             loadScanHistory();
+          } else {
+            showToast('Failed to delete scan record.', 'error');
           }
         }
       });
@@ -1448,6 +1458,12 @@ async function runCtSearch() {
 }
 
 document.querySelector('#ct-search-btn')?.addEventListener('click', runCtSearch);
+document.querySelector('#ct-domain-input')?.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    runCtSearch();
+  }
+});
 
 // ---------------------------------------------------------------------------
 // 4. Collaborative Threat Intelligence Search
@@ -1487,6 +1503,12 @@ async function searchThreatIntel() {
 }
 
 document.querySelector('#intel-search-btn')?.addEventListener('click', searchThreatIntel);
+document.querySelector('#intel-query-input')?.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    searchThreatIntel();
+  }
+});
 
 // ---------------------------------------------------------------------------
 // 5. Authentication & User Profile Management

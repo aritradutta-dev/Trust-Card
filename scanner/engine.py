@@ -363,6 +363,7 @@ def _connect_pinned(url: str, addresses: list[str], timeout: float, deadline: fl
                     else:
                         explanation = "The TLS certificate could not be validated for this site."
                     finding = {
+                        "id": "tls-cert-validation-failed",
                         "category": "certificate",
                         "severity": "medium",
                         "summary": explanation,

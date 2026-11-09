@@ -139,9 +139,9 @@ body {
 }
 
 .badge-malicious { background: #F7EBEB; color: #A83232; border: 1px solid #E8B8B8; }
-.badge-high { background: #F7EBEB; color: #C2410C; border: 1px solid #FED7AA; }
+.badge-high, .badge-high_risk { background: #F7EBEB; color: #C2410C; border: 1px solid #FED7AA; }
 .badge-suspicious { background: #FBF6EC; color: #8F6632; border: 1px solid #D4C4A8; }
-.badge-safe { background: #EDF2EE; color: #2B4530; border: 1px solid #778D7A; }
+.badge-low, .badge-safe { background: #EDF2EE; color: #2B4530; border: 1px solid #778D7A; }
 .badge-unknown { background: #EDE8D4; color: #415A77; border: 1px solid #D4C4A8; }
 
 .callout-box {
@@ -236,3 +236,4 @@ ul.remediation-list li { margin-bottom: 6px; font-size: 13px; }
   gap: 8px;
   flex-shrink: 0;
 }
+

@@ -584,8 +584,15 @@ def list_scans(
         clauses.append("(url LIKE ? OR host LIKE ?)")
         params.extend([f"%{query}%", f"%{query}%"])
     if severity and severity != "all":
-        clauses.append("risk_class = ?")
-        params.append(severity)
+        if severity in ("high", "high_risk"):
+            clauses.append("risk_class IN ('high', 'high_risk')")
+        elif severity in ("malicious", "critical"):
+            clauses.append("risk_class IN ('malicious', 'critical')")
+        elif severity in ("safe", "low"):
+            clauses.append("risk_class IN ('safe', 'low')")
+        else:
+            clauses.append("risk_class = ?")
+            params.append(severity)
 
     where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
 

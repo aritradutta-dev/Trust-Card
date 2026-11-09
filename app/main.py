@@ -24,6 +24,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from app.feeds import refresh_feed
 from app.scanner_client import configured_feed_fetcher, configured_scanner
 from app.storage import (
+    compare_scans,
     create_forum_reply,
     create_forum_thread,
     create_report,
@@ -667,6 +668,14 @@ def create_app(
         scans, total = await run_in_threadpool(list_scans, data_path, user_id=user_id, query=q, severity=severity, limit=limit, offset=offset)
         return {"scans": scans, "total": total}
 
+    @app.get("/api/v1/scans/compare")
+    async def compare_scans_endpoint(scan_a: str, scan_b: str):
+        try:
+            comparison = await run_in_threadpool(compare_scans, data_path, scan_a, scan_b)
+            return comparison
+        except KeyError:
+            raise HTTPException(status_code=404, detail="scans_not_found")
+
     @app.get("/api/v1/scans/{scan_id}")
     async def get_scan_endpoint(scan_id: str, request: Request):
         user = _get_user(request)
@@ -684,14 +693,6 @@ def create_app(
         if not deleted:
             raise HTTPException(status_code=404, detail="scan_not_found")
         return {"deleted": True, "scan_id": scan_id}
-
-    @app.get("/api/v1/scans/compare")
-    async def compare_scans_endpoint(scan_a: str, scan_b: str):
-        try:
-            comparison = await run_in_threadpool(compare_scans, data_path, scan_a, scan_b)
-            return comparison
-        except KeyError:
-            raise HTTPException(status_code=404, detail="scans_not_found")
 
     @app.get("/scans/{scan_id}/report", response_class=HTMLResponse)
     @app.get("/api/v1/scans/{scan_id}/report", response_class=HTMLResponse)
