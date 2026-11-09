@@ -50,6 +50,9 @@ if (localButton) {
 }
 
 function showToast(message, type = 'info') {
+  if (typeof message === 'string' && (message.includes('did not match the expected pattern') || message.includes('SyntaxError'))) {
+    message = 'Action could not be completed. Please check your connection or input.';
+  }
   const container = document.querySelector('#toast-container');
   if (!container) return;
   const toast = document.createElement('div');
@@ -69,6 +72,61 @@ function showToast(message, type = 'info') {
     setTimeout(() => toast.remove(), 250);
   }, 3500);
 }
+
+// Resilient JSON fetcher that never throws WebKit SyntaxError on text/HTML responses
+async function safeFetchJson(url, options = {}) {
+  try {
+    const res = await fetch(url, options);
+    let data = null;
+    const contentType = res.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+      try {
+        data = await res.json();
+      } catch {
+        data = null;
+      }
+    } else {
+      try {
+        const text = await res.text();
+        data = text ? (text.startsWith('{') || text.startsWith('[') ? JSON.parse(text) : { detail: text }) : null;
+      } catch {
+        data = null;
+      }
+    }
+    return { res, data, ok: res.ok, status: res.status };
+  } catch (err) {
+    return {
+      res: null,
+      data: null,
+      ok: false,
+      status: 0,
+      networkError: err.message || 'Network request failed',
+    };
+  }
+}
+
+function getErrorMessage(data, fallback = 'Action could not be completed.') {
+  if (!data) return fallback;
+  if (typeof data.detail === 'string') return data.detail.replaceAll('_', ' ');
+  if (Array.isArray(data.detail)) {
+    return data.detail.map((d) => (typeof d === 'object' && d ? d.msg || JSON.stringify(d) : String(d))).join(', ') || fallback;
+  }
+  if (typeof data.message === 'string') return data.message;
+  return fallback;
+}
+
+// Direct Gmail compose redirection for masked email links
+function initEmailRedirects() {
+  const targetEmail = 'akuma2293941586@gmail.com';
+  const composeUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(targetEmail)}`;
+  document.querySelectorAll('a[href*="akuma2293941586"]').forEach((link) => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      window.open(composeUrl, '_blank', 'noopener,noreferrer');
+    });
+  });
+}
+initEmailRedirects();
 
 // Mobile menu toggle
 const mobileMenuBtn = document.querySelector('#mobile-menu-btn');
@@ -414,13 +472,12 @@ async function analyze(mode, consent, ctRdapConsent = false) {
   }
 
   try {
-    const response = await fetch('/api/v1/analyze', {
+    const { res: response, data, ok, networkError } = await safeFetchJson('/api/v1/analyze', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(buildAnalyzeRequest(selectedUrl, mode, consent, selectedFlags, ctRdapConsent)),
     });
-    const data = await response.json();
-    if (!response.ok) throw new Error(apiError(data, 'The link could not be checked.'));
+    if (!ok || !data) throw new Error(apiError(data, networkError || 'The link could not be checked.'));
     currentResult = data;
     finishScanProgress();
     renderResult(data);
@@ -969,13 +1026,12 @@ function makeFinding(finding) {
 async function submitReport(category) {
   if (!currentResult?.scan_id) return;
   try {
-    const response = await fetch('/api/v1/reports', {
+    const { res: response, data, ok } = await safeFetchJson('/api/v1/reports', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ scan_id: currentResult.scan_id, category }),
     });
-    const data = await response.json();
-    if (!response.ok) throw new Error(apiError(data, 'The report could not be submitted.'));
+    if (!ok || !data) throw new Error(apiError(data, 'The report could not be submitted.'));
     resultNotice = data.message;
     renderResult(currentResult);
     showToast(data.message || 'Report submitted for review.', 'success');
@@ -992,16 +1048,15 @@ async function refreshFeeds() {
   button.disabled = true;
   button.textContent = 'Refreshing…';
   try {
-    const response = await fetch('/api/v1/intel/refresh', {
+    const { res: response, data, ok } = await safeFetchJson('/api/v1/intel/refresh', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ providers: ['PhishTank', 'URLhaus', 'OpenPhish'] }),
     });
-    const data = await response.json();
-    if (!response.ok) throw new Error(apiError(data, 'The feeds could not be refreshed.'));
+    if (!ok || !data) throw new Error(apiError(data, 'The feeds could not be refreshed.'));
     feedDialog?.close();
     updateFeedStatus(data);
-    const updated = data.results.filter((item) => item.updated).length;
+    const updated = (data.results || []).filter((item) => item.updated).length;
     resultNotice = updated ? `${updated} threat feed${updated === 1 ? '' : 's'} refreshed.` : 'Feeds could not be refreshed. Previous saved data remains available.';
     if (currentResult) renderResult(currentResult);
     showToast(resultNotice, updated ? 'success' : 'info');
@@ -1149,9 +1204,8 @@ function apiError(data, fallback) {
 // ---------------------------------------------------------------------------
 async function loadDashboardStats() {
   try {
-    const res = await fetch('/api/v1/dashboard/stats');
-    if (!res.ok) return;
-    const stats = await res.json();
+    const { data: stats, ok } = await safeFetchJson('/api/v1/dashboard/stats');
+    if (!ok || !stats) return;
 
     document.querySelector('#kpi-total-scans').textContent = stats.total_scans ?? 0;
     document.querySelector('#kpi-total-malicious').textContent = stats.total_malicious ?? 0;
@@ -1247,11 +1301,10 @@ async function loadScanHistory() {
   tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#6b7280;padding:20px;">Loading scan records…</td></tr>';
 
   try {
-    const res = await fetch(`/api/v1/scans?q=${encodeURIComponent(search)}&severity=${severity}`);
-    const data = await res.json();
+    const { data, ok } = await safeFetchJson(`/api/v1/scans?q=${encodeURIComponent(search)}&severity=${severity}`);
     tbody.replaceChildren();
 
-    if (!data.scans || !data.scans.length) {
+    if (!ok || !data || !data.scans || !data.scans.length) {
       tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#6b7280;padding:24px;">No scan history matching criteria.</td></tr>';
       return;
     }
@@ -1309,8 +1362,8 @@ async function loadScanHistory() {
       delBtn.textContent = 'Delete';
       delBtn.addEventListener('click', async () => {
         if (confirm(`Delete scan record for ${scan.url}?`)) {
-          const delRes = await fetch(`/api/v1/scans/${scan.id}`, { method: 'DELETE' });
-          if (delRes.ok) {
+          const { ok } = await safeFetchJson(`/api/v1/scans/${scan.id}`, { method: 'DELETE' });
+          if (ok) {
             showToast('Scan deleted.', 'info');
             loadScanHistory();
           } else {
@@ -1343,9 +1396,8 @@ document.querySelector('#compare-selected-btn')?.addEventListener('click', async
   compareDialog?.showModal();
 
   try {
-    const res = await fetch(`/api/v1/scans/compare?scan_a=${scanA}&scan_b=${scanB}`);
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.detail || 'Failed to compare scans');
+    const { data, ok } = await safeFetchJson(`/api/v1/scans/compare?scan_a=${scanA}&scan_b=${scanB}`);
+    if (!ok || !data) throw new Error(getErrorMessage(data, 'Failed to compare scans'));
 
     content.innerHTML = `
       <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
@@ -1394,13 +1446,14 @@ async function runCtSearch() {
   btn.textContent = 'Searching CT Logs…';
 
   try {
-    const [ctRes, dnsRes] = await Promise.all([
-      fetch(`/api/v1/ct/search?domain=${encodeURIComponent(domain)}`),
-      fetch(`/api/v1/domain/dns?domain=${encodeURIComponent(domain)}`),
+    const [{ data: ctData, ok: ctOk }, { data: dnsData, ok: dnsOk }] = await Promise.all([
+      safeFetchJson(`/api/v1/ct/search?domain=${encodeURIComponent(domain)}`),
+      safeFetchJson(`/api/v1/domain/dns?domain=${encodeURIComponent(domain)}`),
     ]);
 
-    const ctData = await ctRes.json();
-    const dnsData = await dnsRes.json();
+    if (!ctOk || !ctData || !dnsOk || !dnsData) {
+      throw new Error(getErrorMessage(ctData || dnsData, 'Certificate Transparency search failed.'));
+    }
 
     document.querySelector('#ct-results-panel').hidden = false;
     document.querySelector('#ct-total-certs').textContent = ctData.total_certs_logged ?? 0;
@@ -1475,11 +1528,10 @@ async function searchThreatIntel() {
   tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#6b7280;padding:20px;">Querying threat intelligence database…</td></tr>';
 
   try {
-    const res = await fetch(`/api/v1/intel/search?q=${encodeURIComponent(query)}&category=${category}`);
-    const data = await res.json();
+    const { data, ok } = await safeFetchJson(`/api/v1/intel/search?q=${encodeURIComponent(query)}&category=${category}`);
     tbody.replaceChildren();
 
-    if (!data.results || !data.results.length) {
+    if (!ok || !data || !data.results || !data.results.length) {
       tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#6b7280;padding:24px;">No matching threat indicators found in local collaborative intelligence.</td></tr>';
       return;
     }
@@ -1515,9 +1567,8 @@ document.querySelector('#intel-query-input')?.addEventListener('keydown', (e) =>
 // ---------------------------------------------------------------------------
 async function initAuth() {
   try {
-    const res = await fetch('/api/v1/auth/me');
-    const data = await res.json();
-    currentUser = data.user;
+    const { data, ok } = await safeFetchJson('/api/v1/auth/me');
+    currentUser = ok && data ? data.user : null;
     renderUserHeader();
   } catch {
     currentUser = null;
@@ -1539,7 +1590,7 @@ function renderUserHeader() {
     logoutBtn.className = 'btn-sm btn-secondary';
     logoutBtn.textContent = 'Sign Out';
     logoutBtn.addEventListener('click', async () => {
-      await fetch('/api/v1/auth/logout', { method: 'POST' });
+      await safeFetchJson('/api/v1/auth/logout', { method: 'POST' });
       currentUser = null;
       renderUserHeader();
       showToast('Signed out.', 'info');
@@ -1584,19 +1635,18 @@ document.querySelector('#login-submit-btn')?.addEventListener('click', async () 
     return;
   }
   try {
-    const res = await fetch('/api/v1/auth/login', {
+    const { data, ok } = await safeFetchJson('/api/v1/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password }),
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.detail || 'Login failed');
+    if (!ok || !data) throw new Error(getErrorMessage(data, 'Login failed'));
     currentUser = data.user;
     renderUserHeader();
     authDialog?.close();
     showToast(`Signed in as ${currentUser.username}.`, 'success');
   } catch (err) {
-    showToast(err.message, 'error');
+    showToast(getErrorMessage(null, err.message), 'error');
   }
 });
 
@@ -1609,19 +1659,18 @@ document.querySelector('#reg-submit-btn')?.addEventListener('click', async () =>
     return;
   }
   try {
-    const res = await fetch('/api/v1/auth/register', {
+    const { data, ok } = await safeFetchJson('/api/v1/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, email, password }),
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.detail || 'Registration failed');
+    if (!ok || !data) throw new Error(getErrorMessage(data, 'Registration failed'));
     currentUser = data.user;
     renderUserHeader();
     authDialog?.close();
     showToast(`Account created for ${currentUser.username}!`, 'success');
   } catch (err) {
-    showToast(err.message, 'error');
+    showToast(getErrorMessage(null, err.message), 'error');
   }
 });
 
@@ -1657,7 +1706,7 @@ if (submitIntelBtn) {
 
     try {
       submitIntelBtn.disabled = true;
-      const res = await fetch('/api/v1/intel/submit', {
+      const { data, ok } = await safeFetchJson('/api/v1/intel/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1668,14 +1717,13 @@ if (submitIntelBtn) {
           evidence,
         }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || 'Failed to submit threat indicator.');
+      if (!ok || !data) throw new Error(getErrorMessage(data, 'Failed to submit threat indicator.'));
       showToast('Threat indicator contributed to community database!', 'success');
       document.querySelector('#submit-intel-val').value = '';
       document.querySelector('#submit-intel-evidence').value = '';
       searchThreatIntel();
     } catch (err) {
-      showToast(err.message, 'error');
+      showToast(getErrorMessage(null, err.message), 'error');
     } finally {
       submitIntelBtn.disabled = false;
     }
@@ -1701,9 +1749,8 @@ async function loadForumThreads(cat = currentForumCat, q = currentForumQuery) {
     if (cat && cat !== 'all') url += `&category=${encodeURIComponent(cat)}`;
     if (q) url += `&q=${encodeURIComponent(q)}`;
 
-    const res = await fetch(url);
-    if (!res.ok) throw new Error('Failed to load forum threads.');
-    const data = await res.json();
+    const { data, ok } = await safeFetchJson(url);
+    if (!ok || !data) throw new Error('Failed to load forum discussions.');
     const threads = data.threads || [];
 
     if (threads.length === 0) {
@@ -1778,15 +1825,14 @@ async function loadForumThreads(cat = currentForumCat, q = currentForumQuery) {
 
 async function upvoteThread(threadId, btnElement) {
   try {
-    const res = await fetch(`/api/v1/forum/threads/${encodeURIComponent(threadId)}/upvote`, { method: 'POST' });
-    if (!res.ok) throw new Error('Upvote failed');
-    const data = await res.json();
+    const { data, ok } = await safeFetchJson(`/api/v1/forum/threads/${encodeURIComponent(threadId)}/upvote`, { method: 'POST' });
+    if (!ok || !data) throw new Error(getErrorMessage(data, 'Upvote failed'));
     btnElement.classList.add('upvoted');
     const numSpan = btnElement.querySelector('.upvote-num');
     if (numSpan) numSpan.textContent = data.upvotes;
     showToast('Upvoted!', 'success');
   } catch (err) {
-    showToast(err.message, 'error');
+    showToast(getErrorMessage(null, err.message), 'error');
   }
 }
 
@@ -1795,9 +1841,8 @@ async function openThreadDetail(threadId) {
   activeDetailThreadId = threadId;
 
   try {
-    const res = await fetch(`/api/v1/forum/threads/${encodeURIComponent(threadId)}`);
-    if (!res.ok) throw new Error('Failed to load discussion thread.');
-    const th = await res.json();
+    const { data: th, ok } = await safeFetchJson(`/api/v1/forum/threads/${encodeURIComponent(threadId)}`);
+    if (!ok || !th) throw new Error(getErrorMessage(th, 'Failed to load discussion thread.'));
 
     document.querySelector('#thread-detail-title').textContent = th.title;
     document.querySelector('#thread-detail-cat').textContent = th.category || 'General';
@@ -1848,7 +1893,7 @@ async function openThreadDetail(threadId) {
 
     threadDetailDialog.showModal();
   } catch (err) {
-    showToast(err.message, 'error');
+    showToast(getErrorMessage(null, err.message), 'error');
   }
 }
 
@@ -1907,7 +1952,7 @@ document.querySelector('#new-thread-submit-btn')?.addEventListener('click', asyn
   }
 
   try {
-    const res = await fetch('/api/v1/forum/threads', {
+    const { data, ok } = await safeFetchJson('/api/v1/forum/threads', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -1917,15 +1962,14 @@ document.querySelector('#new-thread-submit-btn')?.addEventListener('click', asyn
         content,
       }),
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.detail || 'Failed to create discussion thread.');
+    if (!ok || !data) throw new Error(getErrorMessage(data, 'Failed to create discussion thread.'));
     showToast('Discussion thread created!', 'success');
     document.querySelector('#new-thread-title-input').value = '';
     document.querySelector('#new-thread-content-input').value = '';
     newThreadDialog?.close();
     loadForumThreads(currentForumCat, currentForumQuery);
   } catch (err) {
-    showToast(err.message, 'error');
+    showToast(getErrorMessage(null, err.message), 'error');
   }
 });
 
@@ -1941,19 +1985,18 @@ document.querySelector('#thread-reply-submit-btn')?.addEventListener('click', as
   }
 
   try {
-    const res = await fetch(`/api/v1/forum/threads/${encodeURIComponent(activeDetailThreadId)}/replies`, {
+    const { data, ok } = await safeFetchJson(`/api/v1/forum/threads/${encodeURIComponent(activeDetailThreadId)}/replies`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ content, author_name: author }),
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.detail || 'Failed to post reply.');
+    if (!ok || !data) throw new Error(getErrorMessage(data, 'Failed to post reply.'));
     showToast('Reply posted.', 'success');
     document.querySelector('#thread-reply-input').value = '';
     openThreadDetail(activeDetailThreadId);
     loadForumThreads(currentForumCat, currentForumQuery);
   } catch (err) {
-    showToast(err.message, 'error');
+    showToast(getErrorMessage(null, err.message), 'error');
   }
 });
 
