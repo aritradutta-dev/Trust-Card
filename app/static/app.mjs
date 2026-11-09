@@ -260,6 +260,31 @@ document.querySelector('#cancel-feeds')?.addEventListener('click', () => feedDia
 document.querySelector('[data-close-dialog="feed-consent"]')?.addEventListener('click', () => feedDialog?.close());
 document.querySelector('#approve-feeds')?.addEventListener('click', refreshFeeds);
 
+// How it works dialog
+const howDialog = document.querySelector('#how-it-works-dialog');
+document.querySelectorAll('#nav-how-btn, #mobile-how-btn, #hero-how-btn, [data-open-dialog="how-it-works-dialog"]').forEach((el) => {
+  el.addEventListener('click', (e) => {
+    e.preventDefault();
+    howDialog?.showModal();
+  });
+});
+document.querySelectorAll('[data-close-dialog="how-it-works-dialog"]').forEach((el) => {
+  el.addEventListener('click', () => howDialog?.close());
+});
+howDialog?.addEventListener('click', (e) => {
+  const rect = howDialog.getBoundingClientRect();
+  const isInDialog = (rect.top <= e.clientY && e.clientY <= rect.top + rect.height
+    && rect.left <= e.clientX && e.clientX <= rect.left + rect.width);
+  if (!isInDialog) {
+    howDialog.close();
+  }
+});
+
+// Hero feed trigger switches to Collaborative Intel tab
+document.querySelector('#hero-feed-trigger')?.addEventListener('click', () => {
+  switchView('view-intel');
+});
+
 function updateInputPreview() {
   count.textContent = `${input.value.length.toLocaleString()} / 12,000`;
   errorBox.hidden = true;
@@ -2253,7 +2278,6 @@ function initBootSequence() {
 
   const whisperBar = document.querySelector('#boot-whisper-bar');
   const whisperText = document.querySelector('#boot-whisper-text');
-  const rebootBtn = document.querySelector('#reboot-system-btn');
   const brandEmblem = document.querySelector('.brand-mark');
 
   let isBooting = false;
@@ -2325,7 +2349,6 @@ function initBootSequence() {
     }
   });
 
-  rebootBtn?.addEventListener('click', () => startBoot(true));
   brandEmblem?.addEventListener('click', (e) => {
     if (e.altKey) {
       e.preventDefault();

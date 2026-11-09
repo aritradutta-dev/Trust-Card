@@ -1492,6 +1492,14 @@ textarea:focus { border-color: rgba(65, 90, 119, 0.5); box-shadow: var(--nm-inse
 .feed-status { display: flex; flex-wrap: wrap; gap: 6px; }
 .feed-chip { padding: 4px 9px; border: 1px solid rgba(212, 196, 168, 0.6); border-radius: 8px; color: var(--muted); background: var(--surface); font-size: 9px; }
 .feed-panel > .button { flex: 0 0 auto; }
+.intel-feed-panel {
+  max-width: 1000px;
+  margin: 0 auto 24px;
+  border: 1px solid rgba(212, 196, 168, 0.6);
+  border-radius: 18px;
+  background: var(--paper);
+  box-shadow: var(--shadow);
+}
 
 /* Support & Contact Panel */
 .support-panel {
@@ -1554,16 +1562,36 @@ textarea:focus { border-color: rgba(65, 90, 119, 0.5); box-shadow: var(--nm-inse
 
 .footer {
   display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 1000px;
+  margin: 48px auto 0;
+  padding: 0 4px 38px;
+  color: var(--quiet);
+  font-size: 11px;
+}
+
+.footer-hotline-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+  padding: 24px 28px;
+  border: 1px solid rgba(212, 196, 168, 0.6);
+  border-radius: 18px;
+  background: var(--paper);
+  box-shadow: var(--shadow);
+}
+
+.footer-bottom-row {
+  display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
   gap: 16px;
-  max-width: 1000px;
-  margin: 40px auto 0;
-  padding: 24px 4px 38px;
-  border-top: 1px solid rgba(212, 196, 168, 0.6);
-  color: var(--quiet);
-  font-size: 11px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(212, 196, 168, 0.45);
 }
 .footer-meta {
   display: flex;
@@ -2892,32 +2920,99 @@ textarea:focus { border-color: rgba(65, 90, 119, 0.5); box-shadow: var(--nm-inse
   transition: opacity 0.25s ease, transform 0.25s ease;
 }
 
-/* Topbar system status / replay button */
-.system-reboot-btn {
+/* Hero Action Pills */
+.hero-actions-strip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.hero-guide-pill,
+.hero-feed-pill {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
+  gap: 7px;
+  padding: 6px 14px;
   border-radius: 99px;
+  border: 1px solid rgba(119, 141, 122, 0.35);
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(8px);
+  color: var(--ink);
   font-size: 11px;
   font-weight: 700;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  background: #EDF2EE;
-  color: #2B4530;
-  border: 1px solid #778D7A;
   cursor: pointer;
-  box-shadow: 2px 2px 5px rgba(180, 170, 150, 0.3), -2px -2px 5px #ffffff;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 6px rgba(13, 27, 42, 0.05);
+  text-decoration: none;
 }
-.system-reboot-btn:hover {
-  background: #E0EADE;
+
+.hero-guide-pill:hover,
+.hero-feed-pill:hover {
+  background: #ffffff;
+  border-color: var(--sage);
   transform: translateY(-1px);
-  box-shadow: 3px 4px 8px rgba(180, 170, 150, 0.4), -2px -2px 6px #ffffff;
-  color: #1a3020;
+  box-shadow: 0 4px 12px rgba(13, 27, 42, 0.09);
+  color: var(--blue);
 }
-.system-reboot-btn:active {
-  transform: translateY(1px);
-  box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.15);
+
+.hero-feed-pill .status-dot {
+  width: 7px;
+  height: 7px;
+}
+
+.hero-feed-pill .pill-arrow {
+  color: var(--sage);
+  font-size: 12px;
+}
+
+/* How It Works Modal Dialog */
+.how-dialog-card {
+  width: min(100% - 32px, 860px);
+  max-width: 860px;
+  max-height: 88vh;
+  padding: 26px 30px;
+  border: 1px solid rgba(212, 196, 168, 0.6);
+  border-radius: 20px;
+  background: var(--paper);
+  box-shadow: 0 25px 80px rgba(30, 34, 72, .24);
+}
+
+.how-dialog-body {
+  overflow-y: auto;
+  max-height: calc(88vh - 140px);
+  padding-right: 4px;
+}
+
+.how-dialog-body .how-grid {
+  margin: 16px 0 22px;
+}
+
+.how-dialog-body .how-card {
+  box-shadow: var(--nm-raised-sm);
+}
+
+.how-section-intro {
+  margin-bottom: 16px;
+  text-align: left;
+}
+
+.how-section-intro .step-label {
+  margin-bottom: 6px;
+}
+
+.how-section-intro h3 {
+  margin: 0 0 6px;
+  font-size: 20px;
+  color: var(--ink);
+}
+
+.how-section-intro p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
 }
 
 @media (prefers-reduced-motion: reduce) {

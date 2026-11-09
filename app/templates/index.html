@@ -50,7 +50,7 @@
     </a>
     <nav class="top-nav" aria-label="Main navigation">
       <a class="nav-active" href="#view-checker" data-tab-target="view-checker">Check link</a>
-      <a href="#how-it-works">How it works</a>
+      <a href="#how-it-works" id="nav-how-btn">How it works</a>
       <a href="/api">API Reference</a>
       <a href="/admin/reports">Admin Review</a>
       <a href="#contact">Contact</a>
@@ -59,9 +59,6 @@
       <div id="auth-user-container">
         <button id="auth-trigger-btn" class="auth-trigger-btn" type="button">Sign In / Register</button>
       </div>
-      <button id="reboot-system-btn" class="system-reboot-btn" type="button" title="Replay Cyber Boot Initialization">
-        <span class="status-dot" aria-hidden="true"></span> Reboot OS ⟳
-      </button>
       <button id="mobile-menu-btn" class="mobile-menu-btn" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="mobile-nav">
         <span class="menu-icon" aria-hidden="true">☰</span>
       </button>
@@ -71,7 +68,7 @@
   <nav id="mobile-nav" class="mobile-nav" hidden aria-label="Mobile Navigation">
     <div class="mobile-nav-inner">
       <a class="mobile-nav-link" href="#view-checker" data-tab-target="view-checker">Check a Link</a>
-      <a class="mobile-nav-link" href="#how-it-works">How It Works</a>
+      <a class="mobile-nav-link" href="#how-it-works" id="mobile-how-btn">How It Works</a>
       <a class="mobile-nav-link" href="#view-dashboard" data-tab-target="view-dashboard">Threat Dashboard</a>
       <a class="mobile-nav-link" href="#view-history" data-tab-target="view-history">Scan History</a>
       <a class="mobile-nav-link" href="#view-ct" data-tab-target="view-ct">Certificate & CT Monitor</a>
@@ -105,6 +102,10 @@
         <div class="eyebrow"><span class="eyebrow-dot" aria-hidden="true"></span> MESSAGE CONTEXT · LINK EVIDENCE · THREAT AUDIT</div>
         <h1>Check a link before you click.</h1>
         <p>Paste a link or the message it came with. Trust Card explains the signals it finds and a safer next step.</p>
+        <div class="hero-actions-strip">
+          <button id="hero-how-btn" class="hero-guide-pill" type="button"><span aria-hidden="true">💡</span> How Trust Card Works</button>
+          <button id="hero-feed-trigger" class="hero-feed-pill" type="button" title="View & update threat feeds in Collaborative Intel"><span class="status-dot green" aria-hidden="true"></span> <span>Threat Feeds Active</span> <span class="pill-arrow" aria-hidden="true">→</span></button>
+        </div>
       </section>
 
       <!-- Scan Progress Indicator -->
@@ -178,56 +179,6 @@
       </section>
 
       <section id="result-region" class="result-region" aria-live="polite" aria-atomic="true" hidden></section>
-
-      <section id="how-it-works" class="how-section" aria-labelledby="how-title">
-        <div class="section-heading"><p class="step-label">A CLEARER SECOND OPINION</p><h2 id="how-title">Why check the message too?</h2><p>Risk can come from the request around a link as well as the destination itself.</p></div>
-        <div class="how-grid">
-          <article class="how-card"><span class="how-icon" aria-hidden="true">01</span><h3>Message context</h3><p>Urgency, credential, payment, and personal-data cues are detected in your browser.</p></article>
-          <article class="how-card"><span class="how-icon" aria-hidden="true">02</span><h3>Local threat data</h3><p>Cached feed matches and reviewed reports can explain a known warning. Feed age stays visible.</p></article>
-          <article class="how-card"><span class="how-icon" aria-hidden="true">03</span><h3>Live scan by choice</h3><p>Review the site and redirect scope before the separate scanner connects to it.</p></article>
-        </div>
-
-        <div class="how-to-read-container">
-          <details class="how-to-read-details">
-            <summary class="how-to-read-summary">
-              <span>📖 How to read this card: Understanding pillars, coverage, and verdicts</span>
-            </summary>
-            <div class="how-to-read-content">
-              <div class="read-block">
-                <h4>1. Why "No warning found" is never "Safe"</h4>
-                <p>Attackers register new domains daily, use legitimate cloud hosting, and obtain valid certificates. A clean result means our automated checks detected no known threat signatures across the checked scope — it is never an endorsement or guarantee of safety. Always visit official services directly.</p>
-              </div>
-              <div class="read-block">
-                <h4>2. The 7 Security Pillars</h4>
-                <p>Trust Card unifies 7 security dimensions: Threat Intelligence, URL & Impersonation, Page Content, Certificate & Trust, Web Security, Community Intelligence, and Message Context. Pillars clearly display status badges: <strong>Alert</strong>, <strong>Attention</strong>, <strong>Clear</strong>, or <strong>Not checked</strong>.</p>
-              </div>
-              <div class="read-block">
-                <h4>3. Local vs. Full Scan Coverage</h4>
-                <p><strong>Local-only check:</strong> Zero outbound network connections. Evaluates cached threat intelligence, brand lookalikes, URL structure, and community reports.</p>
-                <p><strong>Full live scan:</strong> Consented connection with IP pinning. Performs deep TLS validation, checks for weak cryptographic key generation, detects credential-harvesting forms, and audits HTTP security headers.</p>
-              </div>
-              <div class="read-block">
-                <h4>4. Indicator Score vs. Authoritative Verdict</h4>
-                <p>The 0–100 indicator score provides transparent risk ranking across completed checks. However, deterministic verdict rules remain authoritative: technical findings like missing headers or certificate expiration will never turn a link into a "Known threat".</p>
-              </div>
-            </div>
-          </details>
-        </div>
-      </section>
-
-      <section class="feed-panel" aria-labelledby="intel-heading">
-        <div class="feed-copy">
-          <p class="step-label">LOCAL THREAT DATA</p>
-          <h2 id="intel-heading">Your community feeds</h2>
-          <p id="feed-summary" class="feed-summary">{% if feed_stale %}No fresh feed data is available yet.{% else %}Threat feeds are up to date.{% endif %}</p>
-          <div id="feed-status" class="feed-status">
-            {% for item in feed_status %}
-            <span class="feed-chip">{% if item.source == "Demo seed" %}Demo data, not real threat intelligence{% else %}{{ item.source }}{% endif %} · {% if not item.available %}not loaded{% elif item.stale %}stale{% else %}updated {{ item.updated_at }}{% endif %}</span>
-            {% endfor %}
-          </div>
-        </div>
-        <button id="refresh-feeds" class="button button-secondary" type="button">Refresh feeds <span aria-hidden="true">↻</span></button>
-      </section>
     </section>
 
     <!-- VIEW 2: Threat Intelligence Dashboard -->
@@ -352,8 +303,23 @@
     <section id="view-intel" class="view-section" hidden>
       <section class="hero">
         <div class="eyebrow"><span class="eyebrow-dot" aria-hidden="true"></span> Community Defense & Collaborative Intel</div>
-        <h1>Collaborative Threat Database</h1>
-        <p>Search verified phishing, malware, fake banking, and fraudulent payment portals shared across our community.</p>
+        <h1>Collaborative Threat Database & Community Feeds</h1>
+        <p>Live threat intelligence feeds, verified phishing & malware indicators, and community intelligence contributions.</p>
+      </section>
+
+      <!-- Threat Intelligence Feeds Panel -->
+      <section class="feed-panel intel-feed-panel" aria-labelledby="intel-heading">
+        <div class="feed-copy">
+          <p class="step-label">COMMUNITY THREAT FEEDS</p>
+          <h2 id="intel-heading">Local Community Intelligence Feeds</h2>
+          <p id="feed-summary" class="feed-summary">{% if feed_stale %}No fresh feed data is available yet.{% else %}Threat feeds are up to date.{% endif %}</p>
+          <div id="feed-status" class="feed-status">
+            {% for item in feed_status %}
+            <span class="feed-chip">{% if item.source == "Demo seed" %}Demo data, not real threat intelligence{% else %}{{ item.source }}{% endif %} · {% if not item.available %}not loaded{% elif item.stale %}stale{% else %}updated {{ item.updated_at }}{% endif %}</span>
+            {% endfor %}
+          </div>
+        </div>
+        <button id="refresh-feeds" class="button button-secondary" type="button">Refresh feeds <span aria-hidden="true">↻</span></button>
       </section>
 
       <div class="workspace" style="margin-bottom: 24px;">
@@ -473,9 +439,9 @@
       </div>
     </section>
 
-    <!-- Support Section -->
-    <section id="contact" class="support-panel" aria-labelledby="contact-heading">
-      <div class="support-card">
+    <!-- Footer with Integrated Incident Hotline & Navigation Meta -->
+    <footer id="contact" class="footer" aria-labelledby="contact-heading">
+      <div class="footer-hotline-card">
         <div class="support-text">
           <p class="step-label">SECURITY INCIDENTS & HOTLINE</p>
           <h2 id="contact-heading">Need help with a targeted phishing attempt?</h2>
@@ -486,24 +452,72 @@
           <a href="tel:+18005550199" class="contact-pill"><span class="pill-icon" aria-hidden="true">📞</span> +1 (800) 555-0199</a>
         </div>
       </div>
-    </section>
 
-    <footer class="footer">
-      <div class="footer-meta">
-        <span>Trust Card offers cautious signals, not guarantees.</span>
-        <span id="copyright-year">© 2026 Trust Card Platform. All rights reserved.</span>
-      </div>
-      <div class="footer-links">
-        <a href="/">Home</a>
-        <a href="/api">API Documentation</a>
-        <a href="/admin/reports">Admin Review</a>
-        <a href="mailto:security@trustcard.local">Email Response</a>
-        <a href="tel:+18005550199">Hotline: +1 (800) 555-0199</a>
+      <div class="footer-bottom-row">
+        <div class="footer-meta">
+          <span>Trust Card offers cautious signals, not guarantees.</span>
+          <span id="copyright-year">© 2026 Trust Card Platform. All rights reserved.</span>
+        </div>
+        <div class="footer-links">
+          <a href="/">Home</a>
+          <a href="/api">API Documentation</a>
+          <a href="/admin/reports">Admin Review</a>
+          <a href="mailto:security@trustcard.local">Email Response</a>
+          <a href="tel:+18005550199">Hotline: +1 (800) 555-0199</a>
+        </div>
       </div>
     </footer>
   </main>
 
   <div id="toast-container" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- HOW IT WORKS & METHODOLOGY MODAL -->
+  <dialog id="how-it-works-dialog" class="dialog-card how-dialog-card" aria-labelledby="how-dialog-title">
+    <div class="dialog-heading">
+      <span class="dialog-icon" aria-hidden="true">💡</span>
+      <div>
+        <p class="step-label">SECURITY METHODOLOGY & AUDIT GUIDE</p>
+        <h2 id="how-dialog-title">How Trust Card Works</h2>
+      </div>
+      <button class="dialog-close" type="button" aria-label="Close dialog" data-close-dialog="how-it-works-dialog">×</button>
+    </div>
+    <div class="how-dialog-body">
+      <div class="how-section-intro">
+        <p class="step-label">A CLEARER SECOND OPINION</p>
+        <h3>Why check the message too?</h3>
+        <p>Risk can come from the request around a link as well as the destination itself.</p>
+      </div>
+
+      <div class="how-grid">
+        <article class="how-card"><span class="how-icon" aria-hidden="true">01</span><h3>Message context</h3><p>Urgency, credential, payment, and personal-data cues are detected in your browser.</p></article>
+        <article class="how-card"><span class="how-icon" aria-hidden="true">02</span><h3>Local threat data</h3><p>Cached feed matches and reviewed reports can explain a known warning. Feed age stays visible.</p></article>
+        <article class="how-card"><span class="how-icon" aria-hidden="true">03</span><h3>Live scan by choice</h3><p>Review the site and redirect scope before the separate scanner connects to it.</p></article>
+      </div>
+
+      <div class="how-to-read-container">
+        <div class="read-block">
+          <h4>1. Why "No warning found" is never "Safe"</h4>
+          <p>Attackers register new domains daily, use legitimate cloud hosting, and obtain valid certificates. A clean result means our automated checks detected no known threat signatures across the checked scope — it is never an endorsement or guarantee of safety. Always visit official services directly.</p>
+        </div>
+        <div class="read-block">
+          <h4>2. The 7 Security Pillars</h4>
+          <p>Trust Card unifies 7 security dimensions: Threat Intelligence, URL & Impersonation, Page Content, Certificate & Trust, Web Security, Community Intelligence, and Message Context. Pillars clearly display status badges: <strong>Alert</strong>, <strong>Attention</strong>, <strong>Clear</strong>, or <strong>Not checked</strong>.</p>
+        </div>
+        <div class="read-block">
+          <h4>3. Local vs. Full Scan Coverage</h4>
+          <p><strong>Local-only check:</strong> Zero outbound network connections. Evaluates cached threat intelligence, brand lookalikes, URL structure, and community reports.</p>
+          <p><strong>Full live scan:</strong> Consented connection with IP pinning. Performs deep TLS validation, checks for weak cryptographic key generation, detects credential-harvesting forms, and audits HTTP security headers.</p>
+        </div>
+        <div class="read-block">
+          <h4>4. Indicator Score vs. Authoritative Verdict</h4>
+          <p>The 0–100 indicator score provides transparent risk ranking across completed checks. However, deterministic verdict rules remain authoritative: technical findings like missing headers or certificate expiration will never turn a link into a "Known threat".</p>
+        </div>
+      </div>
+    </div>
+    <div class="dialog-actions" style="margin-top: 20px; display: flex; justify-content: flex-end;">
+      <button class="button button-primary" type="button" data-close-dialog="how-it-works-dialog">Understood</button>
+    </div>
+  </dialog>
 
   <!-- AUTH MODAL -->
   <dialog id="auth-dialog" class="dialog-card" aria-labelledby="auth-title">
