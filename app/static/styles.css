@@ -2775,9 +2775,8 @@ textarea:focus { border-color: rgba(65, 90, 119, 0.5); box-shadow: var(--nm-inse
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
-  border-radius: 28px;
-  padding: 6px;
+  animation: gentleEmblemFloat 3.6s ease-in-out infinite alternate;
+  transform: translateZ(0);
 }
 
 /* Transparent Animated GIF */
@@ -2789,7 +2788,6 @@ textarea:focus { border-color: rgba(65, 90, 119, 0.5); box-shadow: var(--nm-inse
   object-fit: contain;
   background: transparent;
   filter: drop-shadow(0 12px 28px rgba(13, 27, 42, 0.09));
-  animation: gentleEmblemFloat 3.6s ease-in-out infinite alternate;
   transform: translateZ(0);
 }
 
@@ -2798,27 +2796,58 @@ textarea:focus { border-color: rgba(65, 90, 119, 0.5); box-shadow: var(--nm-inse
   100% { transform: translateY(-4px) scale(1.012); }
 }
 
-/* Liquid Light Sheen Gliding Across the Shield */
+/* Liquid Light Sheen Gliding Conforming to Shield Silhouette */
 .boot-light-sheen {
   position: absolute;
-  top: -30%;
-  left: -120%;
-  width: 60%;
-  height: 160%;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.55) 50%,
-    transparent 100%
-  );
-  transform: rotate(28deg);
+  inset: 0;
   pointer-events: none;
-  animation: liquidSheenGlade 2.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  -webkit-mask-image: url('/static/boot-shield-mask.png');
+  mask-image: url('/static/boot-shield-mask.png');
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  overflow: hidden;
+}
+
+.boot-light-sheen::after {
+  content: "";
+  position: absolute;
+  top: -10%;
+  left: 0;
+  width: 130px;
+  height: 120%;
+  background: radial-gradient(
+    ellipse 60% 90% at 50% 50%,
+    rgba(255, 255, 255, 0.88) 0%,
+    rgba(255, 255, 255, 0.45) 32%,
+    rgba(255, 255, 255, 0.08) 58%,
+    transparent 76%
+  );
+  filter: blur(4px);
+  pointer-events: none;
+  will-change: transform, opacity;
+  animation: liquidSheenGlade 2.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
 @keyframes liquidSheenGlade {
-  0% { left: -120%; }
-  45%, 100% { left: 160%; }
+  0% {
+    transform: translateX(-130px) skewX(-22deg);
+    opacity: 0;
+  }
+  8% {
+    opacity: 1;
+  }
+  48% {
+    transform: translateX(380px) skewX(-22deg);
+    opacity: 0.95;
+  }
+  58%, 100% {
+    transform: translateX(420px) skewX(-22deg);
+    opacity: 0;
+  }
 }
 
 /* 6. High-Precision Status Whisper */
