@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Security Assessment Report · {{ scan.url }} · Trust Card</title>
+  <title>Trust-Card-Security-Report-{{ scan.id[:10] }}-{{ scan.host }}</title>
   <style>
     :root {
       /* Holst Palette Core */
@@ -163,14 +163,78 @@
       padding-top: 24px;
     }
 
+    @page {
+      size: A4 portrait;
+      margin: 12mm 10mm;
+    }
+
     @media print {
-      body { background: #fff; padding: 0; }
-      .report-container { border: none; box-shadow: none; padding: 0; max-width: 100%; }
-      .action-buttons { display: none; }
+      body {
+        background: #fff !important;
+        padding: 0 !important;
+        color: #0D1B2A !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      .report-container {
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        max-width: 100% !important;
+      }
+      .action-buttons, .print-banner {
+        display: none !important;
+      }
+      .meta-grid, .callout-box, table, tr, .section-title {
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+      }
+    }
+
+    /* Screen-only Print / Export Banner */
+    .print-banner {
+      max-width: 900px;
+      margin: 0 auto 20px;
+      padding: 16px 20px;
+      background: #EDF2EE;
+      border: 1px solid #778D7A;
+      border-radius: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 4px 12px rgba(13, 27, 42, 0.05);
+    }
+    .print-banner-text strong {
+      display: block;
+      color: #1a3020;
+      font-size: 14px;
+      margin-bottom: 2px;
+    }
+    .print-banner-text p {
+      margin: 0;
+      color: #415A77;
+      font-size: 12px;
+    }
+    .print-banner-actions {
+      display: flex;
+      gap: 8px;
+      flex-shrink: 0;
     }
   </style>
 </head>
 <body>
+  <div class="print-banner">
+    <div class="print-banner-text">
+      <strong>🖨️ PDF Export & Print Ready</strong>
+      <p>Select <strong>"Save as PDF"</strong> as your destination in the print dialog to download your report file.</p>
+    </div>
+    <div class="print-banner-actions">
+      <button onclick="window.print()" class="btn btn-primary">🖨️ Save as PDF / Print</button>
+      <button onclick="window.close()" class="btn btn-secondary">Close</button>
+    </div>
+  </div>
+
   <div class="report-container">
     <header class="report-header">
       <div>
@@ -351,6 +415,15 @@
       <div>© 2026 Trust Card Platform. All rights reserved. Evaluation is based on available evidence; not a guarantee of absolute safety.</div>
     </footer>
   </div>
+
+  <script>
+    // Automatically open browser print/PDF export dialog after render
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        window.print();
+      }, 350);
+    });
+  </script>
 </body>
 </html>
 

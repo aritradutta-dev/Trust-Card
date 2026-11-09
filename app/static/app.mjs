@@ -874,7 +874,11 @@ function renderResult(data) {
 
   if (data.scan_id) {
     const pdfBtn = makeButton('🖨️ Download PDF Report', 'dock-btn btn-pdf', () => {
-      window.open(`/scans/${data.scan_id}/report`, '_blank');
+      const reportUrl = `/scans/${data.scan_id}/report`;
+      const win = window.open(reportUrl, '_blank');
+      if (!win || win.closed || typeof win.closed === 'undefined') {
+        window.location.href = reportUrl;
+      }
     });
     dock.append(pdfBtn);
   }
